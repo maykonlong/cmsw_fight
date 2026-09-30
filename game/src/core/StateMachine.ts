@@ -24,6 +24,9 @@ export class StateMachine {
     }
 
     transition(newState: string, ...enterArgs: any[]) {
+        if (this.state && this.possibleStates[this.state]) {
+            this.possibleStates[this.state].exit(...this.stateArgs);
+        }
         this.state = newState;
         this.possibleStates[this.state].enter(...this.stateArgs, ...enterArgs);
     }
@@ -33,4 +36,5 @@ export class State {
     public stateMachine!: StateMachine;
     enter(..._args: any[]) {}
     execute(..._args: any[]) {}
+    exit(..._args: any[]) {}
 }

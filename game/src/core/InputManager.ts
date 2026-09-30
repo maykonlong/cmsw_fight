@@ -6,7 +6,7 @@ export class InputManager {
     private keys: { [key: string]: Phaser.Input.Keyboard.Key };
     
     // Rastrear botoes de gamepad do frame anterior para o "JustPressed"
-    private prevPadState = { A: false, X: false, Y: false, up: false };
+    private prevPadState = { A: false, X: false, Y: false, up: false, RT: false };
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -15,9 +15,10 @@ export class InputManager {
         
         // Mapeamento de botões de ataque estilo fighting game
         this.keys = {
-            LP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
-            MP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
-            HP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C)
+            LP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z), // Soco leve
+            MP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X), // Soco médio
+            HP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C), // Chute
+            HK: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V), // Especial
         };
     }
 
@@ -35,6 +36,7 @@ export class InputManager {
     public virtualLPJustPressed: boolean = false;
     public virtualMPJustPressed: boolean = false;
     public virtualHPJustPressed: boolean = false;
+    public virtualHKJustPressed: boolean = false;
 
     get pad() {
         return this.scene.input.gamepad?.pad1;
@@ -69,9 +71,14 @@ export class InputManager {
         return Phaser.Input.Keyboard.JustDown(this.keys.MP) || this.virtualMPJustPressed || padJustY; 
     }
     get isHPJustPressed() { 
-        const padRB = this.pad && Boolean(this.pad.R1); // Xbox RB button
-        const padJustRB = padRB && !this.prevPadState.A; // Reusing A logic or just simple check
+        const padRB = this.pad && Boolean(this.pad.R1);
+        const padJustRB = padRB && !this.prevPadState.A;
         return Phaser.Input.Keyboard.JustDown(this.keys.HP) || this.virtualHPJustPressed || padJustRB; 
+    }
+    get isHKJustPressed() { // Especial
+        const padRT = this.pad && Boolean(this.pad.R2);
+        const padJustRT = padRT && !this.prevPadState.RT;
+        return Phaser.Input.Keyboard.JustDown(this.keys.HK) || this.virtualHKJustPressed || padJustRT; 
     }
 
     // Limpa os buffers de 1 frame do virtual pad no final do ciclo do Phaser
@@ -80,12 +87,14 @@ export class InputManager {
         this.virtualLPJustPressed = false;
         this.virtualMPJustPressed = false;
         this.virtualHPJustPressed = false;
+        this.virtualHKJustPressed = false;
 
         if (this.pad) {
             this.prevPadState.up = Boolean(this.pad.up || this.pad.axes[1].getValue() < -0.5);
             this.prevPadState.X = Boolean(this.pad.X);
             this.prevPadState.Y = Boolean(this.pad.Y);
             this.prevPadState.A = Boolean(this.pad.R1);
+            this.prevPadState.RT = Boolean(this.pad.R2);
         }
     }
 }

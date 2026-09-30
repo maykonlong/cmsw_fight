@@ -19,19 +19,21 @@ export class BootScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#000000');
 
         // Logo do estúdio
-        const studioText = this.add.text(width / 2, height / 2 - 40, 'CMSW SOFTWARE', {
+        const studioText = this.add.text(width / 2, height / 2 - 50, 'CMSW SOFTWARE', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '52px',
+            fontSize: '64px',
             color: '#ffffff',
             stroke: '#ff0000',
-            strokeThickness: 6,
+            strokeThickness: 8,
         }).setOrigin(0.5).setAlpha(0);
 
-        const subText = this.add.text(width / 2, height / 2 + 40, 'APRESENTA', {
-            fontFamily: 'Arial',
+        const subText = this.add.text(width / 2, height / 2 + 50, 'RESOLVA SUA TRETA AQUI', {
+            fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '28px',
-            color: '#cccccc',
-            letterSpacing: 12,
+            color: '#ffdd00',
+            stroke: '#ff0000',
+            strokeThickness: 5,
+            letterSpacing: 6,
         }).setOrigin(0.5).setAlpha(0);
 
         // Fade in → espera → Fade out → vai pro menu
