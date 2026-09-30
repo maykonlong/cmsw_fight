@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Fighter } from '../entities/Fighter';
+import { Projectile } from '../entities/Projectile';
 import { InputManager } from '../core/InputManager';
 import { VirtualGamepad } from '../ui/VirtualGamepad';
 
@@ -8,6 +9,7 @@ export class CombatScene extends Phaser.Scene {
     private enemy!: Fighter;
     private inputManager!: InputManager;
     private hpText!: Phaser.GameObjects.Text;
+    private projectiles!: Phaser.GameObjects.Group;
 
     constructor() {
         super({ key: 'CombatScene' });
@@ -28,14 +30,22 @@ export class CombatScene extends Phaser.Scene {
         graphics.generateTexture('player_placeholder', 64, 128);
 
         graphics.clear();
-        graphics.fillStyle(0xff0000, 1);
-        graphics.fillRect(0, 0, 64, 128);
-        graphics.generateTexture('enemy_placeholder', 64, 128);
+        graphics.fillStyle(0xff00ff, 1);
+        graphics.fillCircle(16, 16, 16);
+        graphics.generateTexture('aura_placeholder', 32, 32);
 
         this.inputManager = new InputManager(this);
+        this.projectiles = this.add.group();
 
         this.player = new Fighter(this, 300, 500, 'player_placeholder', this.inputManager);
         this.physics.add.collider(this.player, floor);
+
+        // Ouvir o disparo do especial (Aura do beijo)
+        this.player.on('fire_special', (fighter: Fighter) => {
+            const dir = fighter.flipX ? -1 : 1;
+            const proj = new Projectile(this, fighter.x + (50 * dir), fighter.y, 'aura_placeholder', fighter, 400 * dir, 30, 'electric');
+            this.projectiles.add(proj);
+        });
 
         // Inimigo sem InputManager (CPU/Dummy)
         this.enemy = new Fighter(this, 980, 500, 'enemy_placeholder');
@@ -53,6 +63,30 @@ export class CombatScene extends Phaser.Scene {
                 // Aplica 50 de dano e 400 de pushback
                 this.enemy.takeDamage(50, 400, this.player.x);
                 this.hpText.setText(`Enemy HP: ${this.enemy.hp}`);
+            }
+        });
+
+        // Detecção de colisão (Projéteis -> Enemy)
+        this.physics.add.overlap(this.projectiles, this.enemy, (enemyObj, projObj) => {
+            const enemy = enemyObj as Fighter;
+            const proj = projObj as Projectile;
+            
+            if (proj.hitActive && !enemy.isHit && proj.getOwner() !== enemy) {
+                proj.hitActive = false; // Só acerta uma vez
+                enemy.takeDamage(proj.damage, 0, proj.x, proj.damageType);
+                this.hpText.setText(`Enemy HP: ${enemy.hp}`);
+                proj.destroy(); // Destroi a aura ao acertar
+            }
+        });
+
+        // Detecção de colisão (Projéteis -> Player se houver)
+        this.physics.add.overlap(this.projectiles, this.player, (playerObj, projObj) => {
+            const player = playerObj as Fighter;
+            const proj = projObj as Projectile;
+            if (proj.hitActive && !player.isHit && proj.getOwner() !== player) {
+                proj.hitActive = false;
+                player.takeDamage(proj.damage, 0, proj.x, proj.damageType);
+                proj.destroy();
             }
         });
 

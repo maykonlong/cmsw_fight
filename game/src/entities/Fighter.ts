@@ -36,6 +36,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             jump: new JumpState(),
             crouch: new CrouchState(),
             attack: new AttackState(),
+            special: new SpecialState(),
             hit: new HitState()
         }, [this]);
     }
@@ -48,7 +49,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         this.hitbox.setPosition(this.x + (40 * directionMultiplier), this.y - 10);
     }
 
-    takeDamage(amount: number, pushbackForce: number, fromX: number) {
+    takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
         if (this.isHit) return; // Invulnerabilidade de hit stun
         
         this.hp -= amount;
@@ -58,7 +59,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         const dir = this.x < fromX ? -1 : 1;
         this.setVelocityX(pushbackForce * dir);
         
-        this.stateMachine.transition('hit');
+        this.stateMachine.transition('hit', type);
     }
 }
 
@@ -82,6 +83,10 @@ class IdleState extends State {
         }
         if (fighter.inputManager.isLPJustPressed) {
             this.stateMachine.transition('attack');
+            return;
+        }
+        if (fighter.inputManager.isHPJustPressed) {
+            this.stateMachine.transition('special');
             return;
         }
     }
@@ -109,6 +114,10 @@ class WalkState extends State {
         
         if (fighter.inputManager.isLPJustPressed) {
             this.stateMachine.transition('attack');
+            return;
+        }
+        if (fighter.inputManager.isHPJustPressed) {
+            this.stateMachine.transition('special');
             return;
         }
     }
@@ -182,22 +191,68 @@ class AttackState extends State {
 }
 
 class HitState extends State {
-    enter(fighter: Fighter) {
+    private type: 'normal' | 'electric' = 'normal';
+    private originalX: number = 0;
+
+    enter(fighter: Fighter, type: 'normal' | 'electric' = 'normal') {
         fighter.isHit = true;
-        fighter.hitStunTimer = 20; // 20 frames de hit stun
-        fighter.setTint(0xffffff); // Pisca branco
+        this.type = type;
+        this.originalX = fighter.x;
+
+        if (this.type === 'electric') {
+            fighter.hitStunTimer = 40; // Choque dura mais (40 frames)
+            fighter.setVelocityX(0); // Choque prende no lugar
+        } else {
+            fighter.hitStunTimer = 20; // Hit normal 20 frames
+            fighter.setTint(0xffffff); // Pisca branco
+        }
     }
 
     execute(fighter: Fighter) {
         fighter.hitStunTimer--;
         
-        // Desacelerar o pushback gradualmente (Fricção simplificada)
-        if (Math.abs(fighter.body!.velocity.x) > 0) {
-            fighter.setVelocityX(fighter.body!.velocity.x * 0.8);
+        if (this.type === 'electric') {
+            // Efeito visual de Eletrocussão (Strobe amarelo e azul, tremor)
+            const isYellow = fighter.hitStunTimer % 4 < 2;
+            fighter.setTint(isYellow ? 0xffff00 : 0x00ffff);
+            
+            // Tremor
+            const shake = (Math.random() - 0.5) * 6;
+            fighter.setX(this.originalX + shake);
+        } else {
+            // Desacelerar o pushback gradualmente
+            if (Math.abs(fighter.body!.velocity.x) > 0) {
+                fighter.setVelocityX(fighter.body!.velocity.x * 0.8);
+            }
         }
 
         if (fighter.hitStunTimer <= 0) {
             fighter.isHit = false;
+            fighter.clearTint();
+            fighter.setX(this.originalX); // Alinhar após tremor
+            this.stateMachine.transition('idle');
+        }
+    }
+}
+
+class SpecialState extends State {
+    private duration: number = 0;
+    
+    enter(fighter: Fighter) {
+        fighter.setVelocityX(0);
+        this.duration = 40; // Especial demora mais pra castar
+        fighter.setTint(0xff00ff); // Magenta para identificar especial
+    }
+
+    execute(fighter: Fighter) {
+        this.duration--;
+
+        // No frame 20, atira o projétil
+        if (this.duration === 20) {
+            fighter.emit('fire_special', fighter);
+        }
+
+        if (this.duration <= 0) {
             fighter.clearTint();
             this.stateMachine.transition('idle');
         }
