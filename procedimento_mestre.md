@@ -917,14 +917,9 @@ INTEGRAÇÃO NO MOTOR
 PERSONAGEM JOGÁVEL
 ```
 
-- [ ] **15.1.1** Criar `PERSONAGEM_TEMPLATE.json` em branco como base para novos personagens
-- [ ] **15.1.2** Criar `CHARACTER_CREATION_GUIDE.md` com questionário padrão:
-  - Identidade (nome, apelido, frase)
-  - Aparência (roupa, cabelo, acessórios)
-  - Arquétipo (Balanced/Rushdown/Grappler/Zoner)
-  - Frame data dos especiais
-  - Animações de vitória/derrota únicas
-- [ ] **15.1.3** Criar `scripts/generate_character.js`: script que recebe o JSON e valida o contrato mínimo de sprites
+- [x] **15.1.1** Criar `PERSONAGEM_TEMPLATE.json` em branco como base para novos personagens
+- [x] **15.1.2** Criar `CHARACTER_CREATION_GUIDE.md` com questionário padrão
+- [x] **15.1.3** Criar `scripts/validate_character.js`: script que recebe o JSON e valida o contrato mínimo de sprites
 
 ---
 

@@ -1,0 +1,61 @@
+{
+    "id": "char_id",
+    "name": "Nome do Personagem",
+    "catchphrase": "Sua frase de impacto aqui!",
+    "health": 1000,
+    "stunMax": 1000,
+    "throwRange": 60,
+    "movement": {
+        "walkForward": 250,
+        "walkBackward": 200,
+        "jumpVelocityY": -750,
+        "jumpVelocityX": 250
+    },
+    "sprites": {
+        "idle": "char_idle",
+        "walk": "char_walk",
+        "crouch": "char_crouch",
+        "jump": "char_jump",
+        "block": "char_block",
+        "hit": "char_hit",
+        "knockdown": "char_knockdown",
+        "ko": "char_ko"
+    },
+    "normals": [
+        "stand_LP", "stand_MP", "stand_HP",
+        "stand_LK", "stand_MK", "stand_HK"
+    ],
+    "crouchNormals": [
+        "crouch_LP", "crouch_MP", "crouch_HP",
+        "crouch_LK", "crouch_MK", "crouch_HK"
+    ],
+    "airNormals": [
+        "jump_LP", "jump_MP", "jump_HP",
+        "jump_LK", "jump_MK", "jump_HK"
+    ],
+    "specials": [
+        {
+            "id": "hadouken",
+            "name": "Magia Básica",
+            "command": "236P",
+            "type": "projectile",
+            "damage": 80,
+            "startup": 12,
+            "active": 0,
+            "recovery": 20,
+            "projectileKey": "proj_magia"
+        }
+    ],
+    "intro": {
+        "animation": "intro_anim",
+        "phrase": "Vamos lutar!"
+    },
+    "victory": {
+        "animation": "win_anim",
+        "phrase": "Eu venci!"
+    },
+    "defeat": {
+        "animation": "lose_anim",
+        "phrase": "Não pode ser..."
+    }
+}
