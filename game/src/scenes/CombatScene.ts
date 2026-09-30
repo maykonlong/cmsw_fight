@@ -17,7 +17,10 @@ export class CombatScene extends Phaser.Scene {
         super({ key: 'CombatScene' });
     }
 
-    preload() {}
+    preload() {
+        this.load.image('kevin', 'assets/sprites/kevin.png');
+        this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
+    }
 
     create() {
         this.add.text(10, 10, 'CMSW Fight - Fase 2: Máquina de Estados e Combate', { color: '#ffffff', fontSize: '24px' });
@@ -39,7 +42,8 @@ export class CombatScene extends Phaser.Scene {
         this.inputManager = new InputManager(this);
         this.projectiles = this.add.group();
 
-        this.player = new Fighter(this, 300, 500, 'player_placeholder', this.inputManager);
+        this.player = new Fighter(this, 300, 500, 'kevin', this.inputManager);
+        this.player.setScale(0.18);
         this.physics.add.collider(this.player, floor);
 
         // Ouvir o disparo do especial (Aura do beijo)
@@ -50,7 +54,8 @@ export class CombatScene extends Phaser.Scene {
         });
 
         // Inimigo sem InputManager (CPU/Dummy)
-        this.enemy = new Fighter(this, 980, 500, 'enemy_placeholder');
+        this.enemy = new Fighter(this, 980, 500, 'vini_dog');
+        this.enemy.setScale(0.18);
         this.enemy.setFlipX(true); // Vira pra esquerda
         this.physics.add.collider(this.enemy, floor);
 
