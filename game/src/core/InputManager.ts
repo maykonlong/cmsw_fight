@@ -69,9 +69,9 @@ export class InputManager {
         return Phaser.Input.Keyboard.JustDown(this.keys.MP) || this.virtualMPJustPressed || padJustY; 
     }
     get isHPJustPressed() { 
-        const padRB = this.pad && this.pad.R1; // Xbox RB button
+        const padRB = this.pad && Boolean(this.pad.R1); // Xbox RB button
         const padJustRB = padRB && !this.prevPadState.A; // Reusing A logic or just simple check
-        return Phaser.Input.Keyboard.JustDown(this.keys.HP) || this.virtualHPJustPressed || (this.pad && this.pad.R1); 
+        return Phaser.Input.Keyboard.JustDown(this.keys.HP) || this.virtualHPJustPressed || padJustRB; 
     }
 
     // Limpa os buffers de 1 frame do virtual pad no final do ciclo do Phaser
@@ -82,10 +82,10 @@ export class InputManager {
         this.virtualHPJustPressed = false;
 
         if (this.pad) {
-            this.prevPadState.up = this.pad.up || this.pad.axes[1].getValue() < -0.5;
-            this.prevPadState.X = this.pad.X;
-            this.prevPadState.Y = this.pad.Y;
-            this.prevPadState.A = this.pad.R1;
+            this.prevPadState.up = Boolean(this.pad.up || this.pad.axes[1].getValue() < -0.5);
+            this.prevPadState.X = Boolean(this.pad.X);
+            this.prevPadState.Y = Boolean(this.pad.Y);
+            this.prevPadState.A = Boolean(this.pad.R1);
         }
     }
 }
