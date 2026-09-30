@@ -1,0 +1,55 @@
+{
+  "id": "vini_dog",
+  "name": "VINI DOG",
+  "catchphrase": "Resolva sua treta aqui",
+  "archetype": "Zoner",
+  "health": 1000,
+  "stunMax": 200,
+  "throwRange": 60,
+  "movement": {
+    "walkForward": 230,
+    "walkBackward": 170,
+    "jumpVelocityY": -700,
+    "jumpVelocityX": 200,
+    "weight": 1.1
+  },
+  "sprites": {
+    "idle": "vini_dog_idle",
+    "punch": "vini_dog_punch",
+    "kick": "vini_dog_kick",
+    "crouch": "vini_dog_crouch",
+    "jump": "vini_dog_jump",
+    "hit": "vini_dog_hit",
+    "ko": "vini_dog_ko",
+    "win": "vini_dog_win",
+    "portrait": "vini_dog_portrait"
+  },
+  "normals": ["LP", "MP", "HP", "LK", "MK", "HK"],
+  "crouchNormals": ["cLP", "cMP", "cHP", "cLK", "cMK", "cHK"],
+  "airNormals": ["jLP", "jMP", "jHP", "jLK", "jMK", "jHK"],
+  "specials": [
+    {
+      "id": "dog_dash",
+      "name": "Dog Dash",
+      "command": "214K",
+      "type": "special",
+      "damage": 90,
+      "chipDamage": 5,
+      "startup": 12,
+      "active": 15,
+      "recovery": 20,
+      "hitstun": 20,
+      "blockstun": 15,
+      "knockback": 250,
+      "electricEffect": false,
+      "knockdown": true
+    }
+  ],
+  "throws": {
+    "forward": { "damage": 120, "knockdown": true },
+    "backward": { "damage": 110, "knockdown": true }
+  },
+  "intro": { "animation": "idle", "phrase": "" },
+  "victory": { "animation": "win", "phrase": "Resolva sua treta aqui" },
+  "defeat": { "animation": "ko", "phrase": "" }
+}

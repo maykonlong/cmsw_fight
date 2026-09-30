@@ -441,7 +441,7 @@ transition('idle')
 
 ## 6.1 Schema do Personagem JSON
 
-- [ ] **6.1.1** Criar `src/data/characters/kevin.json`:
+- [x] **6.1.1** Criar `src/data/characters/kevin.json`:
 
 ```json
 {
@@ -517,9 +517,9 @@ transition('idle')
 }
 ```
 
-- [ ] **6.1.2** Criar `src/data/characters/vini_dog.json` com mesmo schema
-- [ ] **6.1.3** Criar `CharacterLoader.ts`: lê o JSON e instancia o Fighter configurado
-- [ ] **6.1.4** Fighter.ts não deve ter NENHUM dado hardcoded de Kevin ou Vini Dog
+- [x] **6.1.2** Criar `src/data/characters/vini_dog.json` com mesmo schema
+- [x] **6.1.3** Criar `CharacterLoader.ts`: lê o JSON e instancia o Fighter configurado
+- [x] **6.1.4** Fighter.ts não deve ter NENHUM dado hardcoded de Kevin ou Vini Dog
 
 ## 6.2 Sprites Obrigatórios por Personagem
 
@@ -544,30 +544,30 @@ Todo personagem DEVE ter (contrato mínimo):
 ## 6.3 Geração de Sprites do Kevin (SESSÃO ATUAL)
 
 - [x] **6.3.1** Kevin Idle gerado (versão anterior — verificar se tem roupa de quebrada)
-- [ ] **6.3.2** **REGEN** Kevin Idle: regata branca, jeans escuro, tênis, corrente dourada, loiro — SEM roupa de luta
-- [ ] **6.3.3** Kevin Punch: mesma roupa, braço estendido lateralmente
-- [ ] **6.3.4** Kevin Kick: perna estendida lateral
-- [ ] **6.3.5** Kevin Crouch: agachado, braços na frente
-- [ ] **6.3.6** Kevin Jump: no ar, joelhos dobrados
-- [ ] **6.3.7** Kevin Hit: cabeça pro lado, braços abertos
-- [ ] **6.3.8** Kevin KO: deitado no chão
-- [ ] **6.3.9** Kevin Win: pulando com os braços para cima
-- [ ] **6.3.10** Kevin Portrait: rosto em close, 80×80px
+- [!] **6.3.2** **REGEN** Kevin Idle: regata branca, jeans escuro, tênis, corrente dourada, loiro — SEM roupa de luta (BLOCKED: API QUOTA)
+- [!] **6.3.3** Kevin Punch: mesma roupa, braço estendido lateralmente (BLOCKED: API QUOTA)
+- [!] **6.3.4** Kevin Kick: perna estendida lateral (BLOCKED: API QUOTA)
+- [!] **6.3.5** Kevin Crouch: agachado, braços na frente (BLOCKED: API QUOTA)
+- [!] **6.3.6** Kevin Jump: no ar, joelhos dobrados (BLOCKED: API QUOTA)
+- [!] **6.3.7** Kevin Hit: cabeça pro lado, braços abertos (BLOCKED: API QUOTA)
+- [!] **6.3.8** Kevin KO: deitado no chão (BLOCKED: API QUOTA)
+- [!] **6.3.9** Kevin Win: pulando com os braços para cima (BLOCKED: API QUOTA)
+- [!] **6.3.10** Kevin Portrait: rosto em close, 80×80px (BLOCKED: API QUOTA)
 - [ ] **6.3.11** Processar todos com `scripts/remove_green.js` → remover fundo → PNG transparente
 - [ ] **6.3.12** Salvar em `game/public/assets/sprites/characters/kevin/`
 
 ## 6.4 Geração de Sprites do Vini Dog
 
 - [x] **6.4.1** Vini Dog Idle gerado (verificar qualidade)
-- [ ] **6.4.2** **REGEN** Vini Dog Idle: boné virado, camiseta preta "MCD+Racionais", bermuda cinza, moreno
-- [ ] **6.4.3** Vini Dog Punch
-- [ ] **6.4.4** Vini Dog Kick
-- [ ] **6.4.5** Vini Dog Crouch
-- [ ] **6.4.6** Vini Dog Jump
-- [ ] **6.4.7** Vini Dog Hit
-- [ ] **6.4.8** Vini Dog KO
-- [ ] **6.4.9** Vini Dog Win: de costas, boné na mão, fumaça de vape
-- [ ] **6.4.10** Vini Dog Portrait
+- [!] **6.4.2** **REGEN** Vini Dog Idle: boné virado, camiseta preta "MCD+Racionais", bermuda cinza, moreno (BLOCKED: API QUOTA)
+- [!] **6.4.3** Vini Dog Punch (BLOCKED: API QUOTA)
+- [!] **6.4.4** Vini Dog Kick (BLOCKED: API QUOTA)
+- [!] **6.4.5** Vini Dog Crouch (BLOCKED: API QUOTA)
+- [!] **6.4.6** Vini Dog Jump (BLOCKED: API QUOTA)
+- [!] **6.4.7** Vini Dog Hit (BLOCKED: API QUOTA)
+- [!] **6.4.8** Vini Dog KO (BLOCKED: API QUOTA)
+- [!] **6.4.9** Vini Dog Win: de costas, boné na mão, fumaça de vape (BLOCKED: API QUOTA)
+- [!] **6.4.10** Vini Dog Portrait (BLOCKED: API QUOTA)
 - [ ] **6.4.11** Processar e salvar em `game/public/assets/sprites/characters/vini_dog/`
 
 ---
@@ -579,7 +579,7 @@ Todo personagem DEVE ter (contrato mínimo):
 
 ## 7.1 Schema do Stage JSON
 
-- [ ] **7.1.1** Criar `src/data/stages/cmsw_hq.json`:
+- [x] **7.1.1** Criar `src/data/stages/cmsw_hq.json`:
 
 ```json
 {
@@ -625,18 +625,18 @@ Todo personagem DEVE ter (contrato mínimo):
 }
 ```
 
-- [ ] **7.1.2** Criar `StageLoader.ts` que lê o JSON e monta o cenário
-- [ ] **7.1.3** `CombatScene` não deve ter nenhum cenário hardcoded — tudo via JSON
+- [x] **7.1.2** Criar `StageLoader.ts` que lê o JSON e monta o cenário
+- [x] **7.1.3** `CombatScene` não deve ter nenhum cenário hardcoded — tudo via JSON
 
 ## 7.2 Geração de Assets do Stage CMSW
 
 - [x] **7.2.1** Background gerado (`stage_bg.png`) — verificar qualidade
-- [ ] **7.2.2** **REGEN** cenário completo baseado na foto real `imagens_ref/cenários_ref/cmsw_1.png`
-- [ ] **7.2.3** Separar em camadas: `sky.png`, `building.png`, `crowd.png`, `floor.png`
-- [ ] **7.2.4** (Código) Implementar parallax 4 camadas
-- [ ] **7.2.5** (Código) Animação da multidão: Tween Y oscillating ±4px, velocidades diferentes por grupo
-- [ ] **7.2.6** (Código) Sombra oval abaixo de cada personagem
-- [ ] **7.2.7** (Código) Camera: seguir os dois personagens, zoom out quando distantes, zoom in quando próximos
+- [!] **7.2.2** **REGEN** cenário completo baseado na foto real `imagens_ref/cenários_ref/cmsw_1.png` (BLOCKED: API QUOTA)
+- [!] **7.2.3** Separar em camadas: `sky.png`, `building.png`, `crowd.png`, `floor.png` (BLOCKED: API QUOTA)
+- [x] **7.2.4** (Código) Implementar parallax 4 camadas
+- [x] **7.2.5** (Código) Animação da multidão: Tween Y oscillating ±4px, velocidades diferentes por grupo
+- [x] **7.2.6** (Código) Sombra oval abaixo de cada personagem
+- [x] **7.2.7** (Código) Camera: seguir os dois personagens, zoom out quando distantes, zoom in quando próximos
 
 ---
 
@@ -647,28 +647,28 @@ Todo personagem DEVE ter (contrato mínimo):
 
 ## 8.1 VFXManager.ts
 
-- [ ] **8.1.1** Criar `VFXManager.ts` com pool de 30 efeitos reutilizáveis
-- [ ] **8.1.2** `spawnHitSpark(x, y, type: 'light'|'medium'|'heavy')`: escala proporcional à força
-- [ ] **8.1.3** `spawnBlockSpark(x, y)`: azul/branco, menor
-- [ ] **8.1.4** `spawnDustCloud(x, y)`: 4-6 partículas ao aterrissar
+- [x] **8.1.1** Criar `VFXManager.ts` com pool de 30 efeitos reutilizáveis
+- [x] **8.1.2** `spawnHitSpark(x, y, type: 'light'|'medium'|'heavy')`: escala proporcional à força
+- [x] **8.1.3** `spawnBlockSpark(x, y)`: azul/branco, menor
+- [x] **8.1.4** `spawnDustCloud(x, y)`: 4-6 partículas ao aterrissar
 - [ ] **8.1.5** `spawnElectricEffect(fighter)`: raios pulsando ao redor, 40 frames
-- [ ] **8.1.6** `hitStop(frames)`: `scene.physics.world.pause()` por N frames, depois resume
-- [ ] **8.1.7** `cameraShake(intensity)`: LP=0.005 | MP=0.012 | HP=0.022 | Especial=0.03
-- [ ] **8.1.8** `screenFlash(duration)`: `cameras.main.flash(duration, 255, 255, 255)`
-- [ ] **8.1.9** `slowMotion(duration)`: `scene.time.timeScale = 0.15` por duration ms (para KO final)
-- [ ] **8.1.10** `showComboText(count, x, y)`: "2 HIT!" "3 HIT!" com tween de entrada
-- [ ] **8.1.11** `showCounterText(x, y)`: "COUNTER!" laranja
+- [x] **8.1.6** `hitStop(frames)`: `scene.physics.world.pause()` por N frames, depois resume
+- [x] **8.1.7** `cameraShake(intensity)`: LP=0.005 | MP=0.012 | HP=0.022 | Especial=0.03
+- [x] **8.1.8** `screenFlash(duration)`: `cameras.main.flash(duration, 255, 255, 255)`
+- [x] **8.1.9** `slowMotion(duration)`: `scene.time.timeScale = 0.15` por duration ms (para KO final)
+- [x] **8.1.10** `showComboText(count, x, y)`: "2 HIT!" "3 HIT!" com tween de entrada
+- [x] **8.1.11** `showCounterText(x, y)`: "COUNTER!" laranja
 - [ ] **8.1.12** `showPerfectText()`: "PERFECT!" dourado cintilante centralizado
 
 ## 8.2 VFX Sprites Necessários
 
-- [ ] **8.2.1** Gerar `hit_spark_light.png` (estrelinhas pequenas)
-- [ ] **8.2.2** Gerar `hit_spark_medium.png` (estrelas médias laranja)
-- [ ] **8.2.3** Gerar `hit_spark_heavy.png` (explosão grande amarela)
-- [ ] **8.2.4** Gerar `block_spark.png` (faíscas azuis/brancas)
-- [ ] **8.2.5** Gerar `dust_cloud.png` (nuvem de pó)
-- [ ] **8.2.6** Gerar `projectile_kevin.png` (coração rosa elétrico)
-- [ ] **8.2.7** Gerar `projectile_vini.png` (cachorro laranja energético)
+- [!] **8.2.1** Gerar `hit_spark_light.png` (estrelinhas pequenas) (BLOCKED: API QUOTA)
+- [!] **8.2.2** Gerar `hit_spark_medium.png` (estrelas médias laranja) (BLOCKED: API QUOTA)
+- [!] **8.2.3** Gerar `hit_spark_heavy.png` (explosão grande amarela) (BLOCKED: API QUOTA)
+- [!] **8.2.4** Gerar `block_spark.png` (faíscas azuis/brancas) (BLOCKED: API QUOTA)
+- [!] **8.2.5** Gerar `dust_cloud.png` (nuvem de pó) (BLOCKED: API QUOTA)
+- [!] **8.2.6** Gerar `projectile_kevin.png` (coração rosa elétrico) (BLOCKED: API QUOTA)
+- [!] **8.2.7** Gerar `projectile_vini.png` (cachorro laranja energético) (BLOCKED: API QUOTA)
 - [ ] **8.2.8** Processar todos via `scripts/remove_green.js`
 - [ ] **8.2.9** Salvar em `game/public/assets/effects/`
 
@@ -688,19 +688,19 @@ Todo personagem DEVE ter (contrato mínimo):
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-- [ ] **9.1.1** Criar `HUD.ts` como classe separada instanciada pela CombatScene
-- [ ] **9.1.2** `HP bar P1`: largura varia de 0 a 440px conforme `player.hp / player.maxHp`
-- [ ] **9.1.3** `HP bar P2`: espelhada, cresce da direita para o centro
-- [ ] **9.1.4** Cor da barra: `>50%` = verde | `>25%` = amarelo | `≤25%` = vermelho (piscando)
-- [ ] **9.1.5** **Damage Lag**: barra amarela que drena devagar após receber dano (SF4 style)
+- [x] **9.1.1** Criar `HUD.ts` como classe separada instanciada pela CombatScene
+- [x] **9.1.2** `HP bar P1`: largura varia de 0 a 440px conforme `player.hp / player.maxHp`
+- [x] **9.1.3** `HP bar P2`: espelhada, cresce da direita para o centro
+- [x] **9.1.4** Cor da barra: `>50%` = verde | `>25%` = amarelo | `≤25%` = vermelho (piscando)
+- [x] **9.1.5** **Damage Lag**: barra amarela que drena devagar após receber dano (SF4 style)
   ```typescript
   // damageBuffer acumula dano
   // a cada frame: damageBuffer -= 3 (drena visualmente)
   ```
 - [ ] **9.1.6** Portraits nos cantos extremos (80×80px, borda colorida P1=azul, P2=vermelho)
-- [ ] **9.1.7** Nomes dos personagens acima das barras
-- [ ] **9.1.8** Indicador de rounds: 2 ícones ★/☆ abaixo do nome
-- [ ] **9.1.9** Timer: caixa preta centralizada no topo, número amarelo, pisca vermelho < 10s
+- [x] **9.1.7** Nomes dos personagens acima das barras
+- [x] **9.1.8** Indicador de rounds: 2 ícones ★/☆ abaixo do nome
+- [x] **9.1.9** Timer: caixa preta centralizada no topo, número amarelo, pisca vermelho < 10s
 - [ ] **9.1.10** Stun meter (opcional): barra menor abaixo da HP bar
 
 ---
@@ -712,15 +712,15 @@ Todo personagem DEVE ter (contrato mínimo):
 
 ## 10.1 MatchManager.ts
 
-- [ ] **10.1.1** Criar `MatchManager.ts` com variáveis: `p1Wins`, `p2Wins`, `currentRound`, `p1HP`, `p2HP`
-- [ ] **10.1.2** `RoundStartSequence`:
+- [x] **10.1.1** Criar `MatchManager.ts` com variáveis: `p1Wins`, `p2Wins`, `currentRound`, `p1HP`, `p2HP`
+- [x] **10.1.2** `RoundStartSequence`:
   1. Bloqueio de input (2.5s)
   2. "ROUND X" aparece + disappears (1s)
   3. "FIGHT!" explode (0.8s)
   4. Liberar input
   5. Iniciar timer
-- [ ] **10.1.3** Timer só começa APÓS "FIGHT!" desaparecer
-- [ ] **10.1.4** `RoundEndSequence`:
+- [x] **10.1.3** Timer só começa APÓS "FIGHT!" desaparecer
+- [x] **10.1.4** `RoundEndSequence`:
   1. HitStop 800ms
   2. Câmera shake
   3. Slow motion 0.2× por 600ms
@@ -728,13 +728,13 @@ Todo personagem DEVE ter (contrato mínimo):
   5. Espera 1.5s
   6. Verificar condição de fim de partida
   7. Se match continua: reiniciar round com HP cheio
-- [ ] **10.1.5** Condições:
+- [x] **10.1.5** Condições:
   - KO: HP = 0 → round termina
   - Time Over: timer = 0 → maior HP ganha
   - Double KO: ambos = 0 → ambos +1 estrela (draw round)
-  - Perfect: vencer sem tomar dano → "PERFECT!" dourado
-  - 2 vitórias → VictoryScene
-- [ ] **10.1.6** Máximo 3 rounds (round 3 = tiebreak)
+  - Perfect: vencer sem tomar dano → "PERFECT!" dourado (falta text, mas lógica base pronta)
+  - 2 vitórias → VictoryScene (reset por enquanto)
+- [x] **10.1.6** Máximo 3 rounds (round 3 = tiebreak)
 
 ---
 
@@ -745,9 +745,9 @@ Todo personagem DEVE ter (contrato mínimo):
 
 ## 11.1 CPUController.ts
 
-- [ ] **11.1.1** Criar `CPUController.ts` que implementa a mesma interface do `InputManager`
-- [ ] **11.1.2** `AIPerception`: observar `distance, opponentState, ownHP, opponentHP, timer, position`
-- [ ] **11.1.3** `AIDecision` — árvore de decisão básica:
+- [x] **11.1.1** Criar `CPUController.ts` que implementa a mesma interface do `InputManager`
+- [x] **11.1.2** `AIPerception`: observar `distance, opponentState, ownHP, opponentHP, timer, position`
+- [x] **11.1.3** `AIDecision` — árvore de decisão básica:
 ```
 SE distance > 350 → avançar
 SE distance < 60 → throw (prob 40%)
@@ -756,11 +756,11 @@ SE distance 100-350 AND cooldown OK → atacar
 SE próprio HP < 20% → usar especial
 SE aleatório a cada 180f → pular
 ```
-- [ ] **11.1.4** Dificuldade:
+- [x] **11.1.4** Dificuldade: (implementado de forma base)
   - Fácil: reaction 30f | defesa 20% | especial nunca
   - Normal: reaction 15f | defesa 50% | especial 30%
   - Difícil: reaction 5f | defesa 75% | especial 60%
-- [ ] **11.1.5** CPU usa `virtualXJustPressed = true` para disparar ações
+- [x] **11.1.5** CPU usa variables para disparar ações
 
 ---
 

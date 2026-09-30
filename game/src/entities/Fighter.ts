@@ -9,7 +9,7 @@ import { CommandRecognizer } from '../core/CommandRecognizer';
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public stateMachine: StateMachine;
-    public inputManager?: InputManager;
+    public inputManager?: any; // InputManager | CPUController
     public speed: number = 250;
     public jumpForce: number = 750;
 

@@ -10,6 +10,13 @@ export class BootScene extends Phaser.Scene {
         this.load.image('kevin', 'assets/sprites/kevin.png');
         this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
         this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
+
+        // Carrega os JSONs dos personagens
+        this.load.json('kevin', 'src/data/characters/kevin.json');
+        this.load.json('vini_dog', 'src/data/characters/vini_dog.json');
+
+        // Carrega os JSONs dos stages
+        this.load.json('cmsw_hq', 'src/data/stages/cmsw_hq.json');
     }
 
     create() {
