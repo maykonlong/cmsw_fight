@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Fighter } from '../entities/Fighter';
 import { HUD } from '../ui/HUD';
 import { VFXManager } from './VFXManager';
+import { AudioManager } from './AudioManager';
 
 export class MatchManager {
     private scene: Phaser.Scene;
@@ -43,6 +44,8 @@ export class MatchManager {
 
         const { width, height } = this.scene.scale;
         
+        AudioManager.getInstance().playVoice(`round_${this.currentRound}`);
+
         // ROUND X Text
         const roundText = this.scene.add.text(width / 2, height / 2, `ROUND ${this.currentRound}`, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
@@ -60,6 +63,7 @@ export class MatchManager {
                 roundText.destroy();
                 
                 // FIGHT Text
+                AudioManager.getInstance().playVoice('fight');
                 const fightText = this.scene.add.text(width / 2, height / 2, 'FIGHT!', {
                     fontFamily: '"Arial Black", Gadget, sans-serif',
                     fontSize: '100px',
@@ -128,14 +132,17 @@ export class MatchManager {
             this.p1Wins++;
             this.p1.stateMachine.transition('win');
             this.p2.stateMachine.transition('knockdown');
+            AudioManager.getInstance().playVoice('time_over');
         } else if (this.p2.hp > this.p1.hp) {
             this.p2Wins++;
             this.p2.stateMachine.transition('win');
             this.p1.stateMachine.transition('knockdown');
+            AudioManager.getInstance().playVoice('time_over');
         } else {
             // Draw
             this.p1Wins++;
             this.p2Wins++;
+            AudioManager.getInstance().playVoice('time_over');
         }
 
         this.roundEndSequence('TIME OVER');
@@ -148,6 +155,10 @@ export class MatchManager {
         this.vfx.hitStop(10);
         this.vfx.cameraShake(0.02);
         this.vfx.slowMotion(2000);
+
+        if (message === 'K.O.' || message === 'DOUBLE KO') {
+            AudioManager.getInstance().playVoice('ko');
+        }
 
         const { width, height } = this.scene.scale;
         

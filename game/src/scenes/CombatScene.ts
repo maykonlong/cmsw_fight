@@ -11,6 +11,7 @@ import { VFXManager } from '../engine/VFXManager';
 import { MatchManager } from '../engine/MatchManager';
 import { HUD } from '../ui/HUD';
 import { CPUController } from '../engine/CPUController';
+import { AudioManager } from '../engine/AudioManager';
 
 export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
@@ -56,6 +57,9 @@ export class CombatScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        AudioManager.getInstance().setScene(this);
+        AudioManager.getInstance().playMusic('stage_cmsw', true);
 
         // ── CENÁRIO ──────────────────────────────────────────────
         const stageInfo = StageLoader.createStage(this, 'cmsw_hq');
@@ -114,6 +118,8 @@ export class CombatScene extends Phaser.Scene {
             if (proj.hitActive && !this.enemy.isHit && proj.getOwner() !== this.enemy) {
                 proj.hitActive = false;
                 this.enemy.takeDamage(proj.damage, 0, proj.x, proj.damageType);
+                this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
+                AudioManager.getInstance().playSFX('electric_hit');
                 proj.destroy();
             }
         });
@@ -123,6 +129,8 @@ export class CombatScene extends Phaser.Scene {
             if (proj.hitActive && !this.player.isHit && proj.getOwner() !== this.player) {
                 proj.hitActive = false;
                 this.player.takeDamage(proj.damage, 0, proj.x, proj.damageType);
+                this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
+                AudioManager.getInstance().playSFX('electric_hit');
                 proj.destroy();
             }
         });
@@ -220,15 +228,18 @@ export class CombatScene extends Phaser.Scene {
                 if (CombatSystem.checkThrowRange(this.player, this.enemy)) {
                     this.enemy.stateMachine.transition('thrown');
                     this.vfxManager.cameraShake(0.02);
+                    AudioManager.getInstance().playSFX('throw');
                 }
             } else {
                 CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
                 if (this.enemy.isBlocking) {
                     this.vfxManager.spawnBlockSpark(this.player.currentHitbox.x, this.player.currentHitbox.y);
+                    AudioManager.getInstance().playSFX('block');
                 } else {
                     this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
+                    AudioManager.getInstance().playSFX('hit_heavy');
                 }
             }
             // Evitar multi-hit no mesmo ataque
@@ -240,15 +251,18 @@ export class CombatScene extends Phaser.Scene {
                 if (CombatSystem.checkThrowRange(this.enemy, this.player)) {
                     this.player.stateMachine.transition('thrown');
                     this.vfxManager.cameraShake(0.02);
+                    AudioManager.getInstance().playSFX('throw');
                 }
             } else {
                 CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
                 if (this.player.isBlocking) {
                     this.vfxManager.spawnBlockSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y);
+                    AudioManager.getInstance().playSFX('block');
                 } else {
                     this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
+                    AudioManager.getInstance().playSFX('hit_heavy');
                 }
             }
             this.enemy.currentHitbox.active = false;

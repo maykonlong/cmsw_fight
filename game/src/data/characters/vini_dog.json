@@ -1,7 +1,7 @@
 {
   "id": "vini_dog",
   "name": "VINI DOG",
-  "catchphrase": "Resolva sua treta aqui",
+  "catchphrase": "Bora Smokar?",
   "archetype": "Zoner",
   "health": 1000,
   "stunMax": 200,
@@ -24,9 +24,30 @@
     "win": "vini_dog_win",
     "portrait": "vini_dog_portrait"
   },
-  "normals": ["LP", "MP", "HP", "LK", "MK", "HK"],
-  "crouchNormals": ["cLP", "cMP", "cHP", "cLK", "cMK", "cHK"],
-  "airNormals": ["jLP", "jMP", "jHP", "jLK", "jMK", "jHK"],
+  "normals": [
+    "LP",
+    "MP",
+    "HP",
+    "LK",
+    "MK",
+    "HK"
+  ],
+  "crouchNormals": [
+    "cLP",
+    "cMP",
+    "cHP",
+    "cLK",
+    "cMK",
+    "cHK"
+  ],
+  "airNormals": [
+    "jLP",
+    "jMP",
+    "jHP",
+    "jLK",
+    "jMK",
+    "jHK"
+  ],
   "specials": [
     {
       "id": "dog_dash",
@@ -46,10 +67,25 @@
     }
   ],
   "throws": {
-    "forward": { "damage": 120, "knockdown": true },
-    "backward": { "damage": 110, "knockdown": true }
+    "forward": {
+      "damage": 120,
+      "knockdown": true
+    },
+    "backward": {
+      "damage": 110,
+      "knockdown": true
+    }
   },
-  "intro": { "animation": "idle", "phrase": "" },
-  "victory": { "animation": "win", "phrase": "Resolva sua treta aqui" },
-  "defeat": { "animation": "ko", "phrase": "" }
+  "intro": {
+    "animation": "idle",
+    "phrase": ""
+  },
+  "victory": {
+    "animation": "win",
+    "phrase": "Resolva sua treta aqui"
+  },
+  "defeat": {
+    "animation": "ko",
+    "phrase": ""
+  }
 }

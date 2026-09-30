@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AudioManager } from '../engine/AudioManager';
 
 export class GameOverScene extends Phaser.Scene {
     private countdown: number = 9;
@@ -11,6 +12,9 @@ export class GameOverScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        AudioManager.getInstance().setScene(this);
+        AudioManager.getInstance().playMusic('game_over', false);
 
         this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0, 0);
 

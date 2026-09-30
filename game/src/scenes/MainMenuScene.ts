@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AudioManager } from '../engine/AudioManager';
 
 export class MainMenuScene extends Phaser.Scene {
     private selectedIndex: number = 0;
@@ -19,6 +20,9 @@ export class MainMenuScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        AudioManager.getInstance().setScene(this);
+        AudioManager.getInstance().playMusic('menu_bgm', true);
 
         // Fundo gradiente escuro com overlay
         const bg = this.add.graphics();

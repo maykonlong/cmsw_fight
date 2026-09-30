@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AudioManager } from '../engine/AudioManager';
 
 const CHARACTERS = [
     {
@@ -62,6 +63,9 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        AudioManager.getInstance().setScene(this);
+        AudioManager.getInstance().playMusic('char_select', true);
 
         // Fundo escuro
         const bg = this.add.graphics();

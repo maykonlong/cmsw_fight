@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AudioManager } from '../engine/AudioManager';
 
 export class VictoryScene extends Phaser.Scene {
     private winnerId!: string;
@@ -19,6 +20,9 @@ export class VictoryScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        AudioManager.getInstance().setScene(this);
+        AudioManager.getInstance().playMusic('victory', false);
 
         // Fundo escurecido
         this.add.rectangle(0, 0, width, height, 0x000000, 0.8).setOrigin(0, 0);
