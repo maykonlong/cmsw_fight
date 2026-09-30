@@ -26,6 +26,8 @@ export class CombatScene extends Phaser.Scene {
     private hud!: HUD;
     private matchManager!: MatchManager;
     private cpuController!: CPUController;
+    private isPaused: boolean = false;
+    private pauseMenuOverlay!: Phaser.GameObjects.Container;
 
     // Dados dos personagens
     private p1Key: string = 'kevin';
@@ -33,8 +35,8 @@ export class CombatScene extends Phaser.Scene {
     private p1Name: string = 'KEVIN';
     private p2Name: string = 'VINI DOG';
 
-    constructor() {
-        super({ key: 'CombatScene' });
+    constructor(key: string = 'CombatScene') {
+        super({ key });
     }
 
     init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string }) {
@@ -134,10 +136,64 @@ export class CombatScene extends Phaser.Scene {
         // ── MATCH MANAGER ─────────────────────────────────────────
         this.matchManager = new MatchManager(this, this.player, this.enemy, this.hud, this.vfxManager);
         this.matchManager.startRoundSequence();
+
+        // ── PAUSE MENU ────────────────────────────────────────────
+        this.createPauseMenu();
+
+        this.input.keyboard?.on('keydown-ESC', () => {
+            if (!this.matchManager.isMatchActive()) return;
+            this.togglePause();
+        });
+    }
+
+    private createPauseMenu() {
+        const { width, height } = this.scale;
+        this.pauseMenuOverlay = this.add.container(0, 0).setDepth(2000).setVisible(false).setScrollFactor(0);
+
+        const bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0, 0);
+        this.pauseMenuOverlay.add(bg);
+
+        const title = this.add.text(width / 2, height / 2 - 100, 'PAUSED', {
+            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontSize: '60px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        this.pauseMenuOverlay.add(title);
+
+        const btnResume = this.add.text(width / 2, height / 2 + 20, 'RESUME', {
+            fontFamily: 'Arial Black', fontSize: '30px', color: '#00ff00'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        
+        btnResume.on('pointerdown', () => this.togglePause());
+        this.pauseMenuOverlay.add(btnResume);
+
+        const btnQuit = this.add.text(width / 2, height / 2 + 80, 'QUIT TO MENU', {
+            fontFamily: 'Arial Black', fontSize: '30px', color: '#ff0000'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        
+        btnQuit.on('pointerdown', () => {
+            this.togglePause();
+            this.scene.start('MainMenuScene');
+        });
+        this.pauseMenuOverlay.add(btnQuit);
+    }
+
+    private togglePause() {
+        this.isPaused = !this.isPaused;
+        if (this.isPaused) {
+            this.physics.pause();
+            this.anims.pauseAll();
+            this.pauseMenuOverlay.setVisible(true);
+        } else {
+            this.physics.resume();
+            this.anims.resumeAll();
+            this.pauseMenuOverlay.setVisible(false);
+        }
     }
 
     // ── GAME LOOP ────────────────────────────────────────────────
     update() {
+        if (this.isPaused) return;
         if (!this.matchManager.isMatchActive()) return;
 
         this.player.update();

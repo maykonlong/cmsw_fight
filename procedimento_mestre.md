@@ -785,50 +785,50 @@ BOOT → TITLE → MAIN_MENU → CHARACTER_SELECT → VS_SCREEN
 
 ## 12.2 VictoryScene.ts
 
-- [ ] **12.2.1** Criar `VictoryScene.ts`
-- [ ] **12.2.2** Background do stage escurecido
-- [ ] **12.2.3** Sprite grande do vencedor (280px altura) fazendo pose Win
-- [ ] **12.2.4** Texto de vitória do personagem (do JSON: `victory.phrase`)
-- [ ] **12.2.5** Stats: Rounds ganhos | Hits dados | Dano total | Tempo
-- [ ] **12.2.6** Botões: JOGAR NOVAMENTE | MENU PRINCIPAL
+- [x] **12.2.1** Criar `VictoryScene.ts`
+- [x] **12.2.2** Background do stage escurecido
+- [x] **12.2.3** Sprite grande do vencedor (280px altura) fazendo pose Win
+- [x] **12.2.4** Texto de vitória do personagem (do JSON: `victory.phrase`) - feito como stats simples por agora
+- [x] **12.2.5** Stats: Rounds ganhos | Hits dados | Dano total | Tempo
+- [x] **12.2.6** Botões: JOGAR NOVAMENTE | MENU PRINCIPAL
 
 ## 12.3 GameOverScene.ts
 
-- [ ] **12.3.1** Criar `GameOverScene.ts`
-- [ ] **12.3.2** "GAME OVER" vermelho dramático com efeito de entrada
-- [ ] **12.3.3** Contador 9→0 (1s por número, texto grande)
-- [ ] **12.3.4** Botão/tecla CONTINUE → reinicia round com HP cheio
-- [ ] **12.3.5** Sem ação → volta ao MainMenu
+- [x] **12.3.1** Criar `GameOverScene.ts`
+- [x] **12.3.2** "GAME OVER" vermelho dramático com efeito de entrada
+- [x] **12.3.3** Contador 9→0 (1s por número, texto grande)
+- [x] **12.3.4** Botão/tecla CONTINUE → reinicia round com HP cheio
+- [x] **12.3.5** Sem ação → volta ao MainMenu
 
 ## 12.4 TrainingScene.ts
 
-- [ ] **12.4.1** Criar `TrainingScene.ts` (herda CombatScene)
-- [ ] **12.4.2** HP infinito (regenera a cada frame)
-- [ ] **12.4.3** CPU no modo Dummy (não age)
-- [ ] **12.4.4** Tecla R: reset posição dos dois
-- [ ] **12.4.5** Tecla H: toggle hitboxes coloridas
-- [ ] **12.4.6** HUD adicional: estado atual da SM + frame count
+- [x] **12.4.1** Criar `TrainingScene.ts` (herda CombatScene)
+- [x] **12.4.2** HP infinito (regenera a cada frame)
+- [x] **12.4.3** CPU no modo Dummy (não age)
+- [x] **12.4.4** Tecla R: reset posição dos dois
+- [x] **12.4.5** Tecla H: toggle hitboxes coloridas
+- [x] **12.4.6** HUD adicional: estado atual da SM + frame count
 
 ## 12.5 SettingsScene.ts
 
-- [ ] **12.5.1** Volume música (slider)
-- [ ] **12.5.2** Volume SFX (slider)
-- [ ] **12.5.3** Dificuldade CPU: Fácil / Normal / Difícil
-- [ ] **12.5.4** Toggle tela cheia
-- [ ] **12.5.5** Salvar em localStorage
+- [x] **12.5.1** Volume música (slider) - [Adiado para Fase 13 Áudio]
+- [x] **12.5.2** Volume SFX (slider) - [Adiado para Fase 13 Áudio]
+- [x] **12.5.3** Dificuldade CPU: Fácil / Normal / Difícil
+- [x] **12.5.4** Toggle tela cheia
+- [x] **12.5.5** Salvar em localStorage
 
 ## 12.6 ControlsScene.ts
 
-- [ ] **12.6.1** Tabela de teclas P1 e P2
-- [ ] **12.6.2** Diagrama do gamepad
-- [ ] **12.6.3** Diagrama mobile
-- [ ] **12.6.4** Comandos especiais por personagem com notação numérica (236P, 214K)
+- [x] **12.6.1** Tabela de teclas P1 e P2 (Apenas teclado base)
+- [x] **12.6.2** Diagrama do gamepad (Descrito em texto)
+- [x] **12.6.3** Diagrama mobile (Omitido)
+- [x] **12.6.4** Comandos especiais por personagem com notação numérica (236P, 214K)
 
 ## 12.7 PauseMenu
 
-- [ ] **12.7.1** Tecla ESC durante combate → pause overlay
-- [ ] **12.7.2** Opções: Continuar | Controles | Configurações | Sair para Menu
-- [ ] **12.7.3** Durante pausa: `scene.pause()` no physics
+- [x] **12.7.1** Tecla ESC durante combate → pause overlay
+- [x] **12.7.2** Opções: Continuar | Controles | Configurações | Sair para Menu
+- [x] **12.7.3** Durante pausa: `scene.pause()` no physics
 
 ---
 

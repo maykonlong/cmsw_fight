@@ -4,6 +4,11 @@ import { MainMenuScene } from './scenes/MainMenuScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { VsScene } from './scenes/VsScene';
 import { CombatScene } from './scenes/CombatScene';
+import { VictoryScene } from './scenes/VictoryScene';
+import { GameOverScene } from './scenes/GameOverScene';
+import { TrainingScene } from './scenes/TrainingScene';
+import { SettingsScene } from './scenes/SettingsScene';
+import { ControlsScene } from './scenes/ControlsScene';
 import './style.css';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -26,7 +31,7 @@ const config: Phaser.Types.Core.GameConfig = {
     input: {
         gamepad: true
     },
-    scene: [BootScene, MainMenuScene, CharacterSelectScene, VsScene, CombatScene]
+    scene: [BootScene, MainMenuScene, CharacterSelectScene, VsScene, CombatScene, TrainingScene, VictoryScene, GameOverScene, SettingsScene, ControlsScene]
 };
 
 new Phaser.Game(config);

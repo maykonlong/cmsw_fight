@@ -1,7 +1,7 @@
 {
   "id": "kevin",
   "name": "KEVIN",
-  "catchphrase": "Cadê meu sabonete?",
+  "catchphrase": "Cê quer um selinho?",
   "archetype": "Balanced",
   "health": 1000,
   "stunMax": 200,
@@ -24,9 +24,30 @@
     "win": "kevin_win",
     "portrait": "kevin_portrait"
   },
-  "normals": ["LP", "MP", "HP", "LK", "MK", "HK"],
-  "crouchNormals": ["cLP", "cMP", "cHP", "cLK", "cMK", "cHK"],
-  "airNormals": ["jLP", "jMP", "jHP", "jLK", "jMK", "jHK"],
+  "normals": [
+    "LP",
+    "MP",
+    "HP",
+    "LK",
+    "MK",
+    "HK"
+  ],
+  "crouchNormals": [
+    "cLP",
+    "cMP",
+    "cHP",
+    "cLK",
+    "cMK",
+    "cHK"
+  ],
+  "airNormals": [
+    "jLP",
+    "jMP",
+    "jHP",
+    "jLK",
+    "jMK",
+    "jHK"
+  ],
   "specials": [
     {
       "id": "aura_beijo",
@@ -64,10 +85,25 @@
     }
   ],
   "throws": {
-    "forward": { "damage": 120, "knockdown": true },
-    "backward": { "damage": 110, "knockdown": true }
+    "forward": {
+      "damage": 120,
+      "knockdown": true
+    },
+    "backward": {
+      "damage": 110,
+      "knockdown": true
+    }
   },
-  "intro": { "animation": "idle", "phrase": "" },
-  "victory": { "animation": "win", "phrase": "Cadê meu sabonete?" },
-  "defeat": { "animation": "ko", "phrase": "" }
+  "intro": {
+    "animation": "idle",
+    "phrase": ""
+  },
+  "victory": {
+    "animation": "win",
+    "phrase": "Cadê meu sabonete?"
+  },
+  "defeat": {
+    "animation": "ko",
+    "phrase": ""
+  }
 }

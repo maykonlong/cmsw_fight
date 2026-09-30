@@ -8,8 +8,9 @@ export class MainMenuScene extends Phaser.Scene {
     private readonly OPTIONS = [
         { label: '1 PLAYER', action: () => this.startGame('1p') },
         { label: '2 PLAYERS', action: () => this.startGame('2p') },
+        { label: 'TREINO', action: () => this.scene.start('TrainingScene') },
         { label: 'CONTROLES', action: () => this.showControls() },
-        { label: 'CRÉDITOS', action: () => this.showCredits() },
+        { label: 'CONFIGURAÇÕES', action: () => this.scene.start('SettingsScene') },
     ];
 
     constructor() {
@@ -170,9 +171,8 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     private showControls() {
-        // Placeholder: volta pro menu por ora
-        this.canSelect = true;
-        this.cameras.main.fadeIn(300, 0, 0, 0);
+        this.canSelect = true; // since we pop state or start new
+        this.scene.start('ControlsScene');
     }
 
     private showCredits() {

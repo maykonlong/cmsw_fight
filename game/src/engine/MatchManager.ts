@@ -176,9 +176,16 @@ export class MatchManager {
     private nextRoundOrEndMatch() {
         if (this.p1Wins >= 2 || this.p2Wins >= 2) {
             // End Match
-            // Note: In real app, transition to VictoryScene
-            // We just restart CombatScene for now, or go to character select
-            this.scene.scene.start('CharacterSelectScene'); 
+            if (this.p1Wins >= 2) {
+                this.scene.scene.start('VictoryScene', {
+                    winner: this.p1.texture.key,
+                    loser: this.p2.texture.key,
+                    p1Wins: this.p1Wins,
+                    p2Wins: this.p2Wins
+                });
+            } else {
+                this.scene.scene.start('GameOverScene');
+            }
         } else {
             // Next round
             this.currentRound++;
