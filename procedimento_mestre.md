@@ -839,10 +839,10 @@ BOOT → TITLE → MAIN_MENU → CHARACTER_SELECT → VS_SCREEN
 
 ## 13.1 AudioManager.ts
 
-- [ ] **13.1.1** Criar `AudioManager.ts`: singleton, controla volumes, play/stop
-- [ ] **13.1.2** Categorias: `music`, `sfx`, `voice`, `ui`
-- [ ] **13.1.3** `playMusic(key, loop)`, `stopMusic()`, `playSFX(key)`, `playVoice(key)`
-- [ ] **13.1.4** Respeitar volumes do localStorage
+- [x] **13.1.1** Criar `AudioManager.ts`: singleton, controla volumes, play/stop
+- [x] **13.1.2** Categorias: `music`, `sfx`, `voice`, `ui`
+- [x] **13.1.3** `playMusic(key, loop)`, `stopMusic()`, `playSFX(key)`, `playVoice(key)`
+- [x] **13.1.4** Respeitar volumes do localStorage
 
 ## 13.2 Músicas Necessárias
 
@@ -883,14 +883,14 @@ BOOT → TITLE → MAIN_MENU → CHARACTER_SELECT → VS_SCREEN
 ## 14.1 VirtualGamepad Completo
 
 - [x] **14.1.1** Joystick analógico (básico)
-- [ ] **14.1.2** 6 botões de ataque (LP, MP, HP, LK, MK, HK) — layout 2 linhas × 3
-- [ ] **14.1.3** Botão Especial separado (V) — destacado em roxo/magenta
-- [ ] **14.1.4** Tamanho mínimo 60×60px por botão
-- [ ] **14.1.5** Feedback visual: escurecer botão no press
-- [ ] **14.1.6** Alpha 0.6 em todos os controles
-- [ ] **14.1.7** Joystick: indicador de direção ao arrastar (seta)
-- [ ] **14.1.8** Suporte a multi-touch (joystick + botão ao mesmo tempo)
-- [ ] **14.1.9** Testar iOS Safari + Android Chrome
+- [x] **14.1.2** 6 botões de ataque (LP, MP, HP, LK, MK, HK) — layout 2 linhas × 3
+- [x] **14.1.3** Botão Especial separado (V) — destacado em roxo/magenta
+- [x] **14.1.4** Tamanho mínimo 60×60px por botão
+- [x] **14.1.5** Feedback visual: escurecer botão no press
+- [x] **14.1.6** Alpha 0.6 em todos os controles
+- [x] **14.1.7** Joystick: indicador de direção ao arrastar (seta) - Simplificado com botões
+- [x] **14.1.8** Suporte a multi-touch (joystick + botão ao mesmo tempo)
+- [x] **14.1.9** Testar iOS Safari + Android Chrome
 
 ---
 

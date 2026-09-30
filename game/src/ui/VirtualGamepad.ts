@@ -19,8 +19,8 @@ export class VirtualGamepad {
         const h = this.scene.scale.height;
 
         // Estilo base dos botões
-        const btnAlpha = 0.5;
-        const radius = 40;
+        const btnAlpha = 0.6;
+        const radius = 35;
 
         // D-PAD (Esquerda)
         this.createBtn(150, h - 150, radius, btnAlpha, 'left');
@@ -47,12 +47,32 @@ export class VirtualGamepad {
     }
 
     private createBtn(x: number, y: number, r: number, alpha: number, action: string, color: number = 0xffffff) {
-        const btn = this.scene.add.circle(x, y, r, color, alpha).setScrollFactor(0);
+        const btn = this.scene.add.circle(x, y, r, color, alpha).setScrollFactor(0).setDepth(2000);
         btn.setInteractive();
 
-        btn.on('pointerdown', () => this.handleInput(action, true));
-        btn.on('pointerup', () => this.handleInput(action, false));
-        btn.on('pointerout', () => this.handleInput(action, false));
+        // Text label
+        const labelText = action.toUpperCase();
+        this.scene.add.text(x, y, labelText, {
+            fontFamily: 'Arial',
+            fontSize: '16px',
+            color: '#000000',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(2001);
+
+        btn.on('pointerdown', () => {
+            btn.setAlpha(0.9);
+            btn.setScale(0.9);
+            this.handleInput(action, true);
+        });
+        
+        const pointerUp = () => {
+            btn.setAlpha(alpha);
+            btn.setScale(1.0);
+            this.handleInput(action, false);
+        };
+        
+        btn.on('pointerup', pointerUp);
+        btn.on('pointerout', pointerUp);
     }
 
     private handleInput(action: string, isDown: boolean) {
