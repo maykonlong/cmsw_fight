@@ -10,6 +10,8 @@ export class CombatScene extends Phaser.Scene {
     private inputManager!: InputManager;
     private hpText!: Phaser.GameObjects.Text;
     private projectiles!: Phaser.GameObjects.Group;
+    private matchOver: boolean = false;
+    private koText!: Phaser.GameObjects.Text;
 
     constructor() {
         super({ key: 'CombatScene' });
@@ -55,6 +57,13 @@ export class CombatScene extends Phaser.Scene {
         // HUD de vida provisório
         this.hpText = this.add.text(900, 20, 'Enemy HP: 1000', { color: '#ff0000', fontSize: '32px' });
 
+        this.koText = this.add.text(this.scale.width / 2, this.scale.height / 2, 'K.O.', { 
+            font: '100px Arial', 
+            color: '#ff0000',
+            fontStyle: 'bold',
+            stroke: '#ffffff',
+            strokeThickness: 8
+        }).setOrigin(0.5).setVisible(false);
         // Detecção de colisão (Hitbox do Player -> Corpo do Enemy)
         this.physics.add.overlap(this.player.hitbox, this.enemy, () => {
             const hitboxBody = this.player.hitbox.body as Phaser.Physics.Arcade.Body;
@@ -95,10 +104,30 @@ export class CombatScene extends Phaser.Scene {
     }
 
     update() {
+        if (this.matchOver) return;
+
         this.player.update();
         this.enemy.update();
         
         // Limpar buffer do touch e ler estados do gamepad
         this.inputManager.update();
+
+        // Checagem de Fim de Luta
+        if (this.enemy.hp <= 0) {
+            this.endMatch(this.player, this.enemy);
+        } else if (this.player.hp <= 0) {
+            this.endMatch(this.enemy, this.player);
+        }
+    }
+
+    private endMatch(winner: Fighter, loser: Fighter) {
+        this.matchOver = true;
+        this.koText.setVisible(true);
+
+        loser.stateMachine.transition('ko');
+        winner.stateMachine.transition('win');
+
+        // Um efeito dramático de câmera
+        this.cameras.main.shake(500, 0.02);
     }
 }

@@ -37,7 +37,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             crouch: new CrouchState(),
             attack: new AttackState(),
             special: new SpecialState(),
-            hit: new HitState()
+            hit: new HitState(),
+            ko: new KOState(),
+            win: new WinState()
         }, [this]);
     }
 
@@ -256,5 +258,43 @@ class SpecialState extends State {
             fighter.clearTint();
             this.stateMachine.transition('idle');
         }
+    }
+}
+
+class KOState extends State {
+    enter(fighter: Fighter) {
+        fighter.setVelocityX(0);
+        fighter.isHit = true;
+        fighter.setTint(0xff0000); // Fica vermelho pra indicar derrota
+        fighter.setAngle(90); // Cai no chão
+        fighter.y += 20; // Ajuste pra ficar no chão
+    }
+}
+
+class WinState extends State {
+    
+    enter(fighter: Fighter) {
+        fighter.setVelocityX(0);
+        fighter.setTint(0x00ff00); // Fica verde para indicar vitória
+
+        // --- LÓGICA DE VITÓRIA DO KEVIN ---
+        // Criação do Banheiro Portátil (Mock)
+        const scene = fighter.scene;
+        scene.add.rectangle(fighter.x + 80, fighter.y, 80, 150, 0x0000ff);
+        
+        // Clone Moreno (Mock)
+        const clone = scene.add.rectangle(fighter.x + 80, fighter.y + 20, 40, 80, 0x8b4513);
+        
+        // Animação simples simulando entrarem no banheiro
+        scene.tweens.add({
+            targets: [fighter, clone],
+            alpha: 0, // Somem da tela indicando que entraram no banheiro
+            delay: 1000,
+            duration: 500
+        });
+    }
+
+    execute(_fighter: Fighter) {
+        // Personagem fica parado comemorando
     }
 }
