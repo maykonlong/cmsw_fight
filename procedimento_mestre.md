@@ -37,7 +37,7 @@ JOGO FUNCIONAL
 
 ## 0.2 Estrutura de Pastas
 
-- [ ] **0.2.1** Criar estrutura definitiva de pastas:
+- [x] **0.2.1** Criar estrutura definitiva de pastas:
 ```
 game/
 ├── src/
@@ -128,12 +128,12 @@ Notação numérica (Numpad):
 ```
 
 - [x] **1.1.1** InputManager.ts com LP, MP, HP, LK, MK, HK, HKSpecial mapeados
-- [ ] **1.1.2** Adicionar LK(A), MK(S) ao InputManager (faltam chutes separados)
-- [ ] **1.1.3** Adicionar virtualLKJustPressed, virtualMKJustPressed ao VirtualGamepad
+- [x] **1.1.2** Adicionar LK(A), MK(S) ao InputManager (faltam chutes separados)
+- [x] **1.1.3** Adicionar virtualLKJustPressed, virtualMKJustPressed ao VirtualGamepad
 
 ## 1.2 Input Buffer (Sistema de Janela de Frames)
 
-- [ ] **1.2.1** Criar `InputBuffer.ts`:
+- [x] **1.2.1** Criar `InputBuffer.ts`:
 ```typescript
 // Guarda os últimos 60 frames de input
 interface BufferedInput { direction: string; buttons: string[]; frame: number; }
@@ -144,12 +144,12 @@ class InputBuffer {
     clear(): void;
 }
 ```
-- [ ] **1.2.2** InputBuffer descarta entradas com mais de 60 frames
-- [ ] **1.2.3** InputBuffer.push() chamado a cada frame no update()
+- [x] **1.2.2** InputBuffer descarta entradas com mais de 60 frames
+- [x] **1.2.3** InputBuffer.push() chamado a cada frame no update()
 
 ## 1.3 Command Recognizer (Reconhecimento de Comandos Especiais)
 
-- [ ] **1.3.1** Criar `CommandRecognizer.ts`:
+- [x] **1.3.1** Criar `CommandRecognizer.ts`:
 ```typescript
 interface CommandDefinition {
     name: string;
@@ -157,11 +157,11 @@ interface CommandDefinition {
     windowFrames: number; // janela de execução (ex: 15)
 }
 ```
-- [ ] **1.3.2** Implementar `236P` (Quarto de círculo frente + soco) = Especial Kevin
-- [ ] **1.3.3** Implementar `214K` (Quarto de círculo trás + chute) = Especial Vini Dog
-- [ ] **1.3.4** Implementar `623P` (Dragon Punch = →↓↘+P) = Uppercut especial Kevin
-- [ ] **1.3.5** As direções devem ser relativas ao lado que o personagem está olhando (espelhar se facing left)
-- [ ] **1.3.6** Comandos de carga (`charge_back_forward`): detectar 1.5s segurado na direção + botão
+- [x] **1.3.2** Implementar `236P` (Quarto de círculo frente + soco) = Especial Kevin
+- [x] **1.3.3** Implementar `214K` (Quarto de círculo trás + chute) = Especial Vini Dog
+- [x] **1.3.4** Implementar `623P` (Dragon Punch = →↓↘+P) = Uppercut especial Kevin
+- [x] **1.3.5** As direções devem ser relativas ao lado que o personagem está olhando (espelhar se facing left)
+- [x] **1.3.6** Comandos de carga (`charge_back_forward`): detectar 1.5s segurado na direção + botão
 - [ ] **1.3.7** Sistema de prioridade: THROW > SPECIAL > NORMAL quando múltiplos possíveis
 
 ---
@@ -179,12 +179,12 @@ HURTBOX  = área que RECEBE dano
 PUSHBOX  = área que impede sobreposição física
 ```
 
-- [ ] **2.1.1** Criar `Hitbox.ts`: retângulo com `x, y, w, h, active, damage, type`
-- [ ] **2.1.2** Criar `Hurtbox.ts`: retângulo com `x, y, w, h, invincible`
-- [ ] **2.1.3** Criar `Pushbox.ts`: retângulo central do personagem para colisão física
+- [x] **2.1.1** Criar `Hitbox.ts`: retângulo com `x, y, w, h, active, damage, type`
+- [x] **2.1.2** Criar `Hurtbox.ts`: retângulo com `x, y, w, h, invincible`
+- [x] **2.1.3** Criar `Pushbox.ts`: retângulo central do personagem para colisão física
 - [ ] **2.1.4** Cada Fighter tem 1 Pushbox + N Hurtboxes + N Hitboxes (variáveis por frame de animação)
-- [ ] **2.1.5** CombatSystem verifica: `Hitbox A ∩ Hurtbox B` (não sprite vs sprite)
-- [ ] **2.1.6** PushboxSystem verifica: `Pushbox A ∩ Pushbox B` → separar personagens
+- [x] **2.1.5** CombatSystem verifica: `Hitbox A ∩ Hurtbox B` (não sprite vs sprite)
+- [x] **2.1.6** PushboxSystem verifica: `Pushbox A ∩ Pushbox B` → separar personagens
 - [ ] **2.1.7** Debug mode (tecla H): desenhar hitboxes (vermelho), hurtboxes (verde), pushbox (azul)
 
 ---
@@ -223,11 +223,11 @@ interface MoveData {
 }
 ```
 
-- [ ] **3.1.1** Criar `src/data/moves/base_moves.ts` com todos os ataques comuns
-- [ ] **3.1.2** Ataques de pé: LP, MP, HP, LK, MK, HK com frame data completa
-- [ ] **3.1.3** Ataques agachados: cLP, cMP, cHP, cLK, cMK, cHK
-- [ ] **3.1.4** Ataques aéreos: jLP, jMP, jHP, jLK, jMK, jHK
-- [ ] **3.1.5** Todos os ataques usam o mesmo sistema de frame counting via StateMachine
+- [x] **3.1.1** Criar `src/data/moves/base_moves.ts` com todos os ataques comuns
+- [x] **3.1.2** Ataques de pé: LP, MP, HP, LK, MK, HK com frame data completa
+- [x] **3.1.3** Ataques agachados: cLP, cMP, cHP, cLK, cMK, cHK
+- [x] **3.1.4** Ataques aéreos: jLP, jMP, jHP, jLK, jMK, jHK
+- [x] **3.1.5** Todos os ataques usam o mesmo sistema de frame counting via StateMachine
 
 ## 3.2 Tabela de Frame Data Base
 
@@ -243,8 +243,8 @@ interface MoveData {
 | cHK    | 12      | 5      | 22       | 80     | 0       | 0         | 0    | **Yes**   |
 | Special| 20      | 8      | 15       | 80     | 28      | 20        | 8    | No        |
 
-- [ ] **3.2.1** Implementar frame data da tabela acima no `base_moves.ts`
-- [ ] **3.2.2** Cada move executa por `startup+active+recovery` frames exatos
+- [x] **3.2.1** Implementar frame data da tabela acima no `base_moves.ts`
+- [x] **3.2.2** Cada move executa por `startup+active+recovery` frames exatos
 
 ---
 
@@ -315,14 +315,14 @@ IDLE
     └── TAUNT
 ```
 
-- [ ] **4.1.1** Reescrever Fighter.ts usando dados do JSON do personagem (não hardcoded)
-- [ ] **4.1.2** Implementar todos os 6 ataques de pé como estados independentes
-- [ ] **4.1.3** Implementar todos os 6 ataques agachados como estados independentes
-- [ ] **4.1.4** Implementar todos os 6 ataques aéreos como estados independentes
-- [ ] **4.1.5** BlockHigh vs BlockLow (verificar hitLevel do ataque recebido)
-- [ ] **4.1.6** DIZZY/STUN state: após receber dano suficiente, personagem fica zonzo (estrelas girando)
-- [ ] **4.1.7** Método `autoFaceOpponent()`: virar para o inimigo durante IDLE e WALK
-- [ ] **4.1.8** LAND state: frame de pouso após jump (2-3f sem poder agir)
+- [x] **4.1.1** Reescrever Fighter.ts usando dados do JSON do personagem (não hardcoded)
+- [x] **4.1.2** Implementar todos os 6 ataques de pé como estados independentes
+- [x] **4.1.3** Implementar todos os 6 ataques agachados como estados independentes
+- [x] **4.1.4** Implementar todos os 6 ataques aéreos como estados independentes
+- [x] **4.1.5** BlockHigh vs BlockLow (verificar hitLevel do ataque recebido)
+- [x] **4.1.6** DIZZY/STUN state: após receber dano suficiente, personagem fica zonzo (estrelas girando)
+- [x] **4.1.7** Método `autoFaceOpponent()`: virar para o inimigo durante IDLE e WALK
+- [x] **4.1.8** LAND state: frame de pouso após jump (2-3f sem poder agir)
 
 ## 4.2 Sistema de Phases do Ataque
 
@@ -338,11 +338,11 @@ recovery frames (hitbox OFF)
 transition('idle')
 ```
 
-- [ ] **4.2.1** Criar `AttackState` genérico que recebe `MoveData` como parâmetro
-- [ ] **4.2.2** `AttackState` ativa hitbox no frame `startup+1`
-- [ ] **4.2.3** `AttackState` desativa hitbox no frame `startup+active+1`
-- [ ] **4.2.4** `AttackState` transiciona para idle no frame `startup+active+recovery`
-- [ ] **4.2.5** Janela de cancel: durante `cancelWindow`, se detectar especial → cancelar recovery
+- [x] **4.2.1** Criar `AttackState` genérico que recebe `MoveData` como parâmetro
+- [x] **4.2.2** `AttackState` ativa hitbox no frame `startup+1`
+- [x] **4.2.3** `AttackState` desativa hitbox no frame `startup+active+1`
+- [x] **4.2.4** `AttackState` transiciona para idle no frame `startup+active+recovery`
+- [x] **4.2.5** Janela de cancel: durante `cancelWindow`, se detectar especial → cancelar recovery
 
 ---
 
@@ -353,59 +353,59 @@ transition('idle')
 
 ## 5.1 CombatSystem.ts
 
-- [ ] **5.1.1** Criar `CombatSystem.ts` que centraliza toda lógica de combate (tirar da CombatScene)
-- [ ] **5.1.2** `checkHitboxCollision(attackerHitbox, defenderHurtbox)` → retorna HitResult
-- [ ] **5.1.3** `checkPushbox(fighter1, fighter2)` → separar se sobrepostos
-- [ ] **5.1.4** `checkThrowRange(thrower, target)` → `distance < thrower.throwRange`
-- [ ] **5.1.5** `applyHit(attacker, defender, move)` → aplica dano, hitstun, knockback
+- [x] **5.1.1** Criar `CombatSystem.ts` que centraliza toda lógica de combate (tirar da CombatScene)
+- [x] **5.1.2** `checkHitboxCollision(attackerHitbox, defenderHurtbox)` → retorna HitResult
+- [x] **5.1.3** `checkPushbox(fighter1, fighter2)` → separar se sobrepostos
+- [x] **5.1.4** `checkThrowRange(thrower, target)` → `distance < thrower.throwRange`
+- [x] **5.1.5** `applyHit(attacker, defender, move)` → aplica dano, hitstun, knockback
 
 ## 5.2 Sistema de Dano
 
-- [ ] **5.2.1** Criar `DamageSystem.ts`
-- [ ] **5.2.2** `calculateDamage(base, isCounterHit, isChip)`:
+- [x] **5.2.1** Criar `DamageSystem.ts` (Feito no CombatSystem)
+- [x] **5.2.2** `calculateDamage(base, isCounterHit, isChip)`:
   - Normal hit: `damage = move.damage`
   - Counter hit: `damage = move.damage * 1.25`
   - Chip damage (bloqueado): `damage = move.chipDamage`
-- [ ] **5.2.3** Aplicar dano ao `fighter.hp` (nunca ir abaixo de 0)
+- [x] **5.2.3** Aplicar dano ao `fighter.hp` (nunca ir abaixo de 0)
 - [ ] **5.2.4** Atualizar barra de HP imediatamente e disparar evento `onDamageTaken`
 
 ## 5.3 Hit Levels
 
-- [ ] **5.3.1** Definir `hitLevel` por ataque: `HIGH | MID | LOW | AIR | UNBLOCKABLE`
-- [ ] **5.3.2** `BLOCK_HIGH` bloqueia: `HIGH` e `MID` — NÃO bloqueia `LOW`
-- [ ] **5.3.3** `BLOCK_LOW` bloqueia: `LOW` e `MID` — NÃO bloqueia `HIGH`
-- [ ] **5.3.4** Ataques aéreos (`AIR`) passam pelo bloqueio agachado apenas em certas circunstâncias
-- [ ] **5.3.5** `UNBLOCKABLE` (throws): nunca podem ser bloqueados
+- [x] **5.3.1** Definir `hitLevel` por ataque: `HIGH | MID | LOW | AIR | UNBLOCKABLE`
+- [x] **5.3.2** `BLOCK_HIGH` bloqueia: `HIGH` e `MID` — NÃO bloqueia `LOW`
+- [x] **5.3.3** `BLOCK_LOW` bloqueia: `LOW` e `MID` — NÃO bloqueia `HIGH`
+- [x] **5.3.4** Ataques aéreos (`AIR`) passam pelo bloqueio agachado apenas em certas circunstâncias
+- [x] **5.3.5** `UNBLOCKABLE` (throws): nunca podem ser bloqueados
 
 ## 5.4 BlockStun e HitStun
 
-- [ ] **5.4.1** Ao acertar: defender entra em HIT state por `move.hitstun` frames
-- [ ] **5.4.2** Ao bloquear: defender entra em BLOCK state por `move.blockstun` frames
-- [ ] **5.4.3** Durante hitstun/blockstun: sem input aceito
-- [ ] **5.4.4** Chip damage: aplicar `move.chipDamage` mesmo ao bloquear
-- [ ] **5.4.5** Pushback ao bloquear: ambos recuam levemente (evitar corner lock fácil)
+- [x] **5.4.1** Ao acertar: defender entra em HIT state por `move.hitstun` frames
+- [x] **5.4.2** Ao bloquear: defender entra em BLOCK state por `move.blockstun` frames
+- [x] **5.4.3** Durante hitstun/blockstun: sem input aceito
+- [x] **5.4.4** Chip damage: aplicar `move.chipDamage` mesmo ao bloquear
+- [x] **5.4.5** Pushback ao bloquear: ambos recuam levemente (evitar corner lock fácil)
 
 ## 5.5 Counter Hit
 
-- [ ] **5.5.1** CounterHit: detectar se `defender.stateMachine.state` começa com `STAND_` ou `CROUCH_` e ainda está em `startup frames`
-- [ ] **5.5.2** Se counter hit: aplicar `1.25×` dano + `+8 frames` de hitstun extra
+- [x] **5.5.1** CounterHit: detectar se `defender.stateMachine.state` começa com `STAND_` ou `CROUCH_` e ainda está em `startup frames`
+- [x] **5.5.2** Se counter hit: aplicar `1.25×` dano + `+8 frames` de hitstun extra
 - [ ] **5.5.3** Exibir texto "COUNTER!" em laranja na tela por 1.5s
 
 ## 5.6 Throws (Agarrões)
 
-- [ ] **5.6.1** ThrowSystem: verificar `distance < fighter.throwRange` e `LP+LK simultâneos`
-- [ ] **5.6.2** ThrowForward: jogar inimigo para frente → `THROWN` state com velocidade +500
+- [x] **5.6.1** ThrowSystem: verificar `distance < fighter.throwRange` e `LP+LK simultâneos`
+- [x] **5.6.2** ThrowForward: jogar inimigo para frente → `THROWN` state com velocidade +500
 - [ ] **5.6.3** ThrowBackward (← + LP+LK): jogar para trás
 - [ ] **5.6.4** ThrowEscape: janela de 8f após receber throw input para escapar (ambos saem sem dano)
-- [ ] **5.6.5** Throws são `UNBLOCKABLE`
-- [ ] **5.6.6** Throw causa knockdown imediato
+- [x] **5.6.5** Throws são `UNBLOCKABLE`
+- [x] **5.6.6** Throw causa knockdown imediato
 
 ## 5.7 Knockdown e Wakeup
 
-- [ ] **5.7.1** `KnockdownState`: personagem cai com animação (angle 90° + velocity X decrescente)
+- [x] **5.7.1** `KnockdownState`: personagem cai com animação (angle 90° + velocity X decrescente)
 - [ ] **5.7.2** Hard knockdown (cHK, Throws): 50 frames no chão, não pode agir
 - [ ] **5.7.3** Soft knockdown (normais que derrubam): 30f ou apertar botão para `quickrise`
-- [ ] **5.7.4** `WakeupState`: 15 frames de invencibilidade ao levantar
+- [x] **5.7.4** `WakeupState`: 15 frames de invencibilidade ao levantar
 - [ ] **5.7.5** Oponente não pode atacar nos primeiros 10f do wakeup (fair play)
 
 ## 5.8 Stun / Dizzy
@@ -414,7 +414,7 @@ transition('idle')
 - [ ] **5.8.2** Cada hit adiciona `move.stunValue` ao `stunMeter`
 - [ ] **5.8.3** `stunMeter` decai naturalmente 2 pontos/frame quando não está em hitstun
 - [ ] **5.8.4** Se `stunMeter >= 200`: entrar em `DIZZY` state
-- [ ] **5.8.5** `DIZZY`: personagem zanzando por 120 frames, estrelas girando acima da cabeça
+- [x] **5.8.5** `DIZZY`: personagem zanzando por 120 frames, estrelas girando acima da cabeça
 - [ ] **5.8.6** Durante DIZZY: pode apertar botões para sair mais rápido (-2f por input)
 - [ ] **5.8.7** `stunMeter` reseta ao entrar em DIZZY
 
@@ -428,9 +428,9 @@ transition('idle')
 
 ## 5.10 Cancel Window
 
-- [ ] **5.10.1** Ataques com `cancelable: true` têm uma janela após o frame ativo
-- [ ] **5.10.2** Durante cancel window, se reconhecer comando especial → executar especial + ignorar recovery do normal
-- [ ] **5.10.3** Combos possíveis: LP → especial, MP → especial (conforme cancelable = true no JSON)
+- [x] **5.10.1** Ataques com `cancelable: true` têm uma janela após o frame ativo
+- [x] **5.10.2** Durante cancel window, se reconhecer comando especial → executar especial + ignorar recovery do normal
+- [x] **5.10.3** Combos possíveis: LP → especial, MP → especial (conforme cancelable = true no JSON)
 
 ---
 

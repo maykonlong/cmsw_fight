@@ -3,6 +3,7 @@ import { Fighter } from '../entities/Fighter';
 import { Projectile } from '../entities/Projectile';
 import { InputManager } from '../core/InputManager';
 import { VirtualGamepad } from '../ui/VirtualGamepad';
+import { CombatSystem } from '../engine/CombatSystem';
 
 export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
@@ -96,14 +97,7 @@ export class CombatScene extends Phaser.Scene {
         this.enemy.setFlipX(true);
         this.physics.add.collider(this.enemy, floor);
 
-        // Colisões de combate
-        this.physics.add.overlap(this.player.hitbox, this.enemy, () => {
-            const hitboxBody = this.player.hitbox.body as Phaser.Physics.Arcade.Body;
-            if (hitboxBody.enable && !this.enemy.isHit) {
-                this.enemy.takeDamage(50, 400, this.player.x);
-                this.updateHpBars();
-            }
-        });
+        // Colisões de combate (Agora gerenciadas via CombatSystem no update)
 
         this.physics.add.overlap(this.projectiles, this.enemy, (_enemyObj, projObj) => {
             const proj = projObj as Projectile;
@@ -280,6 +274,35 @@ export class CombatScene extends Phaser.Scene {
         this.player.update();
         this.enemy.update();
         this.inputManager.update();
+
+        // Check Box collisions
+        if (CombatSystem.checkHitboxCollision(this.player.currentHitbox, this.enemy.currentHurtbox)) {
+            if (this.player.currentHitbox.type === 'throw') {
+                if (CombatSystem.checkThrowRange(this.player, this.enemy)) {
+                    this.enemy.stateMachine.transition('thrown');
+                }
+            } else {
+                CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
+                this.updateHpBars();
+            }
+            // Evitar multi-hit no mesmo ataque
+            this.player.currentHitbox.active = false;
+        }
+
+        if (CombatSystem.checkHitboxCollision(this.enemy.currentHitbox, this.player.currentHurtbox)) {
+            if (this.enemy.currentHitbox.type === 'throw') {
+                if (CombatSystem.checkThrowRange(this.enemy, this.player)) {
+                    this.player.stateMachine.transition('thrown');
+                }
+            } else {
+                CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
+                this.updateHpBars();
+            }
+            this.enemy.currentHitbox.active = false;
+        }
+
+        // Pushbox resolve
+        CombatSystem.resolvePushbox(this.player.pushbox, this.enemy.pushbox, this.player, this.enemy);
 
         if (this.enemy.hp <= 0) {
             this.endMatch(this.player, this.enemy);

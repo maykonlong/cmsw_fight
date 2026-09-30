@@ -20,18 +20,30 @@ export class VirtualGamepad {
 
         // Estilo base dos botões
         const btnAlpha = 0.5;
-        const radius = 50;
+        const radius = 40;
 
         // D-PAD (Esquerda)
         this.createBtn(150, h - 150, radius, btnAlpha, 'left');
-        this.createBtn(350, h - 150, radius, btnAlpha, 'right');
-        this.createBtn(250, h - 250, radius, btnAlpha, 'up');
-        this.createBtn(250, h - 50, radius, btnAlpha, 'down');
+        this.createBtn(310, h - 150, radius, btnAlpha, 'right');
+        this.createBtn(230, h - 230, radius, btnAlpha, 'up');
+        this.createBtn(230, h - 70, radius, btnAlpha, 'down');
 
-        // Botões de Ação (Direita)
-        this.createBtn(w - 250, h - 150, radius, btnAlpha, 'lp', 0xff0000); // Soco Fraco
-        this.createBtn(w - 150, h - 250, radius, btnAlpha, 'mp', 0x00ff00); // Soco Médio
-        this.createBtn(w - 100, h - 120, radius, btnAlpha, 'hp', 0x0000ff); // Soco Forte
+        // Botões de Ação (Direita) - 2 rows x 3 + special
+        const btnX = w - 300;
+        const btnY = h - 200;
+
+        // Row 1: Punches
+        this.createBtn(btnX, btnY, radius, btnAlpha, 'lp', 0xffcccc);
+        this.createBtn(btnX + 100, btnY, radius, btnAlpha, 'mp', 0xff6666);
+        this.createBtn(btnX + 200, btnY, radius, btnAlpha, 'hp', 0xff0000);
+
+        // Row 2: Kicks
+        this.createBtn(btnX, btnY + 100, radius, btnAlpha, 'lk', 0xccccff);
+        this.createBtn(btnX + 100, btnY + 100, radius, btnAlpha, 'mk', 0x6666ff);
+        this.createBtn(btnX + 200, btnY + 100, radius, btnAlpha, 'hk', 0x0000ff);
+
+        // Special Button
+        this.createBtn(btnX + 100, btnY - 100, radius, btnAlpha, 'special', 0xff00ff);
     }
 
     private createBtn(x: number, y: number, r: number, alpha: number, action: string, color: number = 0xffffff) {
@@ -63,6 +75,22 @@ export class VirtualGamepad {
             case 'hp': 
                 this.inputManager.virtualHP = isDown; 
                 if (isDown) this.inputManager.virtualHPJustPressed = true;
+                break;
+            case 'lk': 
+                this.inputManager.virtualLK = isDown; 
+                if (isDown) this.inputManager.virtualLKJustPressed = true;
+                break;
+            case 'mk': 
+                this.inputManager.virtualMK = isDown; 
+                if (isDown) this.inputManager.virtualMKJustPressed = true;
+                break;
+            case 'hk': 
+                this.inputManager.virtualHK = isDown; 
+                if (isDown) this.inputManager.virtualHKJustPressed = true;
+                break;
+            case 'special': 
+                this.inputManager.virtualSpecial = isDown; 
+                if (isDown) this.inputManager.virtualSpecialJustPressed = true;
                 break;
         }
     }
