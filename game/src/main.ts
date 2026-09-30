@@ -1,4 +1,8 @@
 import Phaser from 'phaser';
+import { BootScene } from './scenes/BootScene';
+import { MainMenuScene } from './scenes/MainMenuScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { VsScene } from './scenes/VsScene';
 import { CombatScene } from './scenes/CombatScene';
 import './style.css';
 
@@ -7,11 +11,12 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 1280,
     height: 720,
     parent: 'app',
+    backgroundColor: '#000000',
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { x: 0, y: 1200 },
-            debug: true
+            debug: false // Sem debug visual
         }
     },
     scale: {
@@ -21,7 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
     input: {
         gamepad: true
     },
-    scene: [CombatScene]
+    scene: [BootScene, MainMenuScene, CharacterSelectScene, VsScene, CombatScene]
 };
 
 new Phaser.Game(config);

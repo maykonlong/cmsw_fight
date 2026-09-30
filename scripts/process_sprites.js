@@ -1,34 +1,71 @@
-// Pipeline de Recorte Inteligente e Geração de Sprites (Fase 6)
-// Esse script servirá de base para pegarmos a imagem de referência (Kevin_1.jpeg ou Vini_dog_1.jpeg)
-// E transformá-las em um Spritesheet (PNG transparente) com animações baseadas nos Estados de luta.
-
+const { removeBackground } = require('@imgly/background-removal-node');
+const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-// Planejamento do pipeline:
-// 1. Remover Fundo (Rembg / Sharp) -> Removemos o cenário das fotos.
-// 2. Extrair Pose (OpenPose / MediaPipe) -> Entendemos a silhueta do Vini Dog/Kevin.
-// 3. Grid Automático (Spritesheet Gen) -> Alinhar o personagem recortado num grid 64x128 padrão para o Phaser 3.
-
-function processCharacter(characterName) {
-    console.log(`\nIniciando Recorte Inteligente para: ${characterName}...`);
+async function processCharacter(characterName) {
+    console.log(`\n[1/3] Iniciando Recorte Inteligente para: ${characterName}...`);
     
-    const inputPath = path.join(__dirname, `../imagens_ref/personagens_ref/${characterName}`);
-    const outputPath = path.join(__dirname, `../game/public/assets/sprites/${characterName.toLowerCase()}_spritesheet.png`);
-
-    if (!fs.existsSync(inputPath)) {
-        console.error(`Erro: Pasta de origem não encontrada -> ${inputPath}`);
+    const inputDir = path.join(__dirname, `../imagens_ref/personagens_ref/${characterName}`);
+    if (!fs.existsSync(inputDir)) {
+        console.error(`Erro: Pasta de origem não encontrada -> ${inputDir}`);
         return;
     }
 
-    console.log('1. Lendo imagens originais JPEG...');
-    console.log('2. IA de Recorte: Removendo o fundo e extraindo o alfa...');
-    console.log('3. Gerando variações de pose: Idle, Walk, Ataque, Especial...');
-    console.log(`4. Montando Spritesheet e salvando em: ${outputPath}`);
+    const files = fs.readdirSync(inputDir).filter(f => f.endsWith('.jpeg') || f.endsWith('.jpg') || f.endsWith('.png'));
+    if (files.length === 0) {
+        console.error(`Erro: Nenhuma imagem encontrada em ${inputDir}`);
+        return;
+    }
+
+    const firstImage = path.join(inputDir, files[0]);
+    const outDir = path.join(__dirname, `../game/public/assets/sprites`);
+    if (!fs.existsSync(outDir)) {
+        fs.mkdirSync(outDir, { recursive: true });
+    }
+
+    const bgRemovedPath = path.join(outDir, `${characterName.toLowerCase()}_raw.png`);
+    const spritesheetPath = path.join(outDir, `${characterName.toLowerCase()}_placeholder.png`);
+
+    console.log(`[2/3] Removendo Fundo da imagem ${files[0]} com IA... Isso pode demorar alguns segundos na primeira execução para baixar o modelo.`);
     
-    console.log(`✅ ${characterName} processado com sucesso!`);
+    try {
+        const imageBuffer = fs.readFileSync(firstImage);
+        // Utilizando Blob nativo do Node.js
+        const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+        
+        const resultBlob = await removeBackground(blob);
+        const arrayBuffer = await resultBlob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        
+        // Salva a versão com o fundo extraído com precisão
+        fs.writeFileSync(bgRemovedPath, buffer);
+        console.log(`-> Fundo extraído com sucesso! (Salvo em assets/sprites/${characterName.toLowerCase()}_raw.png)`);
+
+        console.log(`[3/3] Normalizando pose no Grid do Phaser (64x128)...`);
+        
+        // Usamos o Sharp para centralizar a imagem num "Hitbox" padronizado
+        await sharp(buffer)
+            .resize({ 
+                width: 64, 
+                height: 128, 
+                fit: 'contain', 
+                background: { r: 0, g: 0, b: 0, alpha: 0 } 
+            })
+            .toFile(spritesheetPath);
+        
+        console.log(`✅ Sucesso! Spritesheet base gerado em: assets/sprites/${characterName.toLowerCase()}_placeholder.png`);
+        
+    } catch (e) {
+        console.error('Erro durante o processamento da IA:', e);
+    }
 }
 
-// Quando formos rodar pra valer:
-// processCharacter('Kevin');
-// processCharacter('Vini_dog');
+// Permite rodar via linha de comando: node process_sprites.js Kevin
+const args = process.argv.slice(2);
+if (args.length > 0) {
+    processCharacter(args[0]);
+} else {
+    console.log("Uso: node process_sprites.js <NomeDoPersonagem>");
+    console.log("Exemplo: node process_sprites.js Kevin");
+}
