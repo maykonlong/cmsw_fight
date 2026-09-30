@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Fighter } from '../entities/Fighter';
 import { InputManager } from '../core/InputManager';
+import { VirtualGamepad } from '../ui/VirtualGamepad';
 
 export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
@@ -38,9 +39,15 @@ export class CombatScene extends Phaser.Scene {
         this.enemy = this.physics.add.sprite(980, 500, 'enemy_placeholder');
         this.enemy.setCollideWorldBounds(true);
         this.physics.add.collider(this.enemy, floor);
+
+        // Inicializar controles Touch/Mobile (Aparece se for dispositivo Touch)
+        new VirtualGamepad(this, this.inputManager);
     }
 
     update() {
         this.player.update();
+        
+        // Limpar buffer do touch e ler estados do gamepad
+        this.inputManager.update();
     }
 }
