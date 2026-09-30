@@ -5,8 +5,9 @@ import { VirtualGamepad } from '../ui/VirtualGamepad';
 
 export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
-    private enemy!: Phaser.Physics.Arcade.Sprite;
+    private enemy!: Fighter;
     private inputManager!: InputManager;
+    private hpText!: Phaser.GameObjects.Text;
 
     constructor() {
         super({ key: 'CombatScene' });
@@ -36,9 +37,24 @@ export class CombatScene extends Phaser.Scene {
         this.player = new Fighter(this, 300, 500, 'player_placeholder', this.inputManager);
         this.physics.add.collider(this.player, floor);
 
-        this.enemy = this.physics.add.sprite(980, 500, 'enemy_placeholder');
-        this.enemy.setCollideWorldBounds(true);
+        // Inimigo sem InputManager (CPU/Dummy)
+        this.enemy = new Fighter(this, 980, 500, 'enemy_placeholder');
+        this.enemy.setFlipX(true); // Vira pra esquerda
         this.physics.add.collider(this.enemy, floor);
+
+        // HUD de vida provisório
+        this.hpText = this.add.text(900, 20, 'Enemy HP: 1000', { color: '#ff0000', fontSize: '32px' });
+
+        // Detecção de colisão (Hitbox do Player -> Corpo do Enemy)
+        this.physics.add.overlap(this.player.hitbox, this.enemy, () => {
+            const hitboxBody = this.player.hitbox.body as Phaser.Physics.Arcade.Body;
+            // Se hitbox estiver ativo e o inimigo não estiver já em hit stun
+            if (hitboxBody.enable && !this.enemy.isHit) {
+                // Aplica 50 de dano e 400 de pushback
+                this.enemy.takeDamage(50, 400, this.player.x);
+                this.hpText.setText(`Enemy HP: ${this.enemy.hp}`);
+            }
+        });
 
         // Inicializar controles Touch/Mobile (Aparece se for dispositivo Touch)
         new VirtualGamepad(this, this.inputManager);
@@ -46,6 +62,7 @@ export class CombatScene extends Phaser.Scene {
 
     update() {
         this.player.update();
+        this.enemy.update();
         
         // Limpar buffer do touch e ler estados do gamepad
         this.inputManager.update();
