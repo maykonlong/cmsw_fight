@@ -233,6 +233,33 @@ export class CombatScene extends Phaser.Scene {
         // Update camera
         this.cameraSystem.update(this.player, this.enemy);
 
+        // ── MANUAL PUSHBOX COLLISION ──────────────────────────────────
+        // Lógica de Fighting Games: personagens não podem atravessar um ao outro
+        // Se a distância X for muito curta e ambos estiverem no chão, empurramos
+        const distanceX = Math.abs(this.player.x - this.enemy.x);
+        const minDistance = 70; // 70 pixels de largura do pushbox
+        if (distanceX < minDistance && this.player.y >= FLOOR_Y - 90 && this.enemy.y >= FLOOR_Y - 90) {
+            const overlap = minDistance - distanceX;
+            if (this.player.x < this.enemy.x) {
+                this.player.x -= overlap / 2;
+                this.enemy.x += overlap / 2;
+            } else {
+                this.player.x += overlap / 2;
+                this.enemy.x -= overlap / 2;
+            }
+        }
+
+        // Auto-Face (Os personagens sempre se encaram se estiverem no chão)
+        if (this.player.y >= FLOOR_Y - 90 && this.enemy.y >= FLOOR_Y - 90) {
+            if (this.player.x < this.enemy.x) {
+                this.player.setFlipX(false);
+                this.enemy.setFlipX(true);
+            } else {
+                this.player.setFlipX(true);
+                this.enemy.setFlipX(false);
+            }
+        }
+
         // Check Box collisions
         if (CombatSystem.checkHitboxCollision(this.player.currentHitbox, this.enemy.currentHurtbox)) {
             if (this.player.currentHitbox.type === 'throw') {
