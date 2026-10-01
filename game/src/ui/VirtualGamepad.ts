@@ -12,17 +12,10 @@ export class VirtualGamepad {
     }
 
     private createControls() {
-        // Detecção robusta de dispositivo touch ou emulador
-        const isTouchDevice = this.scene.sys.game.device.input.touch || 
-                              ('ontouchstart' in window) || 
-                              (navigator.maxTouchPoints > 0);
-
-        if (!isTouchDevice) return;
-
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
 
-        // Estilo base dos botões
+        // Estilo base dos botões na tela
         const btnAlpha = 0.65;
         const radius = 38;
 
@@ -52,7 +45,7 @@ export class VirtualGamepad {
 
     private createBtn(x: number, y: number, r: number, alpha: number, action: string, color: number = 0xffffff, labelOverride?: string) {
         const btn = this.scene.add.circle(x, y, r, color, alpha).setScrollFactor(0).setDepth(2000);
-        btn.setInteractive();
+        btn.setInteractive({ useHandCursor: true });
 
         const labelText = labelOverride ?? action.toUpperCase();
         this.scene.add.text(x, y, labelText, {

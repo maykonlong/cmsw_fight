@@ -96,6 +96,15 @@ export class HUD {
             }).setOrigin(1, 0).setDepth(100).setScrollFactor(0));
         }
 
+        // On-screen Key Guide Banner
+        this.scene.add.text(width / 2, 16, 'CONTROLES: [←↑↓→ / WASD] Movimento  |  [Z,X,C / J,K,L] Socos  |  [A,S,D / U,I,O] Chutes  |  [V / SPACE] Especial', {
+            fontFamily: 'Arial',
+            fontSize: '13px',
+            color: '#ffdd00',
+            backgroundColor: '#000000cc',
+            padding: { x: 10, y: 3 }
+        }).setOrigin(0.5, 0).setDepth(150).setScrollFactor(0);
+
         this.updateBars();
     }
 
