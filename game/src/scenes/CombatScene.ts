@@ -76,8 +76,8 @@ export class CombatScene extends Phaser.Scene {
         // ── PERSONAGENS ──────────────────────────────────────────
         const graphics = this.make.graphics({});
         graphics.fillStyle(0xff00ff, 1);
-        graphics.fillCircle(20, 20, 20);
-        graphics.generateTexture('aura_placeholder', 40, 40);
+        graphics.fillCircle(30, 30, 30);
+        graphics.generateTexture('aura_placeholder', 60, 60);
         graphics.destroy();
 
         this.inputManager = new InputManager(this);
@@ -98,7 +98,7 @@ export class CombatScene extends Phaser.Scene {
 
         this.player.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
-            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y, 'aura_placeholder', fighter, 500 * dir, 30, 'electric');
+            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y, 'aura_placeholder', fighter, 300 * dir, 30, 'electric');
             this.projectiles.add(proj);
         });
 
@@ -106,6 +106,12 @@ export class CombatScene extends Phaser.Scene {
         this.enemy.setDisplaySize(120, 180);
         this.enemy.setFlipX(true);
         this.physics.add.collider(this.enemy, floor);
+        
+        this.enemy.on('fire_special', (fighter: Fighter) => {
+            const dir = fighter.flipX ? -1 : 1;
+            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y, 'aura_placeholder', fighter, 300 * dir, 30, 'electric');
+            this.projectiles.add(proj);
+        });
         
         // Attach AI
         this.cpuController = new CPUController(this.enemy, this.player);

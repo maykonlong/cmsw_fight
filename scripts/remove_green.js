@@ -14,9 +14,8 @@ async function processImage(inputFile, outputFile) {
         const r = this.bitmap.data[idx + 0];
         const g = this.bitmap.data[idx + 1];
         const b = this.bitmap.data[idx + 2];
-        // Remove fundo branco ou verde puro dependendo do que gerarmos
-        // Vamos checar fundo branco (r>220, g>220, b>220) ou fundo verde (r<50, g>200, b<50)
-        if ((r > 220 && g > 220 && b > 220) || (r < 80 && g > 180 && b < 80)) {
+        // Vamos checar fundo branco (r>220, g>220, b>220), verde (r<50, g>200, b<50) ou magenta (r>180, g<80, b>180)
+        if ((r > 220 && g > 220 && b > 220) || (r < 100 && g > 150 && b < 100) || (r > 180 && g < 80 && b > 180)) {
             this.bitmap.data[idx + 3] = 0;
         }
     });
