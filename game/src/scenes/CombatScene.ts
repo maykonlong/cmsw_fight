@@ -110,7 +110,8 @@ export class CombatScene extends Phaser.Scene {
         this.enemy.body!.setSize(120, 180);
         this.enemy.body!.setOffset((this.enemy.width - 120) / 2, this.enemy.height - 180);
         this.physics.add.collider(this.enemy, floor);
-        this.physics.add.collider(this.player, this.enemy); // Impede que os personagens passem um pelo outro
+        // NOTA: Colisão física direta (physics.add.collider) entre fighters removida.
+        // A aproximação física é tratada exclusivamente via Pushbox manual no update().
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
@@ -215,10 +216,10 @@ export class CombatScene extends Phaser.Scene {
         if (this.isPaused) return;
         if (!this.matchManager.isMatchActive()) return;
 
-        this.player.update();
-        this.cpuController.update();
-        this.enemy.update();
         this.inputManager.update();
+        this.cpuController.update();
+        this.player.update();
+        this.enemy.update();
         this.hud.update();
 
         // Update shadows

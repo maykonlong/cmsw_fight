@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { StateMachine, State } from '../core/StateMachine';
-import { InputManager } from '../core/InputManager';
+import { IInputProvider } from '../interfaces/IInputProvider';
 import { Hitbox } from '../engine/Hitbox';
 import { Hurtbox } from '../engine/Hurtbox';
 import { Pushbox } from '../engine/Pushbox';
@@ -9,7 +9,7 @@ import { CommandRecognizer } from '../core/CommandRecognizer';
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public stateMachine: StateMachine;
-    public inputManager?: any; // InputManager | CPUController
+    public inputManager?: IInputProvider;
     public speed: number = 250;
     public jumpForce: number = 750;
 
@@ -27,10 +27,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public isBlocking: boolean = false;
     public hitStunTimer: number = 0;
 
-    // TODO: load from json
     public throwRange: number = 60;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: InputManager) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: IInputProvider) {
         super(scene, x, y, texture);
         scene.add.existing(this);
         scene.physics.add.existing(this);
@@ -92,7 +91,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             throw:       new ThrowState(),
             thrown:      new ThrownState(),
             
-            // Especial Provisório (até usarmos JSON completo)
+            // Especial
             special:     new SpecialState(),
         }, [this]);
     }
@@ -114,7 +113,6 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    // Adaptador provisório
     takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
         if (this.isHit) return;
         this.hp -= amount;
@@ -140,7 +138,8 @@ class IdleState extends State {
             this.stateMachine.transition('special', cmd); return;
         }
 
-        if (inp.isUpJustPressed && f.body?.touching.down) {
+        const isGrounded = f.body && ((f.body as any).blocked?.down || f.body.touching.down);
+        if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
@@ -183,7 +182,8 @@ class WalkState extends State {
             this.stateMachine.transition('special', cmd); return;
         }
 
-        if (inp.isUpJustPressed && f.body?.touching.down) {
+        const isGrounded = f.body && ((f.body as any).blocked?.down || f.body.touching.down);
+        if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
@@ -217,9 +217,9 @@ class WalkState extends State {
 // JUMP
 // ─────────────────────────────────────────────────────────────────
 class JumpState extends State {
-    private timer = 0;
+    private airFrames = 0;
     enter(f: Fighter) {
-        this.timer = 0;
+        this.airFrames = 0;
         f.setVelocityY(-f.jumpForce);
         if (!f.inputManager) return;
         if (f.inputManager.isLeftDown)  f.setVelocityX(-f.speed * 0.85);
@@ -227,7 +227,7 @@ class JumpState extends State {
     }
 
     execute(f: Fighter) {
-        this.timer++;
+        this.airFrames++;
         if (!f.inputManager) return;
         const inp = f.inputManager;
 
@@ -239,7 +239,7 @@ class JumpState extends State {
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
 
-        if (this.timer > 5 && f.body?.touching.down) {
+        if (this.airFrames > 8 && f.body && ((f.body as any).blocked?.down || f.body.touching.down)) {
             this.stateMachine.transition('land');
         }
     }

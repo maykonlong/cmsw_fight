@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { InputBuffer, BufferedInput } from './InputBuffer';
+import { IInputProvider } from '../interfaces/IInputProvider';
+import { InputBuffer } from './InputBuffer';
 
-export class InputManager {
+export class InputManager implements IInputProvider {
     private scene: Phaser.Scene;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private keys: { [key: string]: Phaser.Input.Keyboard.Key };
@@ -31,7 +32,7 @@ export class InputManager {
         this.buffer = new InputBuffer();
     }
 
-    // Estados Virtuais
+    // Estados Virtuais (Touch / UI)
     public virtualLeft: boolean = false;
     public virtualRight: boolean = false;
     public virtualUp: boolean = false;
@@ -43,11 +44,6 @@ export class InputManager {
     public virtualMK: boolean = false;
     public virtualHK: boolean = false;
     public virtualSpecial: boolean = false;
-
-    // Derived states
-    public get isThrowJustPressed(): boolean {
-        return this.isLPJustPressed && this.isLKJustPressed;
-    }
 
     // Estados Just Pressed Virtuais (Consumidos no mesmo frame)
     public virtualUpJustPressed: boolean = false;
@@ -63,62 +59,65 @@ export class InputManager {
         return this.scene.input.gamepad?.pad1;
     }
 
-    get isLeftDown() { 
-        return this.cursors.left.isDown || this.virtualLeft || (this.pad && (this.pad.left || this.pad.axes[0].getValue() < -0.5)) || false; 
+    get isLeftDown(): boolean { 
+        return this.cursors.left.isDown || this.virtualLeft || Boolean(this.pad && (this.pad.left || this.pad.axes[0].getValue() < -0.5)); 
     }
-    get isRightDown() { 
-        return this.cursors.right.isDown || this.virtualRight || (this.pad && (this.pad.right || this.pad.axes[0].getValue() > 0.5)) || false; 
+    get isRightDown(): boolean { 
+        return this.cursors.right.isDown || this.virtualRight || Boolean(this.pad && (this.pad.right || this.pad.axes[0].getValue() > 0.5)); 
     }
-    get isUpDown() { 
-        return this.cursors.up.isDown || this.virtualUp || (this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5)) || false; 
+    get isUpDown(): boolean { 
+        return this.cursors.up.isDown || this.virtualUp || Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5)); 
     }
-    get isDownDown() { 
-        return this.cursors.down.isDown || this.virtualDown || (this.pad && (this.pad.down || this.pad.axes[1].getValue() > 0.5)) || false; 
+    get isDownDown(): boolean { 
+        return this.cursors.down.isDown || this.virtualDown || Boolean(this.pad && (this.pad.down || this.pad.axes[1].getValue() > 0.5)); 
     }
     
-    get isUpJustPressed() { 
-        const padUp = this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5);
+    get isUpJustPressed(): boolean { 
+        const padUp = Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5));
         const padJustUp = padUp && !this.prevPadState.up;
         return Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.virtualUpJustPressed || padJustUp; 
     }
-    get isLPJustPressed() { 
-        const padX = this.pad && this.pad.X; // Xbox X button
+    get isLPJustPressed(): boolean { 
+        const padX = Boolean(this.pad && this.pad.X); // Xbox X button
         const padJustX = padX && !this.prevPadState.X;
         return Phaser.Input.Keyboard.JustDown(this.keys.LP) || this.virtualLPJustPressed || padJustX; 
     }
-    get isMPJustPressed() { 
-        const padY = this.pad && this.pad.Y; // Xbox Y button
+    get isMPJustPressed(): boolean { 
+        const padY = Boolean(this.pad && this.pad.Y); // Xbox Y button
         const padJustY = padY && !this.prevPadState.Y;
         return Phaser.Input.Keyboard.JustDown(this.keys.MP) || this.virtualMPJustPressed || padJustY; 
     }
-    get isHPJustPressed() { 
-        const padRB = this.pad && Boolean(this.pad.R1);
+    get isHPJustPressed(): boolean { 
+        const padRB = Boolean(this.pad && this.pad.R1);
         const padJustRB = padRB && !this.prevPadState.RB;
         return Phaser.Input.Keyboard.JustDown(this.keys.HP) || this.virtualHPJustPressed || padJustRB; 
     }
-    get isLKJustPressed() { 
-        const padA = this.pad && this.pad.A; // Xbox A button
+    get isLKJustPressed(): boolean { 
+        const padA = Boolean(this.pad && this.pad.A); // Xbox A button
         const padJustA = padA && !this.prevPadState.A;
         return Phaser.Input.Keyboard.JustDown(this.keys.LK) || this.virtualLKJustPressed || padJustA; 
     }
-    get isMKJustPressed() { 
-        const padB = this.pad && this.pad.B; // Xbox B button
+    get isMKJustPressed(): boolean { 
+        const padB = Boolean(this.pad && this.pad.B); // Xbox B button
         const padJustB = padB && !this.prevPadState.B;
         return Phaser.Input.Keyboard.JustDown(this.keys.MK) || this.virtualMKJustPressed || padJustB; 
     }
-    get isHKJustPressed() { 
-        const padRT = this.pad && Boolean(this.pad.R2);
+    get isHKJustPressed(): boolean { 
+        const padRT = Boolean(this.pad && this.pad.R2);
         const padJustRT = padRT && !this.prevPadState.RT;
         return Phaser.Input.Keyboard.JustDown(this.keys.HK) || this.virtualHKJustPressed || padJustRT; 
     }
-    get isSpecialJustPressed() { // Especial
-        const padLB = this.pad && Boolean(this.pad.L1);
+    get isSpecialJustPressed(): boolean { 
+        const padLB = Boolean(this.pad && this.pad.L1);
         const padJustLB = padLB && !this.prevPadState.LB;
         return Phaser.Input.Keyboard.JustDown(this.keys.Special) || this.virtualSpecialJustPressed || padJustLB; 
     }
 
-    // Limpa os buffers de 1 frame do virtual pad no final do ciclo do Phaser
-    public update() {
+    get isThrowJustPressed(): boolean {
+        return this.isLPJustPressed && this.isLKJustPressed;
+    }
+
+    public update(): void {
         this.currentFrame++;
         
         // Registrar input no buffer

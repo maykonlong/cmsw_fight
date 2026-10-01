@@ -1,94 +1,121 @@
 import { Fighter } from '../entities/Fighter';
+import { IInputProvider } from '../interfaces/IInputProvider';
 
-export class CPUController {
+export class CPUController implements IInputProvider {
     private me: Fighter;
     private target: Fighter;
-    
-    public left: boolean = false;
-    public right: boolean = false;
-    public up: boolean = false;
-    public down: boolean = false;
-    
-    private attackJustPressed: boolean = false;
-    private specialJustPressed: boolean = false;
-    private throwJustPressed: boolean = false;
-    
-    private reactionDelay: number = 15; // frames (normal difficulty)
-    private timer: number = 0;
-    
-    // Memory
-    private actionCooldown: number = 0;
+
+    private _left = false;
+    private _right = false;
+    private _up = false;
+    private _down = false;
+    private _upJust = false;
+    private _lpJust = false;
+    private _mpJust = false;
+    private _hpJust = false;
+    private _lkJust = false;
+    private _mkJust = false;
+    private _hkJust = false;
+    private _specialJust = false;
+    private _throwJust = false;
+
+    private reactionDelay = 15; // frames between decisions
+    private timer = 0;
+    private actionCooldown = 0;
+    public buffer = { inputs: [] as any[] };
+    public currentFrame = 0;
 
     constructor(me: Fighter, target: Fighter) {
         this.me = me;
         this.target = target;
     }
 
-    public update() {
+    // ═══ IInputProvider Getters ═══
+    get isLeftDown(): boolean { return this._left; }
+    get isRightDown(): boolean { return this._right; }
+    get isUpDown(): boolean { return this._up; }
+    get isDownDown(): boolean { return this._down; }
+    get isUpJustPressed(): boolean { return this._upJust; }
+    get isLPJustPressed(): boolean { return this._lpJust; }
+    get isMPJustPressed(): boolean { return this._mpJust; }
+    get isHPJustPressed(): boolean { return this._hpJust; }
+    get isLKJustPressed(): boolean { return this._lkJust; }
+    get isMKJustPressed(): boolean { return this._mkJust; }
+    get isHKJustPressed(): boolean { return this._hkJust; }
+    get isSpecialJustPressed(): boolean { return this._specialJust; }
+    get isThrowJustPressed(): boolean { return this._throwJust; }
+
+    public update(): void {
         this.timer++;
-        
-        // Reset just pressed
-        this.attackJustPressed = false;
-        this.specialJustPressed = false;
-        this.throwJustPressed = false;
-        
+        this.currentFrame++;
+
+        // Reset just-pressed flags every frame
+        this._lpJust = false;
+        this._mpJust = false;
+        this._hpJust = false;
+        this._lkJust = false;
+        this._mkJust = false;
+        this._hkJust = false;
+        this._specialJust = false;
+        this._throwJust = false;
+        this._upJust = false;
+
         if (this.actionCooldown > 0) {
             this.actionCooldown--;
             return;
         }
 
-        // Only decide every N frames to simulate reaction time
         if (this.timer % this.reactionDelay !== 0) return;
 
-        // Base Decision Tree
         const distanceX = Math.abs(this.me.x - this.target.x);
         const distanceY = Math.abs(this.me.y - this.target.y);
-        const targetIsAttacking = this.target.stateMachine.currentState.name === 'attack';
-        const isFacingTarget = this.me.flipX ? this.me.x > this.target.x : this.me.x < this.target.x;
-        
+        const targetIsAttacking = this.target.stateMachine?.currentState?.name === 'attack';
+
         // 1. Defesa (Block)
-        if (targetIsAttacking && distanceX < 200 && Math.random() < 0.5) { // 50% block
+        if (targetIsAttacking && distanceX < 200 && Math.random() < 0.5) {
             this.moveAway();
             this.actionCooldown = 10;
             return;
         }
 
-        // 2. Throw (Agarrão)
-        if (distanceX < 60 && distanceY < 50 && Math.random() < 0.4) {
-            this.throwJustPressed = true;
+        // 2. Agarrão (Throw)
+        if (distanceX < 50 && distanceY < 50 && Math.random() < 0.4) {
+            this._throwJust = true;
             this.actionCooldown = 30;
             return;
         }
 
-        // 3. Attack (Ataque Básico)
-        if (distanceX > 60 && distanceX < 120 && Math.random() < 0.6) {
-            this.attackJustPressed = true;
+        // 3. Ataque normal (perto)
+        if (distanceX >= 50 && distanceX < 130) {
+            const r = Math.random();
+            if (r < 0.25) this._lpJust = true;
+            else if (r < 0.45) this._mkJust = true;
+            else if (r < 0.65) this._hpJust = true;
+            else this._hkJust = true;
             this.actionCooldown = 20;
             return;
         }
 
-        // 4. Special (Especial) - Se HP < 30% ou aleatório
-        if (distanceX > 100 && distanceX < 300) {
-            const hpRatio = this.me.hp / this.me.maxHp;
-            if ((hpRatio < 0.3 && Math.random() < 0.6) || Math.random() < 0.1) {
-                this.specialJustPressed = true;
-                this.actionCooldown = 40;
-                return;
-            }
+        // 4. Especial (Longe / Projétil)
+        if (distanceX > 200 && Math.random() < 0.15) {
+            this._specialJust = true;
+            this.actionCooldown = 40;
+            return;
         }
 
-        // 5. Jump (Pular)
-        if (Math.random() < 0.05) { // Aleatório a cada 180f aprox
-            this.up = true;
+        // 5. Pulo
+        if (Math.random() < 0.04) {
+            this._upJust = true;
+            this._up = true;
             if (distanceX > 150) this.moveTowards();
-            this.actionCooldown = 20;
+            this.actionCooldown = 25;
             return;
         } else {
-            this.up = false;
+            this._up = false;
         }
 
-        // 6. Movement (Avançar / Recuar)
-        if (distanceX > 120) {
+        // 6. Movimento
+        if (distanceX > 130) {
             this.moveTowards();
         } else {
             this.stopMoving();
@@ -97,35 +124,26 @@ export class CPUController {
 
     private moveTowards() {
         if (this.me.x < this.target.x) {
-            this.right = true;
-            this.left = false;
+            this._right = true;
+            this._left = false;
         } else {
-            this.left = true;
-            this.right = false;
+            this._left = true;
+            this._right = false;
         }
     }
 
     private moveAway() {
         if (this.me.x < this.target.x) {
-            this.left = true;
-            this.right = false;
+            this._left = true;
+            this._right = false;
         } else {
-            this.right = true;
-            this.left = false;
+            this._right = true;
+            this._left = false;
         }
     }
 
     private stopMoving() {
-        this.left = false;
-        this.right = false;
+        this._left = false;
+        this._right = false;
     }
-
-    // Compatibilidade com InputManager
-    public isLeftPressed(): boolean { return this.left; }
-    public isRightPressed(): boolean { return this.right; }
-    public isUpPressed(): boolean { return this.up; }
-    public isDownPressed(): boolean { return this.down; }
-    public isAttackJustPressed(): boolean { return this.attackJustPressed; }
-    public isSpecialJustPressed(): boolean { return this.specialJustPressed; }
-    public isThrowJustPressed(): boolean { return this.throwJustPressed; }
 }

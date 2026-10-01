@@ -1,0 +1,37 @@
+{
+  "id": "cmsw_hq",
+  "name": "C&M Software HQ",
+  "music": "assets/audio/music/stage_cmsw.ogg",
+  "groundY": 590,
+  "leftBoundary": 80,
+  "rightBoundary": 1200,
+  "width": 1280,
+  "layers": [
+    {
+      "id": "sky",
+      "image": "stage_bg",
+      "parallaxX": 0.05,
+      "parallaxY": 0,
+      "depth": 0
+    },
+    {
+      "id": "middleground",
+      "image": "stage_mg",
+      "parallaxX": 0.3,
+      "parallaxY": 0,
+      "depth": 1,
+      "animation": "bounce",
+      "animSpeed": 0.8
+    },
+    {
+      "id": "floor",
+      "image": "stage_fg",
+      "parallaxX": 1.0,
+      "parallaxY": 0,
+      "depth": 2
+    }
+  ],
+  "ambientEffects": [
+    { "type": "leaves", "count": 8, "speed": 0.5 }
+  ]
+}
