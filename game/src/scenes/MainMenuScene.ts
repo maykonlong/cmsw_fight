@@ -73,7 +73,7 @@ export class MainMenuScene extends Phaser.Scene {
         btmLine.fillRect(0, height - 6, width, 6);
 
         // Título principal
-        const title = this.add.text(width / 2, 150, 'CMSW FIGHT', {
+        const title = this.add.text(width / 2, 150, 'C&M FIGTH', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '96px',
             color: '#ffffff',
