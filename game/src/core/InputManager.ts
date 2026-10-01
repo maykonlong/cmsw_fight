@@ -4,8 +4,6 @@ import { InputBuffer } from './InputBuffer';
 
 export class InputManager implements IInputProvider {
     private scene: Phaser.Scene;
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    private keys: { [key: string]: Phaser.Input.Keyboard.Key };
     
     // Rastrear botoes de gamepad do frame anterior para o "JustPressed"
     private prevPadState = { A: false, B: false, X: false, Y: false, RB: false, RT: false, LB: false, up: false };
@@ -13,41 +11,66 @@ export class InputManager implements IInputProvider {
     public buffer: InputBuffer;
     public currentFrame: number = 0;
 
+    // Estado global de teclas DOM nativas para garantia de funcionamento no navegador
+    private static downKeys: Set<string> = new Set();
+    private static justPressedKeys: Set<string> = new Set();
+    private static listenersAttached: boolean = false;
+
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        if (!scene.input.keyboard) throw new Error("Keyboard not available");
-        this.cursors = scene.input.keyboard.createCursorKeys();
-        
-        // Cada KeyCode é registrado EXATAMENTE UMA VEZ para evitar sobrescrever ouvintes
-        this.keys = {
-            // Movimento WASD
-            W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-            A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-            S: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-            D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-
-            // Socos (Z, X, C ou J, K, L)
-            Z: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
-            X: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
-            C: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C),
-            J: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
-            K: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
-            L: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
-
-            // Chutes (V, B, N ou U, I, O)
-            V: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V),
-            B: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B),
-            N: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N),
-            U: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U),
-            I: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
-            O: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O),
-
-            // Especial (ESPAÇO ou E)
-            SPACE: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
-            E: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
-        };
-
         this.buffer = new InputBuffer();
+        this.attachDOMListeners();
+    }
+
+    private attachDOMListeners() {
+        if (InputManager.listenersAttached) return;
+        InputManager.listenersAttached = true;
+
+        window.addEventListener('keydown', (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            const code = e.code.toLowerCase();
+
+            // Prevenir rolagem de tela no navegador para setas e barra de espaço durante o jogo
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'space'].includes(key) || ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space'].includes(code)) {
+                if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            }
+
+            if (!InputManager.downKeys.has(key) && !InputManager.downKeys.has(code)) {
+                InputManager.justPressedKeys.add(key);
+                InputManager.justPressedKeys.add(code);
+            }
+            InputManager.downKeys.add(key);
+            InputManager.downKeys.add(code);
+        });
+
+        window.addEventListener('keyup', (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            const code = e.code.toLowerCase();
+            InputManager.downKeys.delete(key);
+            InputManager.downKeys.delete(code);
+        });
+
+        // Limpar teclas em perda de foco da janela
+        window.addEventListener('blur', () => {
+            InputManager.downKeys.clear();
+            InputManager.justPressedKeys.clear();
+        });
+    }
+
+    private isDown(...keys: string[]): boolean {
+        for (const k of keys) {
+            if (InputManager.downKeys.has(k.toLowerCase())) return true;
+        }
+        return false;
+    }
+
+    private isJustPressed(...keys: string[]): boolean {
+        for (const k of keys) {
+            if (InputManager.justPressedKeys.has(k.toLowerCase())) return true;
+        }
+        return false;
     }
 
     // Estados Virtuais (Touch / UI)
@@ -78,26 +101,22 @@ export class InputManager implements IInputProvider {
     }
 
     get isLeftDown(): boolean { 
-        return this.cursors.left.isDown || 
-               this.keys.A.isDown ||
+        return this.isDown('arrowleft', 'a', 'keya') || 
                this.virtualLeft || 
                Boolean(this.pad && (this.pad.left || this.pad.axes[0].getValue() < -0.5)); 
     }
     get isRightDown(): boolean { 
-        return this.cursors.right.isDown || 
-               this.keys.D.isDown ||
+        return this.isDown('arrowright', 'd', 'keyd') || 
                this.virtualRight || 
                Boolean(this.pad && (this.pad.right || this.pad.axes[0].getValue() > 0.5)); 
     }
     get isUpDown(): boolean { 
-        return this.cursors.up.isDown || 
-               this.keys.W.isDown ||
+        return this.isDown('arrowup', 'w', 'keyw') || 
                this.virtualUp || 
                Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5)); 
     }
     get isDownDown(): boolean { 
-        return this.cursors.down.isDown || 
-               this.keys.S.isDown ||
+        return this.isDown('arrowdown', 's', 'keys') || 
                this.virtualDown || 
                Boolean(this.pad && (this.pad.down || this.pad.axes[1].getValue() > 0.5)); 
     }
@@ -105,57 +124,49 @@ export class InputManager implements IInputProvider {
     get isUpJustPressed(): boolean { 
         const padUp = Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5));
         const padJustUp = padUp && !this.prevPadState.up;
-        return Phaser.Input.Keyboard.JustDown(this.cursors.up) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.W) ||
+        return this.isJustPressed('arrowup', 'w', 'keyw') || 
                this.virtualUpJustPressed || padJustUp; 
     }
     get isLPJustPressed(): boolean { 
         const padX = Boolean(this.pad && this.pad.X);
         const padJustX = padX && !this.prevPadState.X;
-        return Phaser.Input.Keyboard.JustDown(this.keys.Z) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.J) ||
+        return this.isJustPressed('z', 'keyz', 'j', 'keyj') || 
                this.virtualLPJustPressed || padJustX; 
     }
     get isMPJustPressed(): boolean { 
         const padY = Boolean(this.pad && this.pad.Y);
         const padJustY = padY && !this.prevPadState.Y;
-        return Phaser.Input.Keyboard.JustDown(this.keys.X) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.K) ||
+        return this.isJustPressed('x', 'keyx', 'k', 'keyk') || 
                this.virtualMPJustPressed || padJustY; 
     }
     get isHPJustPressed(): boolean { 
         const padRB = Boolean(this.pad && this.pad.R1);
         const padJustRB = padRB && !this.prevPadState.RB;
-        return Phaser.Input.Keyboard.JustDown(this.keys.C) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.L) ||
+        return this.isJustPressed('c', 'keyc', 'l', 'keyl') || 
                this.virtualHPJustPressed || padJustRB; 
     }
     get isLKJustPressed(): boolean { 
         const padA = Boolean(this.pad && this.pad.A);
         const padJustA = padA && !this.prevPadState.A;
-        return Phaser.Input.Keyboard.JustDown(this.keys.V) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.U) ||
+        return this.isJustPressed('v', 'keyv', 'u', 'keyu') || 
                this.virtualLKJustPressed || padJustA; 
     }
     get isMKJustPressed(): boolean { 
         const padB = Boolean(this.pad && this.pad.B);
         const padJustB = padB && !this.prevPadState.B;
-        return Phaser.Input.Keyboard.JustDown(this.keys.B) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.I) ||
+        return this.isJustPressed('b', 'keyb', 'i', 'keyi') || 
                this.virtualMKJustPressed || padJustB; 
     }
     get isHKJustPressed(): boolean { 
         const padRT = Boolean(this.pad && this.pad.R2);
         const padJustRT = padRT && !this.prevPadState.RT;
-        return Phaser.Input.Keyboard.JustDown(this.keys.N) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.O) ||
+        return this.isJustPressed('n', 'keyn', 'o', 'keyo') || 
                this.virtualHKJustPressed || padJustRT; 
     }
     get isSpecialJustPressed(): boolean { 
         const padLB = Boolean(this.pad && this.pad.L1);
         const padJustLB = padLB && !this.prevPadState.LB;
-        return Phaser.Input.Keyboard.JustDown(this.keys.SPACE) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.E) ||
+        return this.isJustPressed(' ', 'space', 'e', 'keye') || 
                this.virtualSpecialJustPressed || padJustLB; 
     }
 
@@ -217,5 +228,8 @@ export class InputManager implements IInputProvider {
             this.prevPadState.RT = Boolean(this.pad.R2);
             this.prevPadState.LB = Boolean(this.pad.L1);
         }
+
+        // Limpar justPressedKeys no final de cada tick do game loop
+        InputManager.justPressedKeys.clear();
     }
 }
