@@ -24,7 +24,9 @@ export class SettingsScene extends Phaser.Scene {
         this.add.text(width / 2, 80, 'CONFIGURAÇÕES', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '60px',
-            color: '#ffffff'
+            color: '#ffdd00',
+            stroke: '#ff0000',
+            strokeThickness: 6
         }).setOrigin(0.5);
 
         this.audioManager = AudioManager.getInstance();
@@ -32,29 +34,40 @@ export class SettingsScene extends Phaser.Scene {
 
         // Load configs if any
         const savedDiff = localStorage.getItem('cmsw_diff');
-        if (savedDiff !== null) this.currentDiff = parseInt(savedDiff);
+        if (savedDiff !== null) this.currentDiff = parseInt(savedDiff, 10);
 
         // Options
-        const startY = 250;
-        const spacing = 80;
+        const startY = 220;
+        const spacing = 75;
 
         const options = [
-            { label: () => `DIFICULDADE CPU: < ${this.diffLevels[this.currentDiff]} >`, action: () => this.toggleDiff() },
-            { label: () => `VOLUME MÚSICA: < ${Math.round(this.audioManager.musicVolume * 10)} >`, action: () => {} },
-            { label: () => `VOLUME EFEITOS: < ${Math.round(this.audioManager.sfxVolume * 10)} >`, action: () => {} },
+            { label: () => `DIFICULDADE CPU: < ${this.diffLevels[this.currentDiff]} >`, action: () => this.adjust(1) },
+            { label: () => `VOLUME MÚSICA: < ${Math.round(this.audioManager.musicVolume * 10)} >`, action: () => this.adjust(1) },
+            { label: () => `VOLUME EFEITOS: < ${Math.round(this.audioManager.sfxVolume * 10)} >`, action: () => this.adjust(1) },
             { label: () => `TELA CHEIA: ${this.fullscreen ? 'ON' : 'OFF'}`, action: () => this.toggleFullscreen() },
-            { label: () => 'VOLTAR', action: () => {
-                this.audioManager.saveSettings();
-                this.scene.start('MainMenuScene');
-            }}
+            { label: () => '[ VOLTAR AO MENU ]', action: () => this.goBack() }
         ];
 
         options.forEach((opt, i) => {
             const item = this.add.text(width / 2, startY + i * spacing, opt.label(), {
                 fontFamily: '"Arial Black", Gadget, sans-serif',
                 fontSize: '32px',
-                color: '#cccccc'
-            }).setOrigin(0.5);
+                color: '#cccccc',
+                stroke: '#000000',
+                strokeThickness: 4
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            item.on('pointerdown', () => {
+                this.selectedIndex = i;
+                this.updateSelection();
+                opt.action();
+            });
+
+            item.on('pointerover', () => {
+                this.selectedIndex = i;
+                this.updateSelection();
+            });
+
             this.menuItems.push(item);
         });
 
@@ -66,13 +79,21 @@ export class SettingsScene extends Phaser.Scene {
         this.input.keyboard?.on('keydown-RIGHT', () => this.adjust(1));
         this.input.keyboard?.on('keydown-ENTER', () => this.select(options));
         this.input.keyboard?.on('keydown-SPACE', () => this.select(options));
+        this.input.keyboard?.on('keydown-ESC', () => this.goBack());
 
         // Update labels dynamically
         this.events.on('update', () => {
             options.forEach((opt, i) => {
-                this.menuItems[i].setText(opt.label());
+                if (this.menuItems[i]) {
+                    this.menuItems[i].setText(opt.label());
+                }
             });
         });
+    }
+
+    private goBack() {
+        this.audioManager.saveSettings();
+        this.scene.start('MainMenuScene');
     }
 
     private move(dir: number) {
@@ -88,13 +109,13 @@ export class SettingsScene extends Phaser.Scene {
             this.audioManager.musicVolume = Phaser.Math.Clamp(this.audioManager.musicVolume + (dir * 0.1), 0, 1);
         } else if (this.selectedIndex === 2) { // SFX
             this.audioManager.sfxVolume = Phaser.Math.Clamp(this.audioManager.sfxVolume + (dir * 0.1), 0, 1);
-            this.audioManager.voiceVolume = this.audioManager.sfxVolume; // Link voice to SFX for now
-            if (dir !== 0) this.audioManager.playUI('ui_cursor'); // Play test sound
+            this.audioManager.voiceVolume = this.audioManager.sfxVolume;
+            if (dir !== 0) this.audioManager.playUI('ui_cursor');
+        } else if (this.selectedIndex === 3) {
+            this.toggleFullscreen();
+        } else if (this.selectedIndex === 4) {
+            this.goBack();
         }
-    }
-
-    private toggleDiff() {
-        this.adjust(1);
     }
 
     private toggleFullscreen() {
@@ -110,9 +131,11 @@ export class SettingsScene extends Phaser.Scene {
         this.menuItems.forEach((item, i) => {
             if (i === this.selectedIndex) {
                 item.setColor('#ffdd00');
+                item.setStroke('#ff0000', 5);
                 item.setScale(1.1);
             } else {
                 item.setColor('#cccccc');
+                item.setStroke('#000000', 4);
                 item.setScale(1);
             }
         });

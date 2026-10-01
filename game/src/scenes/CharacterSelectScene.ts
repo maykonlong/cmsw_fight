@@ -4,6 +4,7 @@ import { AudioManager } from '../engine/AudioManager';
 const CHARACTERS = [
     {
         key: 'kevin',
+        textureKey: 'kevin_idle',
         name: 'KEVIN MANJA',
         specialty: 'Especial: Beijo Elétrico',
         color: 0x3399ff,
@@ -12,6 +13,7 @@ const CHARACTERS = [
     },
     {
         key: 'vini_dog',
+        textureKey: 'vini_dog_idle',
         name: 'VINI DOG',
         specialty: 'Especial: Aura do Cachorro',
         color: 0xff4400,
@@ -20,6 +22,7 @@ const CHARACTERS = [
     },
     {
         key: 'unknown',
+        textureKey: 'unknown',
         name: '???',
         specialty: '???',
         color: 0x444444,
@@ -28,6 +31,7 @@ const CHARACTERS = [
     },
     {
         key: 'unknown',
+        textureKey: 'unknown',
         name: '???',
         specialty: '???',
         color: 0x444444,
@@ -82,7 +86,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Instruções
-        this.add.text(width / 2, 82, 'P1: ← → ENTER    P2: A D ESPAÇO', {
+        this.add.text(width / 2, 82, 'P1: ← → ENTER / CLIQUE NO PERSONAGEM', {
             fontFamily: 'Arial',
             fontSize: '18px',
             color: '#aaaaaa',
@@ -109,9 +113,22 @@ export class CharacterSelectScene extends Phaser.Scene {
             card.strokeRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);
             card.fillRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);
 
-            if (!char.locked && this.textures.exists(char.key)) {
-                this.add.image(cx, cy, char.key)
-                    .setDisplaySize(cardW - 20, cardH - 20);
+            const getTex = (cKey: string) => {
+                if (this.textures.exists(cKey + '_idle')) return cKey + '_idle';
+                if (this.textures.exists(cKey)) return cKey;
+                return null;
+            };
+
+            const texName = getTex(char.key);
+            if (!char.locked && texName) {
+                const img = this.add.image(cx, cy - 10, texName)
+                    .setDisplaySize(cardW - 30, cardH - 40);
+                img.setInteractive({ useHandCursor: true });
+                img.on('pointerdown', () => {
+                    this.p1Index = i;
+                    this.updateGridHighlights();
+                    this.confirmP1();
+                });
             } else {
                 this.add.text(cx, cy, char.locked ? '?' : char.name[0], {
                     fontFamily: '"Arial Black"',
@@ -120,17 +137,22 @@ export class CharacterSelectScene extends Phaser.Scene {
                 }).setOrigin(0.5);
             }
 
-            this.add.text(cx, cy + cardH / 2 + 16, char.name, {
+            const label = this.add.text(cx, cy + cardH / 2 + 16, char.name, {
                 fontFamily: '"Arial Black"',
                 fontSize: '16px',
                 color: char.locked ? '#444444' : '#ffffff',
             }).setOrigin(0.5);
+            label.setInteractive({ useHandCursor: true });
+            label.on('pointerdown', () => {
+                if (!char.locked) {
+                    this.p1Index = i;
+                    this.updateGridHighlights();
+                    this.confirmP1();
+                }
+            });
         });
 
         // Separador central
-        const sep = this.add.graphics();
-        sep.fillStyle(0xff2200, 1);
-        sep.fillRect(width / 2 - 2, 420, 4, 220);
         this.add.text(width / 2, 410, 'VS', {
             fontFamily: '"Arial Black"',
             fontSize: '48px',
@@ -139,12 +161,24 @@ export class CharacterSelectScene extends Phaser.Scene {
             strokeThickness: 4,
         }).setOrigin(0.5);
 
-        // Previews dos personagens selecionados
-        this.p1Preview = this.add.image(200, 540, CHARACTERS[this.p1Index].key)
-            .setDisplaySize(180, 260).setVisible(this.textures.exists(CHARACTERS[this.p1Index].key));
+        const getP1Tex = () => {
+            const k = CHARACTERS[this.p1Index].key;
+            if (this.textures.exists(k + '_idle')) return k + '_idle';
+            return k;
+        };
 
-        this.p2Preview = this.add.image(width - 200, 540, CHARACTERS[this.p2Index].key)
-            .setDisplaySize(180, 260).setFlipX(true).setVisible(this.textures.exists(CHARACTERS[this.p2Index].key));
+        const getP2Tex = () => {
+            const k = CHARACTERS[this.p2Index].key;
+            if (this.textures.exists(k + '_idle')) return k + '_idle';
+            return k;
+        };
+
+        // Previews dos personagens selecionados
+        this.p1Preview = this.add.image(200, 530, getP1Tex())
+            .setDisplaySize(160, 240);
+
+        this.p2Preview = this.add.image(width - 200, 530, getP2Tex())
+            .setDisplaySize(160, 240).setFlipX(true);
 
         // Nomes e especiais abaixo dos previews
         this.p1NameText = this.add.text(200, 660, CHARACTERS[this.p1Index].name, {
@@ -185,46 +219,52 @@ export class CharacterSelectScene extends Phaser.Scene {
             strokeThickness: 4,
         }).setOrigin(0.5);
 
-        // Indicadores de seleção no grid
         this.updateGridHighlights();
 
         // Input P1: ← → ENTER
         this.input.keyboard!.on('keydown-LEFT', () => this.moveP1(-1));
         this.input.keyboard!.on('keydown-RIGHT', () => this.moveP1(1));
         this.input.keyboard!.on('keydown-ENTER', () => this.confirmP1());
+        this.input.keyboard!.on('keydown-SPACE', () => this.confirmP1());
 
-        // Input P2: A D ESPAÇO
+        // Input P2: A D
         this.input.keyboard!.on('keydown-A', () => this.moveP2(-1));
         this.input.keyboard!.on('keydown-D', () => this.moveP2(1));
-        this.input.keyboard!.on('keydown-SPACE', () => this.confirmP2());
 
         this.cameras.main.fadeIn(400, 0, 0, 0);
     }
 
     private updateGridHighlights() {
-        // Redraw highlights seria complexo; simplificamos indicando com texto de label abaixo
-        this.p1NameText?.setText(CHARACTERS[this.p1Index].name);
-        this.p1SpecialText?.setText(CHARACTERS[this.p1Index].specialty);
-        this.p2NameText?.setText(CHARACTERS[this.p2Index].name);
-        this.p2SpecialText?.setText(CHARACTERS[this.p2Index].specialty);
+        const p1Char = CHARACTERS[this.p1Index];
+        const p2Char = CHARACTERS[this.p2Index];
 
-        if (this.textures.exists(CHARACTERS[this.p1Index].key)) {
-            this.p1Preview?.setTexture(CHARACTERS[this.p1Index].key).setVisible(true);
+        this.p1NameText?.setText(p1Char.name);
+        this.p1SpecialText?.setText(p1Char.specialty);
+        this.p2NameText?.setText(p2Char.name);
+        this.p2SpecialText?.setText(p2Char.specialty);
+
+        const p1Tex = this.textures.exists(p1Char.key + '_idle') ? p1Char.key + '_idle' : p1Char.key;
+        const p2Tex = this.textures.exists(p2Char.key + '_idle') ? p2Char.key + '_idle' : p2Char.key;
+
+        if (this.p1Preview && this.textures.exists(p1Tex)) {
+            this.p1Preview.setTexture(p1Tex);
         }
-        if (this.textures.exists(CHARACTERS[this.p2Index].key)) {
-            this.p2Preview?.setTexture(CHARACTERS[this.p2Index].key).setVisible(true);
+        if (this.p2Preview && this.textures.exists(p2Tex)) {
+            this.p2Preview.setTexture(p2Tex);
         }
     }
 
     private moveP1(dir: number) {
         if (this.p1Confirmed) return;
-        this.p1Index = Phaser.Math.Wrap(this.p1Index + dir, 0, CHARACTERS.filter(c => !c.locked).length);
+        const validChars = CHARACTERS.filter(c => !c.locked);
+        this.p1Index = Phaser.Math.Wrap(this.p1Index + dir, 0, validChars.length);
         this.updateGridHighlights();
     }
 
     private moveP2(dir: number) {
         if (this.p2Confirmed) return;
-        this.p2Index = Phaser.Math.Wrap(this.p2Index + dir, 0, CHARACTERS.filter(c => !c.locked).length);
+        const validChars = CHARACTERS.filter(c => !c.locked);
+        this.p2Index = Phaser.Math.Wrap(this.p2Index + dir, 0, validChars.length);
         this.updateGridHighlights();
     }
 
@@ -232,22 +272,18 @@ export class CharacterSelectScene extends Phaser.Scene {
         if (this.p1Confirmed) return;
         this.p1Confirmed = true;
         this.p1NameText.setColor('#ffdd00');
-        this.checkBothConfirmed();
-    }
-
-    private confirmP2() {
-        if (this.p2Confirmed) return;
-        this.p2Confirmed = true;
-        this.p2NameText.setColor('#ffdd00');
+        if (this.mode === '1p') {
+            this.p2Confirmed = true;
+        }
         this.checkBothConfirmed();
     }
 
     private checkBothConfirmed() {
         const bothDone = this.p1Confirmed && (this.mode === '1p' || this.p2Confirmed);
         if (bothDone) {
-            this.time.delayedCall(500, () => {
-                this.cameras.main.fadeOut(400, 0, 0, 0);
-                this.time.delayedCall(420, () => {
+            this.time.delayedCall(400, () => {
+                this.cameras.main.fadeOut(300, 0, 0, 0);
+                this.time.delayedCall(320, () => {
                     this.scene.start('VsScene', {
                         p1: CHARACTERS[this.p1Index].key,
                         p2: CHARACTERS[this.p2Index].key,

@@ -9,7 +9,7 @@ interface VsData {
 }
 
 export class VsScene extends Phaser.Scene {
-    private data_: VsData = { p1: 'kevin', p2: 'vini_dog', p1Name: 'KEVIN', p2Name: 'VINI DOG', mode: '1p' };
+    private data_: VsData = { p1: 'kevin', p2: 'vini_dog', p1Name: 'KEVIN MANJA', p2Name: 'VINI DOG', mode: '1p' };
 
     constructor() {
         super({ key: 'VsScene' });
@@ -27,12 +27,21 @@ export class VsScene extends Phaser.Scene {
         bg.fillGradientStyle(0x0d0221, 0x1a0000, 0x0d0221, 0x1a0000, 1);
         bg.fillRect(0, 0, width, height);
 
+        const getTex = (key: string) => {
+            if (this.textures.exists(key + '_idle')) return key + '_idle';
+            return key;
+        };
+
+        const p1Tex = getTex(this.data_.p1);
+        const p2Tex = getTex(this.data_.p2);
+
         // --- P1 lado esquerdo ---
-        if (this.textures.exists(this.data_.p1)) {
-            const p1Sprite = this.add.image(180, height / 2 + 30, this.data_.p1)
-                .setDisplaySize(280, 420).setAlpha(0).setX(-200);
+        if (this.textures.exists(p1Tex)) {
+            const p1Sprite = this.add.image(180, height / 2 + 30, p1Tex)
+                .setDisplaySize(240, 360).setAlpha(0).setX(-200);
             this.tweens.add({ targets: p1Sprite, x: 220, alpha: 1, duration: 500, ease: 'Power3' });
         }
+
         const p1Bg = this.add.graphics();
         p1Bg.fillStyle(0x3399ff, 0.15);
         p1Bg.fillRect(0, 0, width / 2 - 60, height);
@@ -54,11 +63,12 @@ export class VsScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // --- P2 lado direito ---
-        if (this.textures.exists(this.data_.p2)) {
-            const p2Sprite = this.add.image(width - 180, height / 2 + 30, this.data_.p2)
-                .setDisplaySize(280, 420).setAlpha(0).setX(width + 200).setFlipX(true);
+        if (this.textures.exists(p2Tex)) {
+            const p2Sprite = this.add.image(width - 180, height / 2 + 30, p2Tex)
+                .setDisplaySize(240, 360).setAlpha(0).setX(width + 200).setFlipX(true);
             this.tweens.add({ targets: p2Sprite, x: width - 220, alpha: 1, duration: 500, ease: 'Power3' });
         }
+
         const p2Bg = this.add.graphics();
         p2Bg.fillStyle(0xff4400, 0.15);
         p2Bg.fillRect(width / 2 + 60, 0, width / 2 - 60, height);
@@ -97,13 +107,13 @@ export class VsScene extends Phaser.Scene {
             ease: 'Back.easeOut',
         });
 
-        // Camera shake e flash dramático
+        // Camera flash
         this.time.delayedCall(400, () => {
             this.cameras.main.flash(200, 255, 255, 255);
         });
 
         // Vai para o combate
-        this.time.delayedCall(2800, () => {
+        this.time.delayedCall(2200, () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
             this.time.delayedCall(420, () => {
                 this.scene.start('CombatScene', this.data_);

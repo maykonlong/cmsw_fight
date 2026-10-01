@@ -12,55 +12,58 @@ export class VirtualGamepad {
     }
 
     private createControls() {
-        // Apenas criar se for mobile ou touch habilitado
-        if (!this.scene.sys.game.device.input.touch) return;
+        // Detecção robusta de dispositivo touch ou emulador
+        const isTouchDevice = this.scene.sys.game.device.input.touch || 
+                              ('ontouchstart' in window) || 
+                              (navigator.maxTouchPoints > 0);
+
+        if (!isTouchDevice) return;
 
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
 
         // Estilo base dos botões
-        const btnAlpha = 0.6;
-        const radius = 35;
+        const btnAlpha = 0.65;
+        const radius = 38;
 
         // D-PAD (Esquerda)
-        this.createBtn(150, h - 150, radius, btnAlpha, 'left');
-        this.createBtn(310, h - 150, radius, btnAlpha, 'right');
-        this.createBtn(230, h - 230, radius, btnAlpha, 'up');
-        this.createBtn(230, h - 70, radius, btnAlpha, 'down');
+        this.createBtn(120, h - 140, radius, btnAlpha, 'left', 0xffffff, '←');
+        this.createBtn(260, h - 140, radius, btnAlpha, 'right', 0xffffff, '→');
+        this.createBtn(190, h - 210, radius, btnAlpha, 'up', 0xffffff, '↑');
+        this.createBtn(190, h - 70, radius, btnAlpha, 'down', 0xffffff, '↓');
 
-        // Botões de Ação (Direita) - 2 rows x 3 + special
-        const btnX = w - 300;
-        const btnY = h - 200;
+        // Botões de Ação (Direita) - 2 fileiras x 3 + SPECIAL
+        const btnX = w - 280;
+        const btnY = h - 180;
 
-        // Row 1: Punches
-        this.createBtn(btnX, btnY, radius, btnAlpha, 'lp', 0xffcccc);
-        this.createBtn(btnX + 100, btnY, radius, btnAlpha, 'mp', 0xff6666);
-        this.createBtn(btnX + 200, btnY, radius, btnAlpha, 'hp', 0xff0000);
+        // Punches (Fileira superior)
+        this.createBtn(btnX, btnY, radius, btnAlpha, 'lp', 0xffaaaa, 'LP');
+        this.createBtn(btnX + 90, btnY, radius, btnAlpha, 'mp', 0xff6666, 'MP');
+        this.createBtn(btnX + 180, btnY, radius, btnAlpha, 'hp', 0xff2222, 'HP');
 
-        // Row 2: Kicks
-        this.createBtn(btnX, btnY + 100, radius, btnAlpha, 'lk', 0xccccff);
-        this.createBtn(btnX + 100, btnY + 100, radius, btnAlpha, 'mk', 0x6666ff);
-        this.createBtn(btnX + 200, btnY + 100, radius, btnAlpha, 'hk', 0x0000ff);
+        // Kicks (Fileira inferior)
+        this.createBtn(btnX, btnY + 90, radius, btnAlpha, 'lk', 0xaaaaff, 'LK');
+        this.createBtn(btnX + 90, btnY + 90, radius, btnAlpha, 'mk', 0x6666ff, 'MK');
+        this.createBtn(btnX + 180, btnY + 90, radius, btnAlpha, 'hk', 0x2222ff, 'HK');
 
-        // Special Button
-        this.createBtn(btnX + 100, btnY - 100, radius, btnAlpha, 'special', 0xff00ff);
+        // Special Button (Topo)
+        this.createBtn(btnX + 90, btnY - 90, radius, btnAlpha, 'special', 0xff00ff, 'SPEC');
     }
 
-    private createBtn(x: number, y: number, r: number, alpha: number, action: string, color: number = 0xffffff) {
+    private createBtn(x: number, y: number, r: number, alpha: number, action: string, color: number = 0xffffff, labelOverride?: string) {
         const btn = this.scene.add.circle(x, y, r, color, alpha).setScrollFactor(0).setDepth(2000);
         btn.setInteractive();
 
-        // Text label
-        const labelText = action.toUpperCase();
+        const labelText = labelOverride ?? action.toUpperCase();
         this.scene.add.text(x, y, labelText, {
-            fontFamily: 'Arial',
-            fontSize: '16px',
+            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontSize: '18px',
             color: '#000000',
             fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2001);
 
         btn.on('pointerdown', () => {
-            btn.setAlpha(0.9);
+            btn.setAlpha(0.95);
             btn.setScale(0.9);
             this.handleInput(action, true);
         });

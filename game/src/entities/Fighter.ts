@@ -114,12 +114,23 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    public setPoseTexture(pose: string) {
+        const baseKey = this.texture.key.replace(/_(idle|punch|kick|crouch|jump|hit|ko|win)$/, '');
+        const targetKey = `${baseKey}_${pose}`;
+        if (this.scene.textures.exists(targetKey)) {
+            this.setTexture(targetKey);
+        } else if (this.scene.textures.exists(baseKey)) {
+            this.setTexture(baseKey);
+        }
+    }
+
     takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
         if (this.isHit) return;
         this.hp -= amount;
         if (this.hp < 0) this.hp = 0;
         const dir = this.x < fromX ? -1 : 1;
         this.setVelocityX(pushbackForce * dir);
+        this.setPoseTexture('hit');
         this.stateMachine.transition('hit', type);
     }
 }
@@ -128,6 +139,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 // IDLE
 // ─────────────────────────────────────────────────────────────────
 class IdleState extends State {
+    enter(f: Fighter) {
+        f.setPoseTexture('idle');
+    }
     execute(f: Fighter) {
         f.setVelocityX(0);
         if (!f.inputManager) return;
@@ -323,6 +337,9 @@ class AttackState extends State {
     enter(f: Fighter) {
         this.duration = 0;
         f.currentHitbox.active = false;
+        
+        const poseName = this.moveData.name.includes('K') ? 'kick' : 'punch';
+        f.setPoseTexture(poseName);
         
         // Copiar dados pro hitbox atual
         f.currentHitbox.damage = this.moveData.damage;
