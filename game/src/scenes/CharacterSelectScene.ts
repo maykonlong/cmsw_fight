@@ -52,6 +52,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     private p1SpecialText!: Phaser.GameObjects.Text;
     private p2SpecialText!: Phaser.GameObjects.Text;
     private mode: string = '1p';
+    private onKeyDown?: (e: KeyboardEvent) => void;
 
     constructor() {
         super({ key: 'CharacterSelectScene' });
@@ -75,6 +76,24 @@ export class CharacterSelectScene extends Phaser.Scene {
         const bg = this.add.graphics();
         bg.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a0a2e, 0x1a0a2e, 1);
         bg.fillRect(0, 0, width, height);
+
+        // Botão VOLTAR
+        const btnBack = this.add.text(60, 36, '[ VOLTAR ]', {
+            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontSize: '24px',
+            color: '#ffdd00',
+            stroke: '#ff0000',
+            strokeThickness: 4,
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+
+        const goBack = () => {
+            this.removeListeners();
+            this.scene.start('MainMenuScene');
+        };
+
+        btnBack.on('pointerdown', goBack);
+        btnBack.on('pointerup', goBack);
 
         // Título da tela
         this.add.text(width / 2, 36, 'ESCOLHA SEU LUTADOR', {
@@ -106,7 +125,6 @@ export class CharacterSelectScene extends Phaser.Scene {
             const cx = startX + col * (cardW + 20) + cardW / 2;
             const cy = gridY;
 
-            // Card background
             const card = this.add.graphics();
             card.lineStyle(3, char.locked ? 0x333333 : char.color, 1);
             card.fillStyle(char.locked ? 0x111111 : 0x1a1a2e, 1);
@@ -124,11 +142,13 @@ export class CharacterSelectScene extends Phaser.Scene {
                 const img = this.add.image(cx, cy - 10, texName)
                     .setDisplaySize(cardW - 30, cardH - 40);
                 img.setInteractive({ useHandCursor: true });
-                img.on('pointerdown', () => {
+                const handleSelect = () => {
                     this.p1Index = i;
                     this.updateGridHighlights();
                     this.confirmP1();
-                });
+                };
+                img.on('pointerdown', handleSelect);
+                img.on('pointerup', handleSelect);
             } else {
                 this.add.text(cx, cy, char.locked ? '?' : char.name[0], {
                     fontFamily: '"Arial Black"',
@@ -142,14 +162,17 @@ export class CharacterSelectScene extends Phaser.Scene {
                 fontSize: '16px',
                 color: char.locked ? '#444444' : '#ffffff',
             }).setOrigin(0.5);
-            label.setInteractive({ useHandCursor: true });
-            label.on('pointerdown', () => {
-                if (!char.locked) {
+
+            if (!char.locked) {
+                label.setInteractive({ useHandCursor: true });
+                const handleSelect = () => {
                     this.p1Index = i;
                     this.updateGridHighlights();
                     this.confirmP1();
-                }
-            });
+                };
+                label.on('pointerdown', handleSelect);
+                label.on('pointerup', handleSelect);
+            }
         });
 
         // Separador central
@@ -173,14 +196,12 @@ export class CharacterSelectScene extends Phaser.Scene {
             return k;
         };
 
-        // Previews dos personagens selecionados
         this.p1Preview = this.add.image(200, 530, getP1Tex())
             .setDisplaySize(160, 240);
 
         this.p2Preview = this.add.image(width - 200, 530, getP2Tex())
             .setDisplaySize(160, 240).setFlipX(true);
 
-        // Nomes e especiais abaixo dos previews
         this.p1NameText = this.add.text(200, 660, CHARACTERS[this.p1Index].name, {
             fontFamily: '"Arial Black"',
             fontSize: '26px',
@@ -203,7 +224,6 @@ export class CharacterSelectScene extends Phaser.Scene {
             color: '#aaaaaa',
         }).setOrigin(0.5);
 
-        // Labels P1 / P2
         this.add.text(200, 400, 'JOGADOR 1', {
             fontFamily: '"Arial Black"',
             fontSize: '20px',
@@ -221,17 +241,28 @@ export class CharacterSelectScene extends Phaser.Scene {
 
         this.updateGridHighlights();
 
-        // Input P1: ← → ENTER
-        this.input.keyboard!.on('keydown-LEFT', () => this.moveP1(-1));
-        this.input.keyboard!.on('keydown-RIGHT', () => this.moveP1(1));
-        this.input.keyboard!.on('keydown-ENTER', () => this.confirmP1());
-        this.input.keyboard!.on('keydown-SPACE', () => this.confirmP1());
+        this.onKeyDown = (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            if (key === 'arrowleft') this.moveP1(-1);
+            else if (key === 'arrowright') this.moveP1(1);
+            else if (key === 'a') this.moveP2(-1);
+            else if (key === 'd') this.moveP2(1);
+            else if (key === 'enter' || key === ' ' || key === 'z') this.confirmP1();
+            else if (key === 'escape' || key === 'backspace') goBack();
+        };
 
-        // Input P2: A D
-        this.input.keyboard!.on('keydown-A', () => this.moveP2(-1));
-        this.input.keyboard!.on('keydown-D', () => this.moveP2(1));
+        window.addEventListener('keydown', this.onKeyDown);
+        this.events.once('shutdown', () => this.removeListeners());
+        this.events.once('destroy', () => this.removeListeners());
 
         this.cameras.main.fadeIn(400, 0, 0, 0);
+    }
+
+    private removeListeners() {
+        if (this.onKeyDown) {
+            window.removeEventListener('keydown', this.onKeyDown);
+            this.onKeyDown = undefined;
+        }
     }
 
     private updateGridHighlights() {
@@ -281,6 +312,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     private checkBothConfirmed() {
         const bothDone = this.p1Confirmed && (this.mode === '1p' || this.p2Confirmed);
         if (bothDone) {
+            this.removeListeners();
             this.time.delayedCall(400, () => {
                 this.cameras.main.fadeOut(300, 0, 0, 0);
                 this.time.delayedCall(320, () => {

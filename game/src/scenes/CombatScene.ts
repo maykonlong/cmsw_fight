@@ -45,7 +45,19 @@ export class CombatScene extends Phaser.Scene {
 
     preload() {
         if (!this.textures.exists('kevin')) this.load.image('kevin', 'assets/sprites/kevin.png');
+        if (!this.textures.exists('kevin_idle')) this.load.image('kevin_idle', 'assets/sprites/kevin_idle.png');
+        if (!this.textures.exists('kevin_punch')) this.load.image('kevin_punch', 'assets/sprites/kevin_punch.png');
+        if (!this.textures.exists('kevin_kick')) this.load.image('kevin_kick', 'assets/sprites/kevin_kick.png');
+
         if (!this.textures.exists('vini_dog')) this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
+        if (!this.textures.exists('vini_dog_idle')) this.load.image('vini_dog_idle', 'assets/sprites/vini_dog_idle.png');
+        if (!this.textures.exists('vini_dog_punch')) this.load.image('vini_dog_punch', 'assets/sprites/vini_dog_punch.png');
+        if (!this.textures.exists('vini_dog_win')) this.load.image('vini_dog_win', 'assets/sprites/vini_dog_win.png');
+
+        if (!this.textures.exists('aura_beijo')) this.load.image('aura_beijo', 'assets/sprites/aura_beijo.png');
+        if (!this.textures.exists('aura_cachorro')) this.load.image('aura_cachorro', 'assets/sprites/aura_cachorro.png');
+        if (!this.textures.exists('banheiro_portatil')) this.load.image('banheiro_portatil', 'assets/sprites/banheiro_portatil.png');
+
         if (!this.textures.exists('stage_bg')) this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
     }
 
@@ -79,12 +91,6 @@ export class CombatScene extends Phaser.Scene {
         this.vfxManager = new VFXManager(this, this.cameraSystem);
 
         // ── PERSONAGENS ──────────────────────────────────────────
-        const graphics = this.make.graphics({});
-        graphics.fillStyle(0xff00ff, 1);
-        graphics.fillCircle(30, 30, 30);
-        graphics.generateTexture('aura_placeholder', 60, 60);
-        graphics.destroy();
-
         this.inputManager = new InputManager(this);
         this.projectiles = this.add.group();
 
@@ -105,7 +111,9 @@ export class CombatScene extends Phaser.Scene {
 
         this.player.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
-            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y, 'aura_placeholder', fighter, 300 * dir, 30, 'electric');
+            const tex = fighter.texture.key.includes('vini') ? 'aura_cachorro' : 'aura_beijo';
+            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y - 20, tex, fighter, 400 * dir, 40, 'electric');
+            proj.setDisplaySize(80, 50);
             this.projectiles.add(proj);
         });
 
@@ -118,7 +126,9 @@ export class CombatScene extends Phaser.Scene {
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
-            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y, 'aura_placeholder', fighter, 300 * dir, 30, 'electric');
+            const tex = fighter.texture.key.includes('vini') ? 'aura_cachorro' : 'aura_beijo';
+            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y - 20, tex, fighter, 400 * dir, 40, 'electric');
+            proj.setDisplaySize(80, 50);
             this.projectiles.add(proj);
         });
         

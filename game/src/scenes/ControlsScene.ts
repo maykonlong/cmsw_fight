@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
 export class ControlsScene extends Phaser.Scene {
+    private onKeyDown?: (e: KeyboardEvent) => void;
+
     constructor() {
         super({ key: 'ControlsScene' });
     }
@@ -43,20 +45,38 @@ export class ControlsScene extends Phaser.Scene {
 
         const btnBack = this.add.text(width / 2, height - 70, '[ VOLTAR AO MENU ]', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '32px',
+            fontSize: '36px',
             color: '#ffdd00',
             stroke: '#ff0000',
-            strokeThickness: 5
+            strokeThickness: 5,
+            padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        const goBack = () => this.scene.start('MainMenuScene');
+        const goBack = () => {
+            this.removeListeners();
+            this.scene.start('MainMenuScene');
+        };
 
         btnBack.on('pointerdown', goBack);
+        btnBack.on('pointerup', goBack);
         btnBack.on('pointerover', () => btnBack.setScale(1.1));
         btnBack.on('pointerout', () => btnBack.setScale(1.0));
 
-        this.input.keyboard?.once('keydown-ENTER', goBack);
-        this.input.keyboard?.once('keydown-SPACE', goBack);
-        this.input.keyboard?.once('keydown-ESC', goBack);
+        this.onKeyDown = (e: KeyboardEvent) => {
+            if (['Escape', 'Enter', ' ', 'Space', 'Backspace'].includes(e.key) || ['Escape', 'Enter', 'Space', 'Backspace'].includes(e.code)) {
+                goBack();
+            }
+        };
+
+        window.addEventListener('keydown', this.onKeyDown);
+        this.events.once('shutdown', () => this.removeListeners());
+        this.events.once('destroy', () => this.removeListeners());
+    }
+
+    private removeListeners() {
+        if (this.onKeyDown) {
+            window.removeEventListener('keydown', this.onKeyDown);
+            this.onKeyDown = undefined;
+        }
     }
 }

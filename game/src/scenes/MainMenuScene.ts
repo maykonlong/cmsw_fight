@@ -5,6 +5,7 @@ export class MainMenuScene extends Phaser.Scene {
     private selectedIndex: number = 0;
     private menuItems: Phaser.GameObjects.Text[] = [];
     private canSelect: boolean = true;
+    private onKeyDown?: (e: KeyboardEvent) => void;
 
     private readonly OPTIONS = [
         { label: '1 PLAYER', action: () => this.startGame('1p') },
@@ -20,6 +21,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+        this.canSelect = true;
 
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('menu_bgm', true);
@@ -33,8 +35,8 @@ export class MainMenuScene extends Phaser.Scene {
         if (this.textures.exists('kevin')) {
             const kevinBg = this.add.image(200, height - 10, 'kevin')
                 .setOrigin(0.5, 1)
-                .setScale(0.55)
-                .setAlpha(0.15)
+                .setScale(0.85)
+                .setAlpha(0.2)
                 .setTint(0x4488ff);
             this.tweens.add({
                 targets: kevinBg,
@@ -48,8 +50,8 @@ export class MainMenuScene extends Phaser.Scene {
         if (this.textures.exists('vini_dog')) {
             const viniBg = this.add.image(width - 200, height - 10, 'vini_dog')
                 .setOrigin(0.5, 1)
-                .setScale(0.55)
-                .setAlpha(0.15)
+                .setScale(0.85)
+                .setAlpha(0.2)
                 .setTint(0xff4444)
                 .setFlipX(true);
             this.tweens.add({
@@ -62,18 +64,17 @@ export class MainMenuScene extends Phaser.Scene {
             });
         }
 
-        // Linha decorativa superior
+        // Linha decorativa superior e inferior
         const topLine = this.add.graphics();
         topLine.fillStyle(0xff2200, 1);
         topLine.fillRect(0, 0, width, 6);
 
-        // Linha decorativa inferior
         const btmLine = this.add.graphics();
         btmLine.fillStyle(0xff2200, 1);
         btmLine.fillRect(0, height - 6, width, 6);
 
         // Título principal
-        const title = this.add.text(width / 2, 150, 'C&M FIGTH', {
+        const title = this.add.text(width / 2, 140, 'C&M FIGTH', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '96px',
             color: '#ffffff',
@@ -81,7 +82,6 @@ export class MainMenuScene extends Phaser.Scene {
             strokeThickness: 10,
         }).setOrigin(0.5);
 
-        // Animação pulsante no título
         this.tweens.add({
             targets: title,
             scaleX: 1.04,
@@ -92,8 +92,7 @@ export class MainMenuScene extends Phaser.Scene {
             ease: 'Sine.easeInOut'
         });
 
-        // Subtítulo
-        this.add.text(width / 2, 240, '— SELECIONE —', {
+        this.add.text(width / 2, 230, '— SELECIONE —', {
             fontFamily: 'Arial',
             fontSize: '18px',
             color: '#ff8800',
@@ -101,8 +100,10 @@ export class MainMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Items do menu
-        const startY = 310;
+        const startY = 300;
         const spacing = 72;
+        this.menuItems = [];
+
         this.OPTIONS.forEach((opt, i) => {
             const item = this.add.text(width / 2, startY + i * spacing, opt.label, {
                 fontFamily: '"Arial Black", Gadget, sans-serif',
@@ -110,36 +111,48 @@ export class MainMenuScene extends Phaser.Scene {
                 color: '#cccccc',
                 stroke: '#000000',
                 strokeThickness: 4,
-            }).setOrigin(0.5);
-            this.menuItems.push(item);
-        });
+                padding: { x: 20, y: 5 }
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        // Destaca item inicial
-        this.updateSelection();
-
-        // Input
-        this.input.keyboard!.on('keydown-UP', () => this.move(-1));
-        this.input.keyboard!.on('keydown-DOWN', () => this.move(1));
-        this.input.keyboard!.on('keydown-ENTER', () => this.select());
-        this.input.keyboard!.on('keydown-SPACE', () => this.select());
-        this.input.keyboard!.on('keydown-Z', () => this.select());
-
-        // Fade in
-        this.cameras.main.fadeIn(500, 0, 0, 0);
-
-        // Instrução de toque mobile
-        this.menuItems.forEach((item, i) => {
-            item.setInteractive({ useHandCursor: true });
-            item.on('pointerdown', () => {
+            const handlePointer = () => {
                 this.selectedIndex = i;
                 this.updateSelection();
                 this.select();
-            });
+            };
+
+            item.on('pointerdown', handlePointer);
+            item.on('pointerup', handlePointer);
+
             item.on('pointerover', () => {
                 this.selectedIndex = i;
                 this.updateSelection();
             });
+
+            this.menuItems.push(item);
         });
+
+        this.updateSelection();
+
+        // Listener de teclado nativo DOM
+        this.onKeyDown = (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            if (key === 'arrowup' || key === 'w') this.move(-1);
+            else if (key === 'arrowdown' || key === 's') this.move(1);
+            else if (key === 'enter' || key === ' ' || key === 'z') this.select();
+        };
+
+        window.addEventListener('keydown', this.onKeyDown);
+        this.events.once('shutdown', () => this.removeListeners());
+        this.events.once('destroy', () => this.removeListeners());
+
+        this.cameras.main.fadeIn(500, 0, 0, 0);
+    }
+
+    private removeListeners() {
+        if (this.onKeyDown) {
+            window.removeEventListener('keydown', this.onKeyDown);
+            this.onKeyDown = undefined;
+        }
     }
 
     private move(dir: number) {
@@ -164,6 +177,7 @@ export class MainMenuScene extends Phaser.Scene {
     private select() {
         if (!this.canSelect) return;
         this.canSelect = false;
+        this.removeListeners();
         this.cameras.main.fadeOut(300, 0, 0, 0);
         this.time.delayedCall(320, () => {
             this.OPTIONS[this.selectedIndex].action();
@@ -175,7 +189,6 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     private showControls() {
-        this.canSelect = true; // since we pop state or start new
         this.scene.start('ControlsScene');
     }
 }

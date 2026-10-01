@@ -635,13 +635,23 @@ class KOState extends State {
 class WinState extends State {
     enter(f: Fighter) {
         f.setVelocityX(0);
-        f.setTint(0x00ff88);
-        f.setVelocityY(-400);
+        f.clearTint();
+        if (f.texture.key.includes('vini')) {
+            f.setPoseTexture('win');
+        } else {
+            f.setPoseTexture('idle');
+            // Surge Banheiro Portátil no cenário de vitória do Kevin
+            if (f.scene.textures.exists('banheiro_portatil')) {
+                const toilet = f.scene.add.image(f.x + 80, f.y - 20, 'banheiro_portatil').setDepth(150);
+                toilet.setDisplaySize(140, 220);
+            }
+        }
+        f.setVelocityY(-300);
     }
 
     execute(f: Fighter) {
         if (f.body?.touching.down && f.body.velocity.y >= 0) {
-            f.setVelocityY(-300);
+            f.setVelocityY(0);
         }
     }
 }

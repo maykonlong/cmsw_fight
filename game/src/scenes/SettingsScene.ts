@@ -5,12 +5,12 @@ export class SettingsScene extends Phaser.Scene {
     private selectedIndex: number = 0;
     private menuItems: Phaser.GameObjects.Text[] = [];
     
-    // Configurações
     private diffLevels = ['EASY', 'NORMAL', 'HARD'];
-    private currentDiff: number = 1; // NORMAL
+    private currentDiff: number = 1;
     private fullscreen: boolean = false;
     
     private audioManager!: AudioManager;
+    private onKeyDown?: (e: KeyboardEvent) => void;
 
     constructor() {
         super({ key: 'SettingsScene' });
@@ -32,11 +32,9 @@ export class SettingsScene extends Phaser.Scene {
         this.audioManager = AudioManager.getInstance();
         this.audioManager.setScene(this);
 
-        // Load configs if any
         const savedDiff = localStorage.getItem('cmsw_diff');
         if (savedDiff !== null) this.currentDiff = parseInt(savedDiff, 10);
 
-        // Options
         const startY = 220;
         const spacing = 75;
 
@@ -48,20 +46,25 @@ export class SettingsScene extends Phaser.Scene {
             { label: () => '[ VOLTAR AO MENU ]', action: () => this.goBack() }
         ];
 
+        this.menuItems = [];
         options.forEach((opt, i) => {
             const item = this.add.text(width / 2, startY + i * spacing, opt.label(), {
                 fontFamily: '"Arial Black", Gadget, sans-serif',
                 fontSize: '32px',
                 color: '#cccccc',
                 stroke: '#000000',
-                strokeThickness: 4
+                strokeThickness: 4,
+                padding: { x: 10, y: 5 }
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-            item.on('pointerdown', () => {
+            const handlePointer = () => {
                 this.selectedIndex = i;
                 this.updateSelection();
                 opt.action();
-            });
+            };
+
+            item.on('pointerdown', handlePointer);
+            item.on('pointerup', handlePointer);
 
             item.on('pointerover', () => {
                 this.selectedIndex = i;
@@ -73,15 +76,20 @@ export class SettingsScene extends Phaser.Scene {
 
         this.updateSelection();
 
-        this.input.keyboard?.on('keydown-UP', () => this.move(-1));
-        this.input.keyboard?.on('keydown-DOWN', () => this.move(1));
-        this.input.keyboard?.on('keydown-LEFT', () => this.adjust(-1));
-        this.input.keyboard?.on('keydown-RIGHT', () => this.adjust(1));
-        this.input.keyboard?.on('keydown-ENTER', () => this.select(options));
-        this.input.keyboard?.on('keydown-SPACE', () => this.select(options));
-        this.input.keyboard?.on('keydown-ESC', () => this.goBack());
+        this.onKeyDown = (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            if (key === 'arrowup' || key === 'w') this.move(-1);
+            else if (key === 'arrowdown' || key === 's') this.move(1);
+            else if (key === 'arrowleft' || key === 'a') this.adjust(-1);
+            else if (key === 'arrowright' || key === 'd') this.adjust(1);
+            else if (key === 'enter' || key === ' ' || key === 'z') this.select(options);
+            else if (key === 'escape' || key === 'backspace') this.goBack();
+        };
 
-        // Update labels dynamically
+        window.addEventListener('keydown', this.onKeyDown);
+        this.events.once('shutdown', () => this.removeListeners());
+        this.events.once('destroy', () => this.removeListeners());
+
         this.events.on('update', () => {
             options.forEach((opt, i) => {
                 if (this.menuItems[i]) {
@@ -91,7 +99,15 @@ export class SettingsScene extends Phaser.Scene {
         });
     }
 
+    private removeListeners() {
+        if (this.onKeyDown) {
+            window.removeEventListener('keydown', this.onKeyDown);
+            this.onKeyDown = undefined;
+        }
+    }
+
     private goBack() {
+        this.removeListeners();
         this.audioManager.saveSettings();
         this.scene.start('MainMenuScene');
     }
@@ -102,12 +118,12 @@ export class SettingsScene extends Phaser.Scene {
     }
 
     private adjust(dir: number) {
-        if (this.selectedIndex === 0) { // Difficulty
+        if (this.selectedIndex === 0) {
             this.currentDiff = Phaser.Math.Wrap(this.currentDiff + dir, 0, this.diffLevels.length);
             localStorage.setItem('cmsw_diff', this.currentDiff.toString());
-        } else if (this.selectedIndex === 1) { // Music
+        } else if (this.selectedIndex === 1) {
             this.audioManager.musicVolume = Phaser.Math.Clamp(this.audioManager.musicVolume + (dir * 0.1), 0, 1);
-        } else if (this.selectedIndex === 2) { // SFX
+        } else if (this.selectedIndex === 2) {
             this.audioManager.sfxVolume = Phaser.Math.Clamp(this.audioManager.sfxVolume + (dir * 0.1), 0, 1);
             this.audioManager.voiceVolume = this.audioManager.sfxVolume;
             if (dir !== 0) this.audioManager.playUI('ui_cursor');
