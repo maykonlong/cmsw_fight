@@ -188,6 +188,10 @@ class IdleState extends State {
 // WALK
 // ─────────────────────────────────────────────────────────────────
 class WalkState extends State {
+    enter(f: Fighter) {
+        f.setPoseTexture('walk');
+    }
+
     execute(f: Fighter) {
         if (!f.inputManager) return;
         const inp = f.inputManager;
@@ -235,6 +239,7 @@ class JumpState extends State {
     private airFrames = 0;
     enter(f: Fighter) {
         this.airFrames = 0;
+        f.setPoseTexture('jump');
         f.setVelocityY(-f.jumpForce);
         if (!f.inputManager) return;
         if (f.inputManager.isLeftDown)  f.setVelocityX(-f.speed * 0.85);
@@ -282,6 +287,7 @@ class LandState extends State {
 // ─────────────────────────────────────────────────────────────────
 class CrouchState extends State {
     enter(f: Fighter) {
+        f.setPoseTexture('crouch');
         f.setVelocityX(0);
         f.setScale(f.scaleX, f.scaleY * 0.75);
         f.currentHurtbox.height = 100;
@@ -455,6 +461,7 @@ class SpecialState extends State {
     private cmd: string = '';
 
     enter(f: Fighter, cmd: string = '236P') {
+        f.setPoseTexture('special');
         f.setVelocityX(0);
         this.duration = 45;
         this.fired = false;
@@ -625,6 +632,7 @@ class DizzyState extends State {
 
 class KOState extends State {
     enter(f: Fighter) {
+        f.setPoseTexture('ko');
         f.setVelocityX(0);
         f.isHit = true;
         f.setTint(0xff0000);

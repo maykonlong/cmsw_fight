@@ -44,15 +44,17 @@ export class CombatScene extends Phaser.Scene {
     }
 
     preload() {
+        const poses = ['idle', 'walk', 'jump', 'crouch', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+
         if (!this.textures.exists('kevin')) this.load.image('kevin', 'assets/sprites/kevin.png');
-        if (!this.textures.exists('kevin_idle')) this.load.image('kevin_idle', 'assets/sprites/kevin_idle.png');
-        if (!this.textures.exists('kevin_punch')) this.load.image('kevin_punch', 'assets/sprites/kevin_punch.png');
-        if (!this.textures.exists('kevin_kick')) this.load.image('kevin_kick', 'assets/sprites/kevin_kick.png');
+        poses.forEach(p => {
+            if (!this.textures.exists(`kevin_${p}`)) this.load.image(`kevin_${p}`, `assets/sprites/kevin_${p}.png`);
+        });
 
         if (!this.textures.exists('vini_dog')) this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
-        if (!this.textures.exists('vini_dog_idle')) this.load.image('vini_dog_idle', 'assets/sprites/vini_dog_idle.png');
-        if (!this.textures.exists('vini_dog_punch')) this.load.image('vini_dog_punch', 'assets/sprites/vini_dog_punch.png');
-        if (!this.textures.exists('vini_dog_win')) this.load.image('vini_dog_win', 'assets/sprites/vini_dog_win.png');
+        poses.forEach(p => {
+            if (!this.textures.exists(`vini_dog_${p}`)) this.load.image(`vini_dog_${p}`, `assets/sprites/vini_dog_${p}.png`);
+        });
 
         if (!this.textures.exists('aura_beijo')) this.load.image('aura_beijo', 'assets/sprites/aura_beijo.png');
         if (!this.textures.exists('aura_cachorro')) this.load.image('aura_cachorro', 'assets/sprites/aura_cachorro.png');
