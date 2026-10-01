@@ -153,7 +153,7 @@ class IdleState extends State {
             this.stateMachine.transition('special', cmd); return;
         }
 
-        const isGrounded = f.body && ((f.body as any).blocked?.down || f.body.touching.down);
+        const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }
@@ -197,7 +197,7 @@ class WalkState extends State {
             this.stateMachine.transition('special', cmd); return;
         }
 
-        const isGrounded = f.body && ((f.body as any).blocked?.down || f.body.touching.down);
+        const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }

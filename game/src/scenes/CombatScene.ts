@@ -225,10 +225,12 @@ export class CombatScene extends Phaser.Scene {
 
     // ── GAME LOOP ────────────────────────────────────────────────
     update() {
+        // Sempre atualizar inputManager para sincronia contínua de teclas
+        this.inputManager.update();
+
         if (this.isPaused) return;
         if (!this.matchManager.isMatchActive()) return;
 
-        this.inputManager.update();
         this.cpuController.update();
         this.player.update();
         this.enemy.update();
