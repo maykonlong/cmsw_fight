@@ -1,1007 +1,1180 @@
-# CMSW FIGHT — PROCEDIMENTO MESTRE TÉCNICO
-## Guia de Implementação Completo (Street Fighter II Architecture)
+# C&M FIGTH — PROCEDIMENTO MESTRE v2.0
+## Guia Definitivo para Reconstrução Completa
 
-> **Princípio central:** O MOTOR é único e genérico. Os PERSONAGENS são dados (JSON + sprites).
-> Uma IA deve ler este arquivo, executar cada item `[ ]` na ordem, e marcar `[x]` ao concluir.
-> Nunca pular itens. Nunca misturar ENGINE com CONTEÚDO.
+> **PARA A IA QUE VAI EXECUTAR:**
+> 1. Leia este arquivo INTEIRO antes de escrever qualquer código.
+> 2. Execute cada `[ ]` na ordem. Marque `[x]` ao concluir.
+> 3. **NUNCA pule um item.** Se algo der erro, conserte ANTES de avançar.
+> 4. Após cada FASE, o jogo DEVE funcionar no navegador. Teste. Se não funcionar, NÃO avance.
+> 5. Após cada FASE, faça `git add . && git commit && git push`.
 
 ---
 
 ## LEGENDA
 - `[ ]` Não iniciado
 - `[x]` Concluído
-- `[~]` Em andamento
-- `[!]` Bloqueado
+- `[!]` Bloqueado (ex: falta asset)
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# SEÇÃO A — CONTEXTO DO JOGO
+# ═══════════════════════════════════════════════════════════════
+
+## A.1 O Que É Este Jogo
+
+- **Nome:** C&M Figth
+- **Gênero:** Jogo de Luta 2D (estilo Street Fighter II)
+- **Plataformas:** Navegador (PC Chrome/Firefox/Safari, Mobile Chrome/Safari iOS)
+- **Hospedagem:** GitHub Pages (https://maykonlong.github.io/cmsw_fight/)
+- **Controles:** Teclado, Gamepad (Xbox/PS), Touch (celular)
+- **Resolução:** 1280×720, escala automática para qualquer tela
+- **Tecnologia:** Phaser 3 + TypeScript + Vite
+
+## A.2 Personagens (v1.0)
+
+### Kevin Manja
+- **Visual:** Mlk de quebrada — boné virado, regata, bermudão, tênis
+- **Arquétipo:** Balanced (equilíbrio entre ataque e defesa)
+- **Especial 1:** "Beijo Elétrico" (Projétil — comando: ↓↘→+Soco / 236P)
+- **Especial 2:** "Encontrão" (Anti-aéreo — comando: →↓↘+Soco / 623P)
+- **HP:** 1000
+- **Velocidade de andar:** 250 px/s
+- **Frase de vitória:** "Cadê meu sabonete?"
+
+### Vini Dog
+- **Visual:** Cachorro boxer humanóide com luvas de boxe, bermuda de luta
+- **Arquétipo:** Rushdown (rápido, agressivo, combos de perto)
+- **Especial 1:** "Aura do Cachorro" (Projétil — comando: ↓↙←+Chute / 214K)
+- **Especial 2:** "Mordida Fatal" (Avanço — comando: →↓↘+Soco / 623P)
+- **HP:** 900
+- **Velocidade de andar:** 300 px/s
+- **Frase de vitória:** "Au au, perdeu playboy!"
+
+## A.3 Cenário (v1.0)
+
+- **Nome:** C&M Software HQ
+- **Descrição:** Rua brasileira ao pôr do sol, favela ao fundo, muro com grafite, carro velho estacionado, galera assistindo
+- **3 Camadas Parallax:**
+  - Background (céu/prédios distantes) — scrollFactor 0.1
+  - Middleground (muro/carro/galera) — scrollFactor 0.4
+  - Floor (chão de asfalto) — scrollFactor 1.0
+
+## A.4 Mapeamento Completo de Controles
+
+| Ação             | P1 Teclado | Gamepad Xbox  | Gamepad PS | Touch (Celular)   |
+|------------------|------------|---------------|------------|-------------------|
+| Esquerda         | ←          | D-Pad/LS ←    | D-Pad/LS ← | Botão ← no D-Pad |
+| Direita          | →          | D-Pad/LS →    | D-Pad/LS → | Botão → no D-Pad |
+| Pulo             | ↑          | D-Pad/LS ↑    | D-Pad/LS ↑ | Botão ↑ no D-Pad |
+| Agachar          | ↓          | D-Pad/LS ↓    | D-Pad/LS ↓ | Botão ↓ no D-Pad |
+| Soco Leve (LP)   | Z          | X             | □          | Botão LP          |
+| Soco Médio (MP)  | X          | Y             | △          | Botão MP          |
+| Soco Forte (HP)  | C          | RB            | R1         | Botão HP          |
+| Chute Leve (LK)  | A          | A             | ✕          | Botão LK          |
+| Chute Médio (MK) | S          | B             | ○          | Botão MK          |
+| Chute Forte (HK) | D          | RT            | R2         | Botão HK          |
+| Especial         | V          | LB            | L1         | Botão SPECIAL     |
+| Throw (perto)    | Z+A juntos | X+A juntos    | □+✕ juntos | LP+LK juntos      |
+| Pause            | ESC        | Start         | Options    | (botão pause)     |
+
+## A.5 Fluxo de Telas
+
+```
+BootScene (Logo "C&M Software" por 2 segundos)
+    ↓
+MainMenuScene
+    ├── 1 PLAYER → CharacterSelectScene → CombatScene → Victory/GameOver → MainMenu
+    ├── TREINO   → TrainingScene (HP infinito, CPU parada)
+    ├── CONTROLES → ControlsScene (tabela de botões)
+    └── CONFIG   → SettingsScene (volume, dificuldade, tela cheia)
+```
+
+## A.6 Regras de Match (Igual Street Fighter II)
+
+- **Best of 3:** Primeiro a ganhar 2 rounds vence o match
+- **Timer:** 99 segundos por round (conta regressiva)
+- **Timer zerou:** Quem tem mais HP ganha o round
+- **Empate de HP:** Ambos ganham 1 round
+- **Sequência de round:** "ROUND X" (1.5s) → "FIGHT!" (0.8s) → Luta → "K.O." (3s) → Próximo
+- **Vitória:** P1 ganha → VictoryScene / P1 perde → GameOverScene
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# SEÇÃO B — DIAGNÓSTICO DE BUGS DO PROJETO ATUAL
+# ═══════════════════════════════════════════════════════════════
+
+> **PARA A IA:** Se você está reconstruindo do zero, pule esta seção.
+> Se está consertando o código existente, leia TUDO aqui.
+
+### Bug 1: CPU NUNCA AGE (CRÍTICO)
+- **Sintoma:** O inimigo fica parado, os personagens "passam um pelo outro"
+- **Causa:** `CPUController` tem métodos `isUpPressed()` e `isLeftPressed()`, mas `Fighter.ts` chama propriedades `isUpJustPressed` e `isLeftDown`. Os nomes são diferentes → a CPU nunca recebe comandos.
+- **Solução:** Criar interface `IInputProvider` com as propriedades EXATAS que o Fighter usa. Tanto `InputManager` quanto `CPUController` devem implementar essa interface.
+
+### Bug 2: ATAQUES NÃO CONECTAM (CRÍTICO)
+- **Sintoma:** Socos/chutes passam direto pelo inimigo sem causar dano
+- **Causa:** `Hitbox.updatePosition()` calcula posição relativa mas `CombatSystem.checkHitboxCollision()` compara como se fossem posições absolutas. Os retângulos nunca se intersectam.
+- **Solução:** No `updatePosition()`, calcular posição ABSOLUTA (world-space): `this.x = fighterX + (flipX ? -(offsetX + width) : offsetX)`
+
+### Bug 3: PULO NÃO FUNCIONA (CRÍTICO)
+- **Sintoma:** Apertar ↑ não faz nada, ou o personagem vibra no chão
+- **Causa:** `JumpState.execute()` checa `f.body.touching.down` no mesmo frame que aplica o impulso. Como a física ainda não processou, o pé ainda toca o chão → cancela o pulo.
+- **Solução:** Adicionar contador de frames. Só checar aterrissagem após 8+ frames no ar. Usar `f.body.blocked.down` em vez de `f.body.touching.down`.
+
+### Bug 4: PROJÉTEIS ATRAVESSAM INIMIGOS (CRÍTICO)
+- **Sintoma:** A magia passa direto pelo oponente
+- **Causa:** `Projectile` é um `Phaser.Physics.Arcade.Sprite` mas as hurtboxes são `Phaser.Geom.Rectangle`. O `physics.add.overlap` não funciona entre sistemas diferentes.
+- **Solução:** Checar colisão dos projéteis MANUALMENTE no update(), usando `Phaser.Geom.Intersects.RectangleToRectangle()` contra a hurtbox do oponente.
+
+### Bug 5: BUILD QUEBRA NO GITHUB PAGES (CRÍTICO)
+- **Sintoma:** A página no GitHub Pages fica em branco
+- **Causa 1:** `package.json` usa `"build": "tsc && vite build"`. O path da pasta tem `&` que quebra o `tsc`.
+- **Causa 2:** JSONs estão em `src/data/` que o Vite processa. No build, eles não ficam acessíveis via URL.
+- **Solução:** Remover `tsc` do build (Vite já compila TS). Mover JSONs para `public/data/`.
+
+### Bug 6: SPRITE MOSTRA GRID INTEIRO
+- **Sintoma:** O personagem mostra todas as poses ao mesmo tempo (a sprite sheet inteira)
+- **Causa:** A imagem gerada é um grid de poses, mas o código carrega como imagem única.
+- **Solução:** Usar UMA IMAGEM POR POSE (idle.png, punch.png, etc.). Ou usar `this.load.spritesheet()` com frameWidth/frameHeight.
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# SEÇÃO C — IMPLEMENTAÇÃO PASSO A PASSO
+# ═══════════════════════════════════════════════════════════════
+
+> **PARA A IA:** Execute na ordem. Cada FASE produz algo testável.
 
 ---
 
 # ══════════════════════════════════════
-# FASE 0 — ARQUITETURA E ESTRUTURA BASE
+# FASE 1 — SETUP DO PROJETO
 # ══════════════════════════════════════
 
-## 0.1 Princípio Arquitetural (NÃO PULAR)
+## 1.1 Criar Projeto Vite
 
-O jogo funciona assim:
-
-```
-ENGINE (único, genérico)
-    +
-CHARACTER DATA (JSON + sprites)
-    +
-STAGE DATA (JSON + imagens)
-    =
-JOGO FUNCIONAL
+- [ ] **1.1.1** Na pasta `game/`, rodar:
+```bash
+npx -y create-vite@latest ./ --template vanilla-ts
+npm install phaser@3.80
 ```
 
-**Isso significa:** adicionar um novo personagem = criar um JSON + sprites. Sem tocar no motor.
+**ATENÇÃO:** Usar **Phaser 3.x** (não 4.x). O Phaser 3 é estável e funciona em todos os navegadores.
 
-## 0.2 Estrutura de Pastas
+## 1.2 Configurar vite.config.ts
 
-- [x] **0.2.1** Criar estrutura definitiva de pastas:
+- [ ] **1.2.1** Criar `game/vite.config.ts`:
+```typescript
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  base: '/cmsw_fight/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+  }
+});
+```
+
+## 1.3 Configurar package.json
+
+- [ ] **1.3.1** O `scripts` do `game/package.json` DEVE ser:
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+**PROIBIDO:** Nunca usar `tsc && vite build`. O Vite já compila TypeScript sozinho via esbuild.
+
+## 1.4 Configurar tsconfig.json
+
+- [ ] **1.4.1** Criar `game/tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "include": ["src"]
+}
+```
+
+## 1.5 Estrutura de Pastas
+
+- [ ] **1.5.1** Criar EXATAMENTE esta estrutura:
 ```
 game/
+├── public/                          ← TUDO que o navegador acessa por URL
+│   ├── data/
+│   │   ├── characters/
+│   │   │   ├── kevin.json
+│   │   │   └── vini_dog.json
+│   │   └── stages/
+│   │       └── cmsw_hq.json
+│   └── assets/
+│       ├── sprites/
+│       │   ├── kevin_idle.png       ← UMA POSE POR ARQUIVO
+│       │   ├── kevin_punch.png
+│       │   ├── kevin_kick.png
+│       │   ├── kevin_crouch.png
+│       │   ├── kevin_jump.png
+│       │   ├── kevin_hit.png
+│       │   ├── kevin_ko.png
+│       │   ├── vini_dog_idle.png
+│       │   ├── vini_dog_punch.png
+│       │   ├── (... mesmas poses ...)
+│       │   ├── stage_bg.png
+│       │   ├── stage_mg.png
+│       │   └── stage_fg.png
+│       └── audio/                   ← Para quando tiver áudio
+│           ├── music/
+│           ├── sfx/
+│           └── voice/
 ├── src/
+│   ├── main.ts                      ← Ponto de entrada do jogo
+│   ├── interfaces/
+│   │   └── IInputProvider.ts        ← Interface unificada de input
 │   ├── core/
-│   │   ├── GameLoop.ts
-│   │   ├── StateMachine.ts
-│   │   ├── InputManager.ts
-│   │   ├── InputBuffer.ts          ← NOVO
-│   │   ├── CommandRecognizer.ts    ← NOVO
-│   │   ├── AssetManager.ts         ← NOVO
-│   │   └── AudioManager.ts         ← NOVO
+│   │   ├── InputManager.ts          ← Teclado + Gamepad + Touch
+│   │   ├── InputBuffer.ts           ← Buffer de 60 frames
+│   │   └── CommandRecognizer.ts     ← Reconhece 236P, 623P, etc.
+│   ├── entities/
+│   │   ├── Fighter.ts               ← Lutador genérico + State Machine
+│   │   └── Projectile.ts            ← Bola de energia
 │   ├── engine/
-│   │   ├── Fighter.ts              ← genérico
-│   │   ├── Hitbox.ts               ← NOVO
-│   │   ├── Hurtbox.ts              ← NOVO
-│   │   ├── Pushbox.ts              ← NOVO
-│   │   ├── Projectile.ts
-│   │   ├── CombatSystem.ts         ← NOVO
-│   │   ├── DamageSystem.ts         ← NOVO
-│   │   ├── StunSystem.ts           ← NOVO
-│   │   ├── ComboCounter.ts         ← NOVO
-│   │   ├── Camera.ts               ← NOVO
-│   │   └── VFXManager.ts           ← NOVO
-│   ├── ai/
-│   │   ├── CPUController.ts        ← NOVO
-│   │   ├── AIPerception.ts         ← NOVO
-│   │   └── AIDecision.ts           ← NOVO
+│   │   ├── CombatSystem.ts          ← Lógica de hit, block, throw
+│   │   ├── MatchManager.ts          ← Rounds, timer, vitória
+│   │   ├── CPUController.ts         ← IA do inimigo
+│   │   ├── CameraSystem.ts          ← Câmera segue os dois
+│   │   └── VFXManager.ts            ← Efeitos visuais
 │   ├── scenes/
-│   │   ├── BootScene.ts            [x] feito
-│   │   ├── MainMenuScene.ts        [x] feito
-│   │   ├── CharacterSelectScene.ts [x] feito
-│   │   ├── VsScene.ts              [x] feito
-│   │   ├── CombatScene.ts          [x] feito
-│   │   ├── VictoryScene.ts         ← NOVO
-│   │   ├── GameOverScene.ts        ← NOVO
-│   │   ├── TrainingScene.ts        ← NOVO
-│   │   ├── SettingsScene.ts        ← NOVO
-│   │   └── ControlsScene.ts        ← NOVO
+│   │   ├── BootScene.ts
+│   │   ├── MainMenuScene.ts
+│   │   ├── CharacterSelectScene.ts
+│   │   ├── CombatScene.ts           ← A CENA PRINCIPAL DE LUTA
+│   │   ├── VictoryScene.ts
+│   │   ├── GameOverScene.ts
+│   │   ├── TrainingScene.ts
+│   │   ├── SettingsScene.ts
+│   │   └── ControlsScene.ts
 │   ├── ui/
-│   │   ├── HUD.ts                  ← NOVO (extrair da CombatScene)
-│   │   ├── VirtualGamepad.ts       [x] feito
-│   │   └── ComboDisplay.ts         ← NOVO
+│   │   ├── HUD.ts                   ← Barra de HP, timer, nomes
+│   │   └── VirtualGamepad.ts        ← Controles touch mobile
 │   └── data/
-│       ├── characters/
-│       │   ├── kevin.json           ← NOVO
-│       │   └── vini_dog.json        ← NOVO
-│       └── stages/
-│           └── cmsw_hq.json         ← NOVO
-└── public/
-    └── assets/
-        ├── sprites/
-        │   ├── characters/
-        │   │   ├── kevin/
-        │   │   └── vini_dog/
-        │   └── stages/
-        │       └── cmsw_hq/
-        ├── audio/
-        │   ├── music/
-        │   ├── sfx/
-        │   └── voice/
-        └── effects/
+│       └── moves.ts                 ← Frame data de todos os ataques
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
 ```
+
+**REGRA CRÍTICA:** JSONs e imagens devem estar em `public/`. O Vite copia `public/` para `dist/` no build. Tudo em `src/` é empacotado e NÃO acessível via URL.
+
+## 1.6 index.html
+
+- [ ] **1.6.1** Criar `game/index.html`:
+```html
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="C&M Figth — Jogo de luta 2D estilo Street Fighter. Resolva sua treta aqui!" />
+  <title>C&M Figth — Resolva sua treta aqui</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #app { width: 100%; height: 100%; }
+    canvas { display: block; touch-action: none; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+```
+
+**O `touch-action: none` é OBRIGATÓRIO** para que o touch funcione no celular sem disparar scroll/zoom do navegador.
+
+## 1.7 GitHub Actions Deploy
+
+- [ ] **1.7.1** Criar `.github/workflows/deploy.yml`:
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'game/package-lock.json'
+      - run: npm ci
+        working-directory: ./game
+      - run: npm run build
+        working-directory: ./game
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './game/dist'
+      - uses: actions/deploy-pages@v4
+        id: deployment
+```
+
+## 1.8 VALIDAÇÃO DA FASE 1
+
+- [ ] **1.8.1** `cd game && npm run dev` abre no navegador sem erros no console
+- [ ] **1.8.2** `cd game && npm run build` completa sem erros
+- [ ] **1.8.3** A pasta `game/dist/` contém `index.html` e a pasta `data/`
+- [ ] **1.8.4** Git push → GitHub Action roda verde
 
 ---
 
 # ══════════════════════════════════════
-# FASE 1 — SISTEMA DE INPUT
+# FASE 2 — MOTOR DO JOGO (main.ts)
 # ══════════════════════════════════════
-> Referência: Seções 3, 4, 83, 84, 85, 86 do Manual SF2
 
-## 1.1 Mapeamento de Botões (6 botões + 8 direções)
+## 2.1 main.ts
 
-```
-SOCOS: LP(Z) | MP(X) | HP(C)
-CHUTES: LK(A) | MK(S) | HK(D)
-ESPECIAL: V
-DIRECIONAL: ←↑↓→ (+ diagonais)
-
-P2 TECLADO: U/I/O (socos) | J/K/L (chutes) | Numpad 4/8/2/6
-GAMEPAD: X=LP | Y=MP | RB=HP | A=LK | B=MK | RT=HK | LB=Especial
-```
-
-Notação numérica (Numpad):
-```
-7=↖  8=↑  9=↗
-4=←  5=NEUTRO  6=→
-1=↙  2=↓  3=↘
-```
-
-- [x] **1.1.1** InputManager.ts com LP, MP, HP, LK, MK, HK, HKSpecial mapeados
-- [x] **1.1.2** Adicionar LK(A), MK(S) ao InputManager (faltam chutes separados)
-- [x] **1.1.3** Adicionar virtualLKJustPressed, virtualMKJustPressed ao VirtualGamepad
-
-## 1.2 Input Buffer (Sistema de Janela de Frames)
-
-- [x] **1.2.1** Criar `InputBuffer.ts`:
+- [ ] **2.1.1** Criar `game/src/main.ts` com EXATAMENTE este conteúdo:
 ```typescript
-// Guarda os últimos 60 frames de input
-interface BufferedInput { direction: string; buttons: string[]; frame: number; }
-class InputBuffer {
-    private buffer: BufferedInput[] = [];
-    push(input: BufferedInput): void;
-    getWindow(frames: number): BufferedInput[]; // últimos N frames
-    clear(): void;
-}
-```
-- [x] **1.2.2** InputBuffer descarta entradas com mais de 60 frames
-- [x] **1.2.3** InputBuffer.push() chamado a cada frame no update()
+import Phaser from 'phaser';
+import { BootScene } from './scenes/BootScene';
+import { MainMenuScene } from './scenes/MainMenuScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { CombatScene } from './scenes/CombatScene';
+import { VictoryScene } from './scenes/VictoryScene';
+import { GameOverScene } from './scenes/GameOverScene';
+import { TrainingScene } from './scenes/TrainingScene';
+import { SettingsScene } from './scenes/SettingsScene';
+import { ControlsScene } from './scenes/ControlsScene';
 
-## 1.3 Command Recognizer (Reconhecimento de Comandos Especiais)
-
-- [x] **1.3.1** Criar `CommandRecognizer.ts`:
-```typescript
-interface CommandDefinition {
-    name: string;
-    sequence: string[]; // ex: ['2','3','6','P']
-    windowFrames: number; // janela de execução (ex: 15)
-}
-```
-- [x] **1.3.2** Implementar `236P` (Quarto de círculo frente + soco) = Especial Kevin
-- [x] **1.3.3** Implementar `214K` (Quarto de círculo trás + chute) = Especial Vini Dog
-- [x] **1.3.4** Implementar `623P` (Dragon Punch = →↓↘+P) = Uppercut especial Kevin
-- [x] **1.3.5** As direções devem ser relativas ao lado que o personagem está olhando (espelhar se facing left)
-- [x] **1.3.6** Comandos de carga (`charge_back_forward`): detectar 1.5s segurado na direção + botão
-- [ ] **1.3.7** Sistema de prioridade: THROW > SPECIAL > NORMAL quando múltiplos possíveis
-
----
-
-# ══════════════════════════════════════
-# FASE 2 — SISTEMA DE COLISÃO (3 BOXES)
-# ══════════════════════════════════════
-> Referência: Seção 11 do Manual SF2
-
-## 2.1 As 3 Áreas Invisíveis
-
-```
-HITBOX   = área que CAUSA dano
-HURTBOX  = área que RECEBE dano
-PUSHBOX  = área que impede sobreposição física
-```
-
-- [x] **2.1.1** Criar `Hitbox.ts`: retângulo com `x, y, w, h, active, damage, type`
-- [x] **2.1.2** Criar `Hurtbox.ts`: retângulo com `x, y, w, h, invincible`
-- [x] **2.1.3** Criar `Pushbox.ts`: retângulo central do personagem para colisão física
-- [ ] **2.1.4** Cada Fighter tem 1 Pushbox + N Hurtboxes + N Hitboxes (variáveis por frame de animação)
-- [x] **2.1.5** CombatSystem verifica: `Hitbox A ∩ Hurtbox B` (não sprite vs sprite)
-- [x] **2.1.6** PushboxSystem verifica: `Pushbox A ∩ Pushbox B` → separar personagens
-- [ ] **2.1.7** Debug mode (tecla H): desenhar hitboxes (vermelho), hurtboxes (verde), pushbox (azul)
-
----
-
-# ══════════════════════════════════════
-# FASE 3 — FRAME DATA DOS ATAQUES
-# ══════════════════════════════════════
-> Referência: Seção 38 do Manual SF2
-
-## 3.1 Estrutura de Move Data
-
-Cada ataque deve ter:
-
-```typescript
-interface MoveData {
-    id: string;
-    name: string;
-    input: string;        // 'LP' | 'MP' | 'HP' | 'LK' | 'MK' | 'HK'
-    type: 'normal' | 'special' | 'super' | 'throw';
-    hitLevel: 'HIGH' | 'MID' | 'LOW' | 'AIR' | 'UNBLOCKABLE';
-    startup: number;      // frames antes de ser ativo
-    active: number;       // frames ativos (causa dano)
-    recovery: number;     // frames de recuperação
-    damage: number;       // dano em HP
-    chipDamage: number;   // dano ao bloquear (geralmente 0 para normais)
-    hitstun: number;      // frames que o inimigo fica em hit stun
-    blockstun: number;    // frames que o inimigo fica em block stun
-    knockback: number;    // força de empurrão
-    cancelable: boolean;  // pode cancelar em especial
-    knockdown: boolean;   // derruba o oponente
-    hitboxOffset: { x: number; y: number; w: number; h: number };
-    animation: string;    // nome da animação
-    soundHit: string;     // SFX ao acertar
-    soundBlock: string;   // SFX ao bloquear
-    effect: string;       // VFX ao acertar
-}
-```
-
-- [x] **3.1.1** Criar `src/data/moves/base_moves.ts` com todos os ataques comuns
-- [x] **3.1.2** Ataques de pé: LP, MP, HP, LK, MK, HK com frame data completa
-- [x] **3.1.3** Ataques agachados: cLP, cMP, cHP, cLK, cMK, cHK
-- [x] **3.1.4** Ataques aéreos: jLP, jMP, jHP, jLK, jMK, jHK
-- [x] **3.1.5** Todos os ataques usam o mesmo sistema de frame counting via StateMachine
-
-## 3.2 Tabela de Frame Data Base
-
-| Move   | Startup | Active | Recovery | Damage | Hitstun | Blockstun | Chip | Knockdown |
-|--------|---------|--------|----------|--------|---------|-----------|------|-----------|
-| LP     | 4       | 4      | 8        | 30     | 14      | 10        | 0    | No        |
-| MP     | 6       | 5      | 12       | 60     | 18      | 14        | 0    | No        |
-| HP     | 8       | 6      | 18       | 100    | 22      | 16        | 0    | No        |
-| LK     | 5       | 4      | 9        | 35     | 14      | 10        | 0    | No        |
-| MK     | 7       | 5      | 14       | 70     | 18      | 14        | 0    | No        |
-| HK     | 10      | 7      | 20       | 110    | 24      | 18        | 0    | No        |
-| cHP    | 8       | 6      | 20       | 90     | 20      | 14        | 0    | No        |
-| cHK    | 12      | 5      | 22       | 80     | 0       | 0         | 0    | **Yes**   |
-| Special| 20      | 8      | 15       | 80     | 28      | 20        | 8    | No        |
-
-- [x] **3.2.1** Implementar frame data da tabela acima no `base_moves.ts`
-- [x] **3.2.2** Cada move executa por `startup+active+recovery` frames exatos
-
----
-
-# ══════════════════════════════════════
-# FASE 4 — MÁQUINA DE ESTADOS COMPLETA
-# ══════════════════════════════════════
-> Referência: Seções 6, 7, 8, 9, 10 do Manual SF2
-
-## 4.1 Estados Completos do Fighter
-
-```
-IDLE
-├── WALK_FORWARD
-├── WALK_BACKWARD
-├── JUMP_NEUTRAL
-├── JUMP_FORWARD
-├── JUMP_BACKWARD
-│
-├── CROUCH
-│
-├── [ATAQUES DE PÉ]
-│   ├── STAND_LP
-│   ├── STAND_MP
-│   ├── STAND_HP
-│   ├── STAND_LK
-│   ├── STAND_MK
-│   └── STAND_HK
-│
-├── [ATAQUES AGACHADOS]
-│   ├── CROUCH_LP
-│   ├── CROUCH_MP
-│   ├── CROUCH_HP
-│   ├── CROUCH_LK
-│   ├── CROUCH_MK
-│   └── CROUCH_HK
-│
-├── [ATAQUES AÉREOS]
-│   ├── AIR_LP
-│   ├── AIR_MP
-│   ├── AIR_HP
-│   ├── AIR_LK
-│   ├── AIR_MK
-│   └── AIR_HK
-│
-├── [DEFESA]
-│   ├── BLOCK_HIGH
-│   └── BLOCK_LOW
-│
-├── [ESPECIAIS]
-│   ├── SPECIAL_1
-│   ├── SPECIAL_2
-│   └── SPECIAL_3
-│
-├── [THROW]
-│   ├── THROW
-│   └── THROWN
-│
-├── [RECEBEU DANO]
-│   ├── HIT_LIGHT
-│   ├── HIT_HEAVY
-│   ├── KNOCKDOWN
-│   ├── WAKEUP
-│   └── DIZZY
-│
-└── [FIM DE ROUND]
-    ├── KO
-    ├── WIN
-    └── TAUNT
-```
-
-- [x] **4.1.1** Reescrever Fighter.ts usando dados do JSON do personagem (não hardcoded)
-- [x] **4.1.2** Implementar todos os 6 ataques de pé como estados independentes
-- [x] **4.1.3** Implementar todos os 6 ataques agachados como estados independentes
-- [x] **4.1.4** Implementar todos os 6 ataques aéreos como estados independentes
-- [x] **4.1.5** BlockHigh vs BlockLow (verificar hitLevel do ataque recebido)
-- [x] **4.1.6** DIZZY/STUN state: após receber dano suficiente, personagem fica zonzo (estrelas girando)
-- [x] **4.1.7** Método `autoFaceOpponent()`: virar para o inimigo durante IDLE e WALK
-- [x] **4.1.8** LAND state: frame de pouso após jump (2-3f sem poder agir)
-
-## 4.2 Sistema de Phases do Ataque
-
-Cada estado de ataque deve contar frames e transicionar automaticamente:
-
-```
-enter() → startup frames
-  ↓ (startup completo)
-active frames (hitbox ON)
-  ↓ (active completo)
-recovery frames (hitbox OFF)
-  ↓ (recovery completo)
-transition('idle')
-```
-
-- [x] **4.2.1** Criar `AttackState` genérico que recebe `MoveData` como parâmetro
-- [x] **4.2.2** `AttackState` ativa hitbox no frame `startup+1`
-- [x] **4.2.3** `AttackState` desativa hitbox no frame `startup+active+1`
-- [x] **4.2.4** `AttackState` transiciona para idle no frame `startup+active+recovery`
-- [x] **4.2.5** Janela de cancel: durante `cancelWindow`, se detectar especial → cancelar recovery
-
----
-
-# ══════════════════════════════════════
-# FASE 5 — SISTEMA DE COMBATE COMPLETO
-# ══════════════════════════════════════
-> Referência: Seções 17-36 do Manual SF2
-
-## 5.1 CombatSystem.ts
-
-- [x] **5.1.1** Criar `CombatSystem.ts` que centraliza toda lógica de combate (tirar da CombatScene)
-- [x] **5.1.2** `checkHitboxCollision(attackerHitbox, defenderHurtbox)` → retorna HitResult
-- [x] **5.1.3** `checkPushbox(fighter1, fighter2)` → separar se sobrepostos
-- [x] **5.1.4** `checkThrowRange(thrower, target)` → `distance < thrower.throwRange`
-- [x] **5.1.5** `applyHit(attacker, defender, move)` → aplica dano, hitstun, knockback
-
-## 5.2 Sistema de Dano
-
-- [x] **5.2.1** Criar `DamageSystem.ts` (Feito no CombatSystem)
-- [x] **5.2.2** `calculateDamage(base, isCounterHit, isChip)`:
-  - Normal hit: `damage = move.damage`
-  - Counter hit: `damage = move.damage * 1.25`
-  - Chip damage (bloqueado): `damage = move.chipDamage`
-- [x] **5.2.3** Aplicar dano ao `fighter.hp` (nunca ir abaixo de 0)
-- [ ] **5.2.4** Atualizar barra de HP imediatamente e disparar evento `onDamageTaken`
-
-## 5.3 Hit Levels
-
-- [x] **5.3.1** Definir `hitLevel` por ataque: `HIGH | MID | LOW | AIR | UNBLOCKABLE`
-- [x] **5.3.2** `BLOCK_HIGH` bloqueia: `HIGH` e `MID` — NÃO bloqueia `LOW`
-- [x] **5.3.3** `BLOCK_LOW` bloqueia: `LOW` e `MID` — NÃO bloqueia `HIGH`
-- [x] **5.3.4** Ataques aéreos (`AIR`) passam pelo bloqueio agachado apenas em certas circunstâncias
-- [x] **5.3.5** `UNBLOCKABLE` (throws): nunca podem ser bloqueados
-
-## 5.4 BlockStun e HitStun
-
-- [x] **5.4.1** Ao acertar: defender entra em HIT state por `move.hitstun` frames
-- [x] **5.4.2** Ao bloquear: defender entra em BLOCK state por `move.blockstun` frames
-- [x] **5.4.3** Durante hitstun/blockstun: sem input aceito
-- [x] **5.4.4** Chip damage: aplicar `move.chipDamage` mesmo ao bloquear
-- [x] **5.4.5** Pushback ao bloquear: ambos recuam levemente (evitar corner lock fácil)
-
-## 5.5 Counter Hit
-
-- [x] **5.5.1** CounterHit: detectar se `defender.stateMachine.state` começa com `STAND_` ou `CROUCH_` e ainda está em `startup frames`
-- [x] **5.5.2** Se counter hit: aplicar `1.25×` dano + `+8 frames` de hitstun extra
-- [ ] **5.5.3** Exibir texto "COUNTER!" em laranja na tela por 1.5s
-
-## 5.6 Throws (Agarrões)
-
-- [x] **5.6.1** ThrowSystem: verificar `distance < fighter.throwRange` e `LP+LK simultâneos`
-- [x] **5.6.2** ThrowForward: jogar inimigo para frente → `THROWN` state com velocidade +500
-- [ ] **5.6.3** ThrowBackward (← + LP+LK): jogar para trás
-- [ ] **5.6.4** ThrowEscape: janela de 8f após receber throw input para escapar (ambos saem sem dano)
-- [x] **5.6.5** Throws são `UNBLOCKABLE`
-- [x] **5.6.6** Throw causa knockdown imediato
-
-## 5.7 Knockdown e Wakeup
-
-- [x] **5.7.1** `KnockdownState`: personagem cai com animação (angle 90° + velocity X decrescente)
-- [ ] **5.7.2** Hard knockdown (cHK, Throws): 50 frames no chão, não pode agir
-- [ ] **5.7.3** Soft knockdown (normais que derrubam): 30f ou apertar botão para `quickrise`
-- [x] **5.7.4** `WakeupState`: 15 frames de invencibilidade ao levantar
-- [ ] **5.7.5** Oponente não pode atacar nos primeiros 10f do wakeup (fair play)
-
-## 5.8 Stun / Dizzy
-
-- [ ] **5.8.1** Cada personagem tem `stunMeter` (máx 200)
-- [ ] **5.8.2** Cada hit adiciona `move.stunValue` ao `stunMeter`
-- [ ] **5.8.3** `stunMeter` decai naturalmente 2 pontos/frame quando não está em hitstun
-- [ ] **5.8.4** Se `stunMeter >= 200`: entrar em `DIZZY` state
-- [x] **5.8.5** `DIZZY`: personagem zanzando por 120 frames, estrelas girando acima da cabeça
-- [ ] **5.8.6** Durante DIZZY: pode apertar botões para sair mais rápido (-2f por input)
-- [ ] **5.8.7** `stunMeter` reseta ao entrar em DIZZY
-
-## 5.9 Combo Counter
-
-- [ ] **5.9.1** Criar `ComboCounter.ts`
-- [ ] **5.9.2** Hit consecutivo enquanto oponente está em hitstun → incrementar `comboCount`
-- [ ] **5.9.3** `comboCount` reseta quando: oponente se recupera, toca o chão, round termina
-- [ ] **5.9.4** Exibir "2 HIT" / "3 HIT" etc. na tela com animação de entrada
-- [ ] **5.9.5** Som de tick a cada hit do combo
-
-## 5.10 Cancel Window
-
-- [x] **5.10.1** Ataques com `cancelable: true` têm uma janela após o frame ativo
-- [x] **5.10.2** Durante cancel window, se reconhecer comando especial → executar especial + ignorar recovery do normal
-- [x] **5.10.3** Combos possíveis: LP → especial, MP → especial (conforme cancelable = true no JSON)
-
----
-
-# ══════════════════════════════════════
-# FASE 6 — DADOS DOS PERSONAGENS (JSON)
-# ══════════════════════════════════════
-> Referência: Seções 89, 107, 108, 109 do Manual SF2
-
-## 6.1 Schema do Personagem JSON
-
-- [x] **6.1.1** Criar `src/data/characters/kevin.json`:
-
-```json
-{
-  "id": "kevin",
-  "name": "KEVIN",
-  "catchphrase": "Cadê meu sabonete?",
-  "archetype": "Balanced",
-  "health": 1000,
-  "stunMax": 200,
-  "throwRange": 60,
-  "movement": {
-    "walkForward": 250,
-    "walkBackward": 180,
-    "jumpVelocityY": -750,
-    "jumpVelocityX": 220,
-    "weight": 1.0
-  },
-  "sprites": {
-    "idle": "assets/sprites/characters/kevin/idle.png",
-    "punch": "assets/sprites/characters/kevin/punch.png",
-    "kick": "assets/sprites/characters/kevin/kick.png",
-    "crouch": "assets/sprites/characters/kevin/crouch.png",
-    "jump": "assets/sprites/characters/kevin/jump.png",
-    "hit": "assets/sprites/characters/kevin/hit.png",
-    "ko": "assets/sprites/characters/kevin/ko.png",
-    "win": "assets/sprites/characters/kevin/win.png",
-    "portrait": "assets/sprites/characters/kevin/portrait.png"
-  },
-  "normals": ["LP","MP","HP","LK","MK","HK"],
-  "crouchNormals": ["cLP","cMP","cHP","cLK","cMK","cHK"],
-  "airNormals": ["jLP","jMP","jHP","jLK","jMK","jHK"],
-  "specials": [
-    {
-      "id": "aura_beijo",
-      "name": "Beijo Elétrico",
-      "command": "236P",
-      "type": "projectile",
-      "damage": 80,
-      "chipDamage": 8,
-      "startup": 20,
-      "active": 999,
-      "recovery": 25,
-      "hitstun": 40,
-      "blockstun": 20,
-      "electricEffect": true,
-      "cooldown": 90,
-      "projectileSpeed": 450,
-      "sprite": "assets/sprites/effects/projectile_kevin.png"
-    },
-    {
-      "id": "uppercut_especial",
-      "name": "Encontrão",
-      "command": "623P",
-      "type": "reversal",
-      "damage": 120,
-      "chipDamage": 12,
-      "startup": 4,
-      "active": 8,
-      "recovery": 30,
-      "hitstun": 25,
-      "blockstun": 0,
-      "invincibleFrames": 4,
-      "knockdown": true
+const config: Phaser.Types.Core.GameConfig = {
+  type: Phaser.AUTO,
+  width: 1280,
+  height: 720,
+  parent: 'app',
+  backgroundColor: '#000000',
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { x: 0, y: 1200 },
+      debug: false
     }
-  ],
-  "throws": {
-    "forward": { "damage": 120, "knockdown": true },
-    "backward": { "damage": 110, "knockdown": true }
   },
-  "intro": { "animation": "idle", "phrase": "" },
-  "victory": { "animation": "win", "phrase": "Cadê meu sabonete?" },
-  "defeat": { "animation": "ko", "phrase": "" }
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  input: {
+    gamepad: true,
+    touch: true
+  },
+  scene: [BootScene, MainMenuScene, CharacterSelectScene, CombatScene,
+          TrainingScene, VictoryScene, GameOverScene, SettingsScene, ControlsScene]
+};
+
+new Phaser.Game(config);
+```
+
+## 2.2 BootScene.ts (Tela de Logo)
+
+- [ ] **2.2.1** Criar `game/src/scenes/BootScene.ts`:
+  - Preload: carregar TODAS as imagens e JSONs (ver lista completa na Seção A)
+  - Criar texturas de fallback (retângulos coloridos) caso imagens não existam
+  - Create: mostrar "C&M SOFTWARE" + "RESOLVA SUA TRETA AQUI" por 2s → fade → MainMenuScene
+
+**Fallback obrigatório** — Gerar texturas programáticas se os PNGs não existirem:
+```typescript
+// BootScene.preload()
+// Tenta carregar sprites reais
+this.load.image('kevin_idle', 'assets/sprites/kevin_idle.png');
+this.load.image('vini_dog_idle', 'assets/sprites/vini_dog_idle.png');
+this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
+
+// Carrega JSONs de dados (ATENÇÃO: estão em public/data/)
+this.load.json('kevin_data', 'data/characters/kevin.json');
+this.load.json('vini_dog_data', 'data/characters/vini_dog.json');
+this.load.json('cmsw_hq_data', 'data/stages/cmsw_hq.json');
+
+// BootScene.create() — Fallbacks
+if (!this.textures.exists('kevin_idle')) {
+  const g = this.make.graphics({});
+  g.fillStyle(0x3399ff); g.fillRect(0, 0, 80, 160);
+  g.generateTexture('kevin_idle', 80, 160);
+  g.destroy();
 }
 ```
 
-- [x] **6.1.2** Criar `src/data/characters/vini_dog.json` com mesmo schema
-- [x] **6.1.3** Criar `CharacterLoader.ts`: lê o JSON e instancia o Fighter configurado
-- [x] **6.1.4** Fighter.ts não deve ter NENHUM dado hardcoded de Kevin ou Vini Dog
+## 2.3 VALIDAÇÃO DA FASE 2
 
-## 6.2 Sprites Obrigatórios por Personagem
-
-Todo personagem DEVE ter (contrato mínimo):
-- [ ] **6.2.1** `idle.png` — postura de espera
-- [ ] **6.2.2** `walk_forward.png` — andando frente
-- [ ] **6.2.3** `walk_backward.png` — andando trás
-- [ ] **6.2.4** `jump.png` — no ar
-- [ ] **6.2.5** `crouch.png` — agachado
-- [ ] **6.2.6** `punch.png` — soco (serve para LP/MP/HP com tint/scale)
-- [ ] **6.2.7** `kick.png` — chute (serve para LK/MK/HK)
-- [ ] **6.2.8** `air_attack.png` — ataque aéreo
-- [ ] **6.2.9** `crouch_attack.png` — ataque agachado
-- [ ] **6.2.10** `block_high.png` — defesa em pé
-- [ ] **6.2.11** `block_low.png` — defesa agachada
-- [ ] **6.2.12** `hit.png` — levando pancada
-- [ ] **6.2.13** `ko.png` — caído no chão
-- [ ] **6.2.14** `win.png` — pose de vitória
-- [ ] **6.2.15** `portrait.png` — retrato 80×80px para HUD
-- [ ] **6.2.16** `portrait_large.png` — retrato 200×200px para char select
-
-## 6.3 Geração de Sprites do Kevin (SESSÃO ATUAL)
-
-- [x] **6.3.1** Kevin Idle gerado (versão anterior — verificar se tem roupa de quebrada)
-- [!] **6.3.2** **REGEN** Kevin Idle: regata branca, jeans escuro, tênis, corrente dourada, loiro — SEM roupa de luta (BLOCKED: API QUOTA)
-- [!] **6.3.3** Kevin Punch: mesma roupa, braço estendido lateralmente (BLOCKED: API QUOTA)
-- [!] **6.3.4** Kevin Kick: perna estendida lateral (BLOCKED: API QUOTA)
-- [!] **6.3.5** Kevin Crouch: agachado, braços na frente (BLOCKED: API QUOTA)
-- [!] **6.3.6** Kevin Jump: no ar, joelhos dobrados (BLOCKED: API QUOTA)
-- [!] **6.3.7** Kevin Hit: cabeça pro lado, braços abertos (BLOCKED: API QUOTA)
-- [!] **6.3.8** Kevin KO: deitado no chão (BLOCKED: API QUOTA)
-- [!] **6.3.9** Kevin Win: pulando com os braços para cima (BLOCKED: API QUOTA)
-- [!] **6.3.10** Kevin Portrait: rosto em close, 80×80px (BLOCKED: API QUOTA)
-- [ ] **6.3.11** Processar todos com `scripts/remove_green.js` → remover fundo → PNG transparente
-- [ ] **6.3.12** Salvar em `game/public/assets/sprites/characters/kevin/`
-
-## 6.4 Geração de Sprites do Vini Dog
-
-- [x] **6.4.1** Vini Dog Idle gerado (verificar qualidade)
-- [!] **6.4.2** **REGEN** Vini Dog Idle: boné virado, camiseta preta "MCD+Racionais", bermuda cinza, moreno (BLOCKED: API QUOTA)
-- [!] **6.4.3** Vini Dog Punch (BLOCKED: API QUOTA)
-- [!] **6.4.4** Vini Dog Kick (BLOCKED: API QUOTA)
-- [!] **6.4.5** Vini Dog Crouch (BLOCKED: API QUOTA)
-- [!] **6.4.6** Vini Dog Jump (BLOCKED: API QUOTA)
-- [!] **6.4.7** Vini Dog Hit (BLOCKED: API QUOTA)
-- [!] **6.4.8** Vini Dog KO (BLOCKED: API QUOTA)
-- [!] **6.4.9** Vini Dog Win: de costas, boné na mão, fumaça de vape (BLOCKED: API QUOTA)
-- [!] **6.4.10** Vini Dog Portrait (BLOCKED: API QUOTA)
-- [ ] **6.4.11** Processar e salvar em `game/public/assets/sprites/characters/vini_dog/`
+- [ ] **2.3.1** Tela preta aparece → Logo "C&M SOFTWARE" aparece → Fade → Menu
+- [ ] **2.3.2** Console do navegador mostra "Phaser v3.x.x" sem erros vermelhos
+- [ ] **2.3.3** No celular, a tela se ajusta sem scroll
 
 ---
 
 # ══════════════════════════════════════
-# FASE 7 — STAGE DATA JSON
+# FASE 3 — INTERFACE UNIFICADA DE INPUT
 # ══════════════════════════════════════
-> Referência: Seções 65-67, 101-104 do Manual SF2
 
-## 7.1 Schema do Stage JSON
+> **ESTA É A FASE MAIS IMPORTANTE.** O bug principal do projeto é que o InputManager e o CPUController falam "línguas diferentes". O Fighter.ts chama `inp.isLeftDown` mas o CPUController tem `isLeftPressed()`.
 
-- [x] **7.1.1** Criar `src/data/stages/cmsw_hq.json`:
+## 3.1 IInputProvider.ts
 
-```json
-{
-  "id": "cmsw_hq",
-  "name": "C&M Software HQ",
-  "music": "assets/audio/music/stage_cmsw.ogg",
-  "groundY": 590,
-  "leftBoundary": 80,
-  "rightBoundary": 1200,
-  "width": 1280,
-  "layers": [
-    {
-      "id": "sky",
-      "image": "assets/sprites/stages/cmsw_hq/sky.png",
-      "parallaxX": 0.05,
-      "parallaxY": 0,
-      "depth": 0
-    },
-    {
-      "id": "building",
-      "image": "assets/sprites/stages/cmsw_hq/building.png",
-      "parallaxX": 0.1,
-      "depth": 1
-    },
-    {
-      "id": "crowd",
-      "image": "assets/sprites/stages/cmsw_hq/crowd.png",
-      "parallaxX": 0.3,
-      "depth": 2,
-      "animation": "bounce",
-      "animSpeed": 0.8
-    },
-    {
-      "id": "floor",
-      "image": "assets/sprites/stages/cmsw_hq/floor.png",
-      "parallaxX": 1.0,
-      "depth": 3
+- [ ] **3.1.1** Criar `game/src/interfaces/IInputProvider.ts`:
+```typescript
+export interface IInputProvider {
+  // ═══ Direcionais (true enquanto segurado) ═══
+  readonly isLeftDown: boolean;
+  readonly isRightDown: boolean;
+  readonly isUpDown: boolean;
+  readonly isDownDown: boolean;
+
+  // ═══ Direcionais (true apenas no frame que apertou) ═══
+  readonly isUpJustPressed: boolean;
+
+  // ═══ Ataques (true apenas no frame que apertou) ═══
+  readonly isLPJustPressed: boolean;
+  readonly isMPJustPressed: boolean;
+  readonly isHPJustPressed: boolean;
+  readonly isLKJustPressed: boolean;
+  readonly isMKJustPressed: boolean;
+  readonly isHKJustPressed: boolean;
+  readonly isSpecialJustPressed: boolean;
+
+  // ═══ Combinados ═══
+  readonly isThrowJustPressed: boolean; // LP+LK simultâneo
+
+  // ═══ Buffer de comandos especiais ═══
+  readonly buffer: any;
+  readonly currentFrame: number;
+
+  // ═══ Chamado a cada frame ═══
+  update(): void;
+}
+```
+
+## 3.2 InputManager.ts
+
+- [ ] **3.2.1** Criar `game/src/core/InputManager.ts`:
+  - Classe `InputManager implements IInputProvider`
+  - Lê: Teclado (via `Phaser.Input.Keyboard`)
+  - Lê: Gamepad (via `this.scene.input.gamepad.pad1`)
+  - Lê: Touch virtual (via propriedades `virtualXxx` setadas pelo VirtualGamepad)
+  - Cada getter (`isLeftDown`, `isLPJustPressed`, etc.) faz OR entre teclado, gamepad e touch
+  - O `update()` limpa os estados `JustPressed` do touch e atualiza o buffer
+
+**Mapeamento de teclado:**
+```
+Setas ←↑↓→ = Direcionais
+Z = LP (Soco Leve)
+X = MP (Soco Médio)
+C = HP (Soco Forte)
+A = LK (Chute Leve)
+S = MK (Chute Médio)
+D = HK (Chute Forte)
+V = Especial
+```
+
+**Mapeamento de gamepad Xbox:**
+```
+D-Pad/LeftStick = Direcionais (LS < -0.5 = esquerda, > 0.5 = direita)
+X = LP, Y = MP, RB = HP
+A = LK, B = MK, RT = HK
+LB = Especial
+```
+
+**Detecção de JustPressed para gamepad:** Guardar estado anterior do frame e comparar:
+```typescript
+// prevPadState guardado no update anterior
+const padX = this.pad?.X ?? false;
+const padJustX = padX && !this.prevPadState.X;
+// isLPJustPressed = keyboard JustDown(Z) || virtualLPJustPressed || padJustX
+```
+
+## 3.3 CPUController.ts
+
+- [ ] **3.3.1** Criar `game/src/engine/CPUController.ts`:
+  - Classe `CPUController implements IInputProvider`
+  - **TODOS os getters devem ter EXATAMENTE os mesmos nomes** de `IInputProvider`
+  - A lógica de IA decide quais flags ligar a cada N frames
+
+```typescript
+export class CPUController implements IInputProvider {
+  private me: Fighter;
+  private target: Fighter;
+
+  // Estado interno — setado pela IA
+  private _left = false;
+  private _right = false;
+  private _up = false;
+  private _down = false;
+  private _upJust = false;
+  private _lpJust = false;
+  private _mpJust = false;
+  private _hpJust = false;
+  private _lkJust = false;
+  private _mkJust = false;
+  private _hkJust = false;
+  private _specialJust = false;
+  private _throwJust = false;
+
+  private reactionDelay = 15; // frames entre decisões
+  private timer = 0;
+  private actionCooldown = 0;
+  public buffer = { inputs: [] as any[] };
+  public currentFrame = 0;
+
+  constructor(me: Fighter, target: Fighter) {
+    this.me = me;
+    this.target = target;
+  }
+
+  // ═══ IInputProvider — GETTERS (NOMES EXATOS) ═══
+  get isLeftDown() { return this._left; }
+  get isRightDown() { return this._right; }
+  get isUpDown() { return this._up; }
+  get isDownDown() { return this._down; }
+  get isUpJustPressed() { return this._upJust; }
+  get isLPJustPressed() { return this._lpJust; }
+  get isMPJustPressed() { return this._mpJust; }
+  get isHPJustPressed() { return this._hpJust; }
+  get isLKJustPressed() { return this._lkJust; }
+  get isMKJustPressed() { return this._mkJust; }
+  get isHKJustPressed() { return this._hkJust; }
+  get isSpecialJustPressed() { return this._specialJust; }
+  get isThrowJustPressed() { return this._throwJust; }
+
+  update() {
+    this.timer++;
+    this.currentFrame++;
+
+    // RESET JUST PRESSED (obrigatório a cada frame!)
+    this._lpJust = this._mpJust = this._hpJust = false;
+    this._lkJust = this._mkJust = this._hkJust = false;
+    this._specialJust = this._throwJust = this._upJust = false;
+
+    if (this.actionCooldown > 0) { this.actionCooldown--; return; }
+    if (this.timer % this.reactionDelay !== 0) return;
+
+    // ═══ ÁRVORE DE DECISÃO ═══
+    const dx = Math.abs(this.me.x - this.target.x);
+
+    // Perto (60-130px): atacar
+    if (dx >= 50 && dx < 130) {
+      const r = Math.random();
+      if (r < 0.25) this._lpJust = true;
+      else if (r < 0.45) this._mkJust = true;
+      else if (r < 0.65) this._hpJust = true;
+      else this._hkJust = true;
+      this.actionCooldown = 20;
+      return;
     }
-  ],
-  "ambientEffects": [
-    { "type": "leaves", "count": 8, "speed": 0.5 }
-  ]
+
+    // Muito perto (<50px): throw
+    if (dx < 50) {
+      this._throwJust = true;
+      this.actionCooldown = 30;
+      return;
+    }
+
+    // Longe (>130px): andar em direção ao oponente
+    if (dx > 130) {
+      this._left = this.me.x > this.target.x;
+      this._right = this.me.x < this.target.x;
+
+      // Pular de vez em quando
+      if (Math.random() < 0.03) {
+        this._upJust = true;
+        this._up = true;
+        this.actionCooldown = 25;
+        return;
+      }
+
+      // Projétil de vez em quando se longe
+      if (dx > 250 && Math.random() < 0.08) {
+        this._specialJust = true;
+        this.actionCooldown = 40;
+        return;
+      }
+      return;
+    }
+
+    // Default: parar
+    this._left = false;
+    this._right = false;
+  }
 }
 ```
 
-- [x] **7.1.2** Criar `StageLoader.ts` que lê o JSON e monta o cenário
-- [x] **7.1.3** `CombatScene` não deve ter nenhum cenário hardcoded — tudo via JSON
+## 3.4 Fighter.ts usa IInputProvider
 
-## 7.2 Geração de Assets do Stage CMSW
-
-- [x] **7.2.1** Background gerado (`stage_bg.png`) — verificar qualidade
-- [!] **7.2.2** **REGEN** cenário completo baseado na foto real `imagens_ref/cenários_ref/cmsw_1.png` (BLOCKED: API QUOTA)
-- [!] **7.2.3** Separar em camadas: `sky.png`, `building.png`, `crowd.png`, `floor.png` (BLOCKED: API QUOTA)
-- [x] **7.2.4** (Código) Implementar parallax 4 camadas
-- [x] **7.2.5** (Código) Animação da multidão: Tween Y oscillating ±4px, velocidades diferentes por grupo
-- [x] **7.2.6** (Código) Sombra oval abaixo de cada personagem
-- [x] **7.2.7** (Código) Camera: seguir os dois personagens, zoom out quando distantes, zoom in quando próximos
-
----
-
-# ══════════════════════════════════════
-# FASE 8 — VFX E EFEITOS VISUAIS
-# ══════════════════════════════════════
-> Referência: Seção 69 do Manual SF2
-
-## 8.1 VFXManager.ts
-
-- [x] **8.1.1** Criar `VFXManager.ts` com pool de 30 efeitos reutilizáveis
-- [x] **8.1.2** `spawnHitSpark(x, y, type: 'light'|'medium'|'heavy')`: escala proporcional à força
-- [x] **8.1.3** `spawnBlockSpark(x, y)`: azul/branco, menor
-- [x] **8.1.4** `spawnDustCloud(x, y)`: 4-6 partículas ao aterrissar
-- [ ] **8.1.5** `spawnElectricEffect(fighter)`: raios pulsando ao redor, 40 frames
-- [x] **8.1.6** `hitStop(frames)`: `scene.physics.world.pause()` por N frames, depois resume
-- [x] **8.1.7** `cameraShake(intensity)`: LP=0.005 | MP=0.012 | HP=0.022 | Especial=0.03
-- [x] **8.1.8** `screenFlash(duration)`: `cameras.main.flash(duration, 255, 255, 255)`
-- [x] **8.1.9** `slowMotion(duration)`: `scene.time.timeScale = 0.15` por duration ms (para KO final)
-- [x] **8.1.10** `showComboText(count, x, y)`: "2 HIT!" "3 HIT!" com tween de entrada
-- [x] **8.1.11** `showCounterText(x, y)`: "COUNTER!" laranja
-- [ ] **8.1.12** `showPerfectText()`: "PERFECT!" dourado cintilante centralizado
-
-## 8.2 VFX Sprites Necessários
-
-- [!] **8.2.1** Gerar `hit_spark_light.png` (estrelinhas pequenas) (BLOCKED: API QUOTA)
-- [!] **8.2.2** Gerar `hit_spark_medium.png` (estrelas médias laranja) (BLOCKED: API QUOTA)
-- [!] **8.2.3** Gerar `hit_spark_heavy.png` (explosão grande amarela) (BLOCKED: API QUOTA)
-- [!] **8.2.4** Gerar `block_spark.png` (faíscas azuis/brancas) (BLOCKED: API QUOTA)
-- [!] **8.2.5** Gerar `dust_cloud.png` (nuvem de pó) (BLOCKED: API QUOTA)
-- [!] **8.2.6** Gerar `projectile_kevin.png` (coração rosa elétrico) (BLOCKED: API QUOTA)
-- [!] **8.2.7** Gerar `projectile_vini.png` (cachorro laranja energético) (BLOCKED: API QUOTA)
-- [ ] **8.2.8** Processar todos via `scripts/remove_green.js`
-- [ ] **8.2.9** Salvar em `game/public/assets/effects/`
-
----
-
-# ══════════════════════════════════════
-# FASE 9 — HUD COMPLETO
-# ══════════════════════════════════════
-> Referência: Seções 40-47 do Manual SF2
-
-## 9.1 HUD.ts (Extrair da CombatScene)
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ [★☆] [PORTRAIT P1] [████████████████░░░░░░] 72 [░░░░████████] [PORTRAIT P2] [★★]│
-│        KEVIN                                        VINI DOG  │
-└─────────────────────────────────────────────────────────────────┘
+- [ ] **3.4.1** Em `Fighter.ts`, trocar `public inputManager?: any;` por:
+```typescript
+import { IInputProvider } from '../interfaces/IInputProvider';
+// ...
+public inputManager?: IInputProvider;
 ```
 
-- [x] **9.1.1** Criar `HUD.ts` como classe separada instanciada pela CombatScene
-- [x] **9.1.2** `HP bar P1`: largura varia de 0 a 440px conforme `player.hp / player.maxHp`
-- [x] **9.1.3** `HP bar P2`: espelhada, cresce da direita para o centro
-- [x] **9.1.4** Cor da barra: `>50%` = verde | `>25%` = amarelo | `≤25%` = vermelho (piscando)
-- [x] **9.1.5** **Damage Lag**: barra amarela que drena devagar após receber dano (SF4 style)
-  ```typescript
-  // damageBuffer acumula dano
-  // a cada frame: damageBuffer -= 3 (drena visualmente)
-  ```
-- [ ] **9.1.6** Portraits nos cantos extremos (80×80px, borda colorida P1=azul, P2=vermelho)
-- [x] **9.1.7** Nomes dos personagens acima das barras
-- [x] **9.1.8** Indicador de rounds: 2 ícones ★/☆ abaixo do nome
-- [x] **9.1.9** Timer: caixa preta centralizada no topo, número amarelo, pisca vermelho < 10s
-- [ ] **9.1.10** Stun meter (opcional): barra menor abaixo da HP bar
+## 3.5 VALIDAÇÃO DA FASE 3
+
+- [ ] **3.5.1** Buscar no projeto inteiro: NÃO pode existir `isUpPressed()` ou `isLeftPressed()` — só `isUpJustPressed` e `isLeftDown`
+- [ ] **3.5.2** `CPUController` compila sem erros de TypeScript
 
 ---
 
 # ══════════════════════════════════════
-# FASE 10 — SISTEMA DE ROUNDS (BEST OF 3)
+# FASE 4 — FIGHTER + STATE MACHINE + COLISÃO
 # ══════════════════════════════════════
-> Referência: Seções 39-45, 60-64 do Manual SF2
 
-## 10.1 MatchManager.ts
+## 4.1 State Machine Genérica
 
-- [x] **10.1.1** Criar `MatchManager.ts` com variáveis: `p1Wins`, `p2Wins`, `currentRound`, `p1HP`, `p2HP`
-- [x] **10.1.2** `RoundStartSequence`:
-  1. Bloqueio de input (2.5s)
-  2. "ROUND X" aparece + disappears (1s)
-  3. "FIGHT!" explode (0.8s)
-  4. Liberar input
-  5. Iniciar timer
-- [x] **10.1.3** Timer só começa APÓS "FIGHT!" desaparecer
-- [x] **10.1.4** `RoundEndSequence`:
-  1. HitStop 800ms
-  2. Câmera shake
-  3. Slow motion 0.2× por 600ms
-  4. "K.O." animado
-  5. Espera 1.5s
-  6. Verificar condição de fim de partida
-  7. Se match continua: reiniciar round com HP cheio
-- [x] **10.1.5** Condições:
-  - KO: HP = 0 → round termina
-  - Time Over: timer = 0 → maior HP ganha
-  - Double KO: ambos = 0 → ambos +1 estrela (draw round)
-  - Perfect: vencer sem tomar dano → "PERFECT!" dourado (falta text, mas lógica base pronta)
-  - 2 vitórias → VictoryScene (reset por enquanto)
-- [x] **10.1.6** Máximo 3 rounds (round 3 = tiebreak)
+- [ ] **4.1.1** Criar `game/src/core/StateMachine.ts` com padrão State:
+```typescript
+export abstract class State {
+  protected stateMachine!: StateMachine;
+  enter(fighter: Fighter, ...args: any[]): void {}
+  execute(fighter: Fighter): void {}
+  exit(fighter: Fighter): void {}
+}
 
----
+export class StateMachine {
+  public currentState: State;
+  private states: Record<string, State>;
+  private context: Fighter[];
 
-# ══════════════════════════════════════
-# FASE 11 — IA DO INIMIGO
-# ══════════════════════════════════════
-> Referência: Seções 72-75 do Manual SF2
+  constructor(initialState: string, states: Record<string, State>, context: Fighter[]) {
+    this.states = states;
+    this.context = context;
+    for (const state of Object.values(states)) {
+      (state as any).stateMachine = this;
+    }
+    this.currentState = states[initialState];
+    this.currentState.enter(context[0]);
+  }
 
-## 11.1 CPUController.ts
+  transition(newState: string, ...args: any[]) {
+    if (!this.states[newState]) return;
+    this.currentState.exit(this.context[0]);
+    this.currentState = this.states[newState];
+    this.currentState.enter(this.context[0], ...args);
+  }
 
-- [x] **11.1.1** Criar `CPUController.ts` que implementa a mesma interface do `InputManager`
-- [x] **11.1.2** `AIPerception`: observar `distance, opponentState, ownHP, opponentHP, timer, position`
-- [x] **11.1.3** `AIDecision` — árvore de decisão básica:
-```
-SE distance > 350 → avançar
-SE distance < 60 → throw (prob 40%)
-SE opponent.attacking AND distance < 200 → bloquear
-SE distance 100-350 AND cooldown OK → atacar
-SE próprio HP < 20% → usar especial
-SE aleatório a cada 180f → pular
-```
-- [x] **11.1.4** Dificuldade: (implementado de forma base)
-  - Fácil: reaction 30f | defesa 20% | especial nunca
-  - Normal: reaction 15f | defesa 50% | especial 30%
-  - Difícil: reaction 5f | defesa 75% | especial 60%
-- [x] **11.1.5** CPU usa variables para disparar ações
-
----
-
-# ══════════════════════════════════════
-# FASE 12 — TODAS AS TELAS / CENAS
-# ══════════════════════════════════════
-> Referência: Seções 56-64, 77-81 do Manual SF2
-
-## 12.1 Game States Completos
-
-```
-BOOT → TITLE → MAIN_MENU → CHARACTER_SELECT → VS_SCREEN
-→ ROUND_INTRO → FIGHT → ROUND_END → NEXT_ROUND
-→ MATCH_END → VICTORY / GAME_OVER → CONTINUE → MAIN_MENU
+  step() {
+    this.currentState.execute(this.context[0]);
+  }
+}
 ```
 
-- [x] **12.1.1** BootScene
-- [x] **12.1.2** MainMenuScene
-- [x] **12.1.3** CharacterSelectScene
-- [x] **12.1.4** VsScene
-- [x] **12.1.5** CombatScene
+## 4.2 Fighter.ts — Estados Completos
 
-## 12.2 VictoryScene.ts
+- [ ] **4.2.1** Criar `game/src/entities/Fighter.ts` com:
+  - Propriedades: `hp`, `maxHp`, `speed`, `jumpForce`, `isHit`, `isBlocking`, `hitStunTimer`, `throwRange`, `flipX`
+  - State Machine com estados: `idle`, `walk`, `jump`, `land`, `crouch`, `stand_LP/MP/HP`, `stand_LK/MK/HK`, `crouch_LP/MP/HP/cLK/cMK/cHK`, `air_LP/MP/HP/LK/MK/HK`, `block_high`, `block_low`, `hit`, `knockdown`, `wakeup`, `dizzy`, `ko`, `win`, `throw`, `thrown`, `special`
+  - Hitbox, Hurtbox, Pushbox como propriedades
 
-- [x] **12.2.1** Criar `VictoryScene.ts`
-- [x] **12.2.2** Background do stage escurecido
-- [x] **12.2.3** Sprite grande do vencedor (280px altura) fazendo pose Win
-- [x] **12.2.4** Texto de vitória do personagem (do JSON: `victory.phrase`) - feito como stats simples por agora
-- [x] **12.2.5** Stats: Rounds ganhos | Hits dados | Dano total | Tempo
-- [x] **12.2.6** Botões: JOGAR NOVAMENTE | MENU PRINCIPAL
+**Lista de estados com código EXATO:**
 
-## 12.3 GameOverScene.ts
+### IdleState
+```typescript
+class IdleState extends State {
+  enter(f: Fighter) {
+    f.setVelocityX(0);
+    f.setTexture(f.spriteMap?.idle ?? f.texture.key);
+    f.clearTint();
+  }
+  execute(f: Fighter) {
+    if (!f.inputManager) return;
+    const inp = f.inputManager;
 
-- [x] **12.3.1** Criar `GameOverScene.ts`
-- [x] **12.3.2** "GAME OVER" vermelho dramático com efeito de entrada
-- [x] **12.3.3** Contador 9→0 (1s por número, texto grande)
-- [x] **12.3.4** Botão/tecla CONTINUE → reinicia round com HP cheio
-- [x] **12.3.5** Sem ação → volta ao MainMenu
-
-## 12.4 TrainingScene.ts
-
-- [x] **12.4.1** Criar `TrainingScene.ts` (herda CombatScene)
-- [x] **12.4.2** HP infinito (regenera a cada frame)
-- [x] **12.4.3** CPU no modo Dummy (não age)
-- [x] **12.4.4** Tecla R: reset posição dos dois
-- [x] **12.4.5** Tecla H: toggle hitboxes coloridas
-- [x] **12.4.6** HUD adicional: estado atual da SM + frame count
-
-## 12.5 SettingsScene.ts
-
-- [x] **12.5.1** Volume música (slider) - [Adiado para Fase 13 Áudio]
-- [x] **12.5.2** Volume SFX (slider) - [Adiado para Fase 13 Áudio]
-- [x] **12.5.3** Dificuldade CPU: Fácil / Normal / Difícil
-- [x] **12.5.4** Toggle tela cheia
-- [x] **12.5.5** Salvar em localStorage
-
-## 12.6 ControlsScene.ts
-
-- [x] **12.6.1** Tabela de teclas P1 e P2 (Apenas teclado base)
-- [x] **12.6.2** Diagrama do gamepad (Descrito em texto)
-- [x] **12.6.3** Diagrama mobile (Omitido)
-- [x] **12.6.4** Comandos especiais por personagem com notação numérica (236P, 214K)
-
-## 12.7 PauseMenu
-
-- [x] **12.7.1** Tecla ESC durante combate → pause overlay
-- [x] **12.7.2** Opções: Continuar | Controles | Configurações | Sair para Menu
-- [x] **12.7.3** Durante pausa: `scene.pause()` no physics
-
----
-
-# ══════════════════════════════════════
-# FASE 13 — ÁUDIO COMPLETO
-# ══════════════════════════════════════
-> Referência: Seção 70-71 do Manual SF2
-
-## 13.1 AudioManager.ts
-
-- [x] **13.1.1** Criar `AudioManager.ts`: singleton, controla volumes, play/stop
-- [x] **13.1.2** Categorias: `music`, `sfx`, `voice`, `ui`
-- [x] **13.1.3** `playMusic(key, loop)`, `stopMusic()`, `playSFX(key)`, `playVoice(key)`
-- [x] **13.1.4** Respeitar volumes do localStorage
-
-## 13.2 Músicas Necessárias
-
-- [ ] **13.2.1** `menu_bgm.ogg` — loop menu
-- [ ] **13.2.2** `char_select.ogg` — loop char select
-- [ ] **13.2.3** `stage_cmsw.ogg` — loop combate
-- [ ] **13.2.4** `victory.ogg` — fanfarra vitória (3-4s)
-- [ ] **13.2.5** `game_over.ogg` — tema game over
-
-## 13.3 SFX Necessários
-
-- [ ] **13.3.1** `hit_light.ogg` | `hit_medium.ogg` | `hit_heavy.ogg`
-- [ ] **13.3.2** `block.ogg` — pancada bloqueada
-- [ ] **13.3.3** `projectile_kevin.ogg` — aura do beijo
-- [ ] **13.3.4** `projectile_vini.ogg` — aura do cachorro
-- [ ] **13.3.5** `electric_hit.ogg` — choque ao acertar
-- [ ] **13.3.6** `ko.ogg` — KO pesado
-- [ ] **13.3.7** `jump.ogg` — whoosh ao pular
-- [ ] **13.3.8** `land.ogg` — baque ao aterrissar
-- [ ] **13.3.9** `throw.ogg` — agarrar
-- [ ] **13.3.10** `combo_tick.ogg` — tick por hit de combo
-- [ ] **13.3.11** `ui_cursor.ogg` | `ui_confirm.ogg` | `ui_cancel.ogg`
-
-## 13.4 Announcer (Voz)
-
-- [ ] **13.4.1** `round_1.ogg`, `round_2.ogg`, `round_3.ogg`
-- [ ] **13.4.2** `fight.ogg`
-- [ ] **13.4.3** `ko.ogg` (voz separada do SFX)
-- [ ] **13.4.4** `perfect.ogg`
-- [ ] **13.4.5** `time_over.ogg`
-
----
-
-# ══════════════════════════════════════
-# FASE 14 — CONTROLES MOBILE
-# ══════════════════════════════════════
-
-## 14.1 VirtualGamepad Completo
-
-- [x] **14.1.1** Joystick analógico (básico)
-- [x] **14.1.2** 6 botões de ataque (LP, MP, HP, LK, MK, HK) — layout 2 linhas × 3
-- [x] **14.1.3** Botão Especial separado (V) — destacado em roxo/magenta
-- [x] **14.1.4** Tamanho mínimo 60×60px por botão
-- [x] **14.1.5** Feedback visual: escurecer botão no press
-- [x] **14.1.6** Alpha 0.6 em todos os controles
-- [x] **14.1.7** Joystick: indicador de direção ao arrastar (seta) - Simplificado com botões
-- [x] **14.1.8** Suporte a multi-touch (joystick + botão ao mesmo tempo)
-- [x] **14.1.9** Testar iOS Safari + Android Chrome
-
----
-
-# ══════════════════════════════════════
-# FASE 15 — PIPELINE DE GERAÇÃO DE PERSONAGEM
-# ══════════════════════════════════════
-> Referência: Seções 91-100 do Manual SF2 — O diferencial do projeto
-
-## 15.1 Character Generator (Futuro — preparar motor)
-
-O motor deve estar preparado para receber novos personagens via:
-
-```
-FOTO DO USUÁRIO
-      ↓
-QUESTIONÁRIO (nome, roupa, estilo, golpes)
-      ↓
-GERAÇÃO DE SPRITES (IA de imagem)
-      ↓
-GERAÇÃO DE JSON (dados do personagem)
-      ↓
-INTEGRAÇÃO NO MOTOR
-      ↓
-PERSONAGEM JOGÁVEL
+    if (inp.isUpJustPressed) { this.stateMachine.transition('jump'); return; }
+    if (inp.isDownDown) { this.stateMachine.transition('crouch'); return; }
+    if (inp.isLeftDown || inp.isRightDown) { this.stateMachine.transition('walk'); return; }
+    if (inp.isThrowJustPressed) { this.stateMachine.transition('throw'); return; }
+    if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
+    if (inp.isLPJustPressed) { this.stateMachine.transition('stand_LP'); return; }
+    if (inp.isMPJustPressed) { this.stateMachine.transition('stand_MP'); return; }
+    if (inp.isHPJustPressed) { this.stateMachine.transition('stand_HP'); return; }
+    if (inp.isLKJustPressed) { this.stateMachine.transition('stand_LK'); return; }
+    if (inp.isMKJustPressed) { this.stateMachine.transition('stand_MK'); return; }
+    if (inp.isHKJustPressed) { this.stateMachine.transition('stand_HK'); return; }
+  }
+}
 ```
 
-- [x] **15.1.1** Criar `PERSONAGEM_TEMPLATE.json` em branco como base para novos personagens
-- [x] **15.1.2** Criar `CHARACTER_CREATION_GUIDE.md` com questionário padrão
-- [x] **15.1.3** Criar `scripts/validate_character.js`: script que recebe o JSON e valida o contrato mínimo de sprites
+### JumpState (COM FIX DO BUG DE PULO)
+```typescript
+class JumpState extends State {
+  private airFrames = 0;
 
----
+  enter(f: Fighter) {
+    this.airFrames = 0;
+    f.setVelocityY(-f.jumpForce);
+    if (f.inputManager?.isLeftDown) f.setVelocityX(-f.speed * 0.8);
+    else if (f.inputManager?.isRightDown) f.setVelocityX(f.speed * 0.8);
+    else f.setVelocityX(0);
+  }
 
-# ══════════════════════════════════════
-# FASE 16 — POLIMENTO E PERFORMANCE
-# ══════════════════════════════════════
-> Referência: Seção 116 do Manual SF2
+  execute(f: Fighter) {
+    this.airFrames++;
 
-## 16.1 Performance
+    // Ataques aéreos
+    const inp = f.inputManager;
+    if (inp?.isLPJustPressed) { this.stateMachine.transition('air_LP'); return; }
+    if (inp?.isMPJustPressed) { this.stateMachine.transition('air_MP'); return; }
+    if (inp?.isHPJustPressed) { this.stateMachine.transition('air_HP'); return; }
+    if (inp?.isLKJustPressed) { this.stateMachine.transition('air_LK'); return; }
+    if (inp?.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
+    if (inp?.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
 
-- [ ] **16.1.1** 60fps constante (testar com `game.loop.actualFps`)
-- [ ] **16.1.2** Object pooling para VFX (pool de 30 sparks, 10 dust clouds)
-- [ ] **16.1.3** Sprite atlas: agrupar todos os sprites num atlas (TextureAtlas Phaser)
-- [ ] **16.1.4** Preload ALL assets no BootScene — zero carregamento durante luta
-- [ ] **16.1.5** Remover todos `console.log` antes do build final
-
-## 16.2 Deploy e GitHub Pages
-
-- [ ] **16.2.1** `vite.config.ts`: confirmar `base: '/cmsw_fight/'`
-- [ ] **16.2.2** `deploy.yml`: `npm ci && npm run build` na pasta `/game`
-- [ ] **16.2.3** Source no GitHub Settings > Pages = "GitHub Actions"
-- [ ] **16.2.4** `index.html`: `<title>CMSW Fight — Resolva sua treta aqui</title>`, `lang="pt-BR"`, meta description
-
-## 16.3 Acessibilidade
-
-- [ ] **16.3.1** Screen shake ON/OFF nas configurações
-- [ ] **16.3.2** Flash effects ON/OFF nas configurações
-- [ ] **16.3.3** Controles remapeáveis (teclado)
-
----
-
-# ══════════════════════════════════════
-# FASE 17 — DOCUMENTAÇÃO FINAL
-# ══════════════════════════════════════
-
-- [ ] **17.1** Atualizar `status_projeto.md`
-- [ ] **17.2** Criar `CONTROLS.md` com tabela completa de controles
-- [ ] **17.3** Criar `CHANGELOG.md`
-- [ ] **17.4** Atualizar `README.md`: rodar local (`npm run dev` na pasta `/game`), link GitHub Pages
-- [ ] **17.5** Criar `ADDING_CHARACTERS.md`: guia completo para adicionar personagem novo
-
----
-
-# MAPEAMENTO COMPLETO DE CONTROLES
-
-| Ação            | P1 Teclado | P2 Teclado | Gamepad (P1)    |
-|-----------------|------------|------------|-----------------|
-| Esquerda        | ←          | Numpad 4   | L-Stick/D-Pad ← |
-| Direita         | →          | Numpad 6   | L-Stick/D-Pad → |
-| Pulo            | ↑          | Numpad 8   | L-Stick/D-Pad ↑ |
-| Agachar         | ↓          | Numpad 2   | L-Stick/D-Pad ↓ |
-| Soco Leve LP    | Z          | U          | X               |
-| Soco Médio MP   | X          | I          | Y               |
-| Soco Forte HP   | C          | O          | RB              |
-| Chute Leve LK   | A          | J          | A               |
-| Chute Médio MK  | S          | K          | B               |
-| Chute Forte HK  | D          | L          | RT              |
-| Especial        | V          | M          | LB              |
-| Throw (perto)   | Z+A        | U+J        | X+A             |
-| Pause           | ESC        | ESC        | Start           |
-
----
-
-# ORDEM DE EXECUÇÃO (15 SESSÕES)
-
-```
-SESSÃO 1  → Fase 0: Criar estrutura de pastas
-SESSÃO 2  → Fase 1: Input Buffer + Command Recognizer (236P, 214K)
-SESSÃO 3  → Fase 2: Sistema de 3 Boxes (Hitbox, Hurtbox, Pushbox)
-SESSÃO 4  → Fase 3: Frame Data de todos os ataques
-SESSÃO 5  → Fase 4: State Machine completa (todos os 30+ estados)
-SESSÃO 6  → Fase 5: CombatSystem, DamageSystem, StunSystem, ComboCounter
-SESSÃO 7  → Fase 6+7: JSONs dos personagens e stages, refatorar Fighter para data-driven
-SESSÃO 8  → Fase 6.3+6.4: Gerar/processar sprites Kevin e Vini Dog (nova versão)
-SESSÃO 9  → Fase 7.2: Gerar/processar cenário CMSW em camadas
-SESSÃO 10 → Fase 8: VFXManager completo
-SESSÃO 11 → Fase 9+10: HUD refatorado + MatchManager (best of 3)
-SESSÃO 12 → Fase 11: IA do inimigo (CPUController)
-SESSÃO 13 → Fase 12: Todas as telas restantes (Victory, GameOver, Training, Settings)
-SESSÃO 14 → Fase 13+14: Áudio completo + Mobile controls
-SESSÃO 15 → Fase 15+16+17: Pipeline de personagem, polimento, deploy, docs
+    // SÓ checar aterrissagem após 8 frames (CORRIGE O BUG DE PULO)
+    if (this.airFrames > 8 && f.body && (f.body as any).blocked?.down) {
+      this.stateMachine.transition('land');
+    }
+  }
+}
 ```
 
+### AttackState (Genérico para TODOS os ataques)
+```typescript
+class AttackState extends State {
+  private frame = 0;
+  private moveData: MoveData;
+
+  constructor(moveData: MoveData) {
+    super();
+    this.moveData = moveData;
+  }
+
+  enter(f: Fighter) {
+    this.frame = 0;
+    f.currentHitbox.active = false;
+    f.currentHitbox.damage = this.moveData.damage;
+    f.currentHitbox.type = this.moveData.type;
+    f.currentHitbox.hitLevel = this.moveData.hitLevel;
+    f.currentHitbox.knockback = this.moveData.knockback;
+    f.currentHitbox.hitstun = this.moveData.hitstun;
+    f.currentHitbox.blockstun = this.moveData.blockstun;
+    f.currentHitbox.offsetX = this.moveData.hitboxOffset.x;
+    f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
+    f.currentHitbox.width = this.moveData.hitboxOffset.w;
+    f.currentHitbox.height = this.moveData.hitboxOffset.h;
+    f.setTint(0x4444ff); // Startup
+  }
+
+  execute(f: Fighter) {
+    this.frame++;
+
+    // Frame startup+1: ativar hitbox
+    if (this.frame === this.moveData.startup + 1) {
+      f.currentHitbox.active = true;
+      f.setTint(0xff4444); // Active
+    }
+
+    // Frame startup+active+1: desativar hitbox
+    if (this.frame === this.moveData.startup + this.moveData.active + 1) {
+      f.currentHitbox.active = false;
+      f.setTint(0x4444ff); // Recovery
+    }
+
+    // Frame total: sair do ataque
+    if (this.frame >= this.moveData.startup + this.moveData.active + this.moveData.recovery) {
+      f.currentHitbox.active = false;
+      f.clearTint();
+      this.stateMachine.transition('idle');
+    }
+  }
+}
+```
+
+## 4.3 Hitbox/Hurtbox em WORLD-SPACE
+
+- [ ] **4.3.1** Criar `Hitbox.ts` e `Hurtbox.ts`:
+```typescript
+// Hitbox.ts
+export class Hitbox extends Phaser.Geom.Rectangle {
+  public active = false;
+  public damage = 0;
+  public type: string = 'normal';
+  public hitLevel: string = 'HIGH';
+  public knockback = 100;
+  public hitstun = 14;
+  public blockstun = 10;
+  public offsetX = 0;
+  public offsetY = 0;
+
+  updatePosition(fighterX: number, fighterY: number, flipX: boolean) {
+    // WORLD-SPACE: calcula posição ABSOLUTA
+    const finalOffsetX = flipX ? -(this.offsetX + this.width) : this.offsetX;
+    this.x = fighterX + finalOffsetX;
+    this.y = fighterY + this.offsetY;
+  }
+}
+```
+
+## 4.4 Pushbox Manual (NÃO usar physics.add.collider entre fighters)
+
+- [ ] **4.4.1** No `update()` da `CombatScene`, ANTES de checar hitboxes:
+```typescript
+// Pushbox — Impede que passem um pelo outro
+const dx = this.player.x - this.enemy.x;
+const absDx = Math.abs(dx);
+const MIN_DIST = 70;
+
+if (absDx < MIN_DIST) {
+  const push = (MIN_DIST - absDx) / 2;
+  if (dx > 0) { this.player.x += push; this.enemy.x -= push; }
+  else { this.player.x -= push; this.enemy.x += push; }
+}
+
+// Auto-Face — Sempre encaram um ao outro
+if (!this.player.isHit) this.player.setFlipX(this.player.x > this.enemy.x);
+if (!this.enemy.isHit) this.enemy.setFlipX(this.enemy.x > this.player.x);
+```
+
+## 4.5 Colisão de Hitbox (CombatSystem.ts)
+
+- [ ] **4.5.1** Criar `CombatSystem.ts`:
+```typescript
+export class CombatSystem {
+  static checkHit(hitbox: Hitbox, hurtbox: Hurtbox): boolean {
+    if (!hitbox.active || hurtbox.invincible) return false;
+    return Phaser.Geom.Intersects.RectangleToRectangle(hitbox, hurtbox);
+  }
+
+  static applyHit(attacker: Fighter, defender: Fighter, hitbox: Hitbox) {
+    if (defender.isHit) return;
+
+    const dir = attacker.x < defender.x ? 1 : -1;
+
+    // Checar bloqueio
+    if (defender.isBlocking) {
+      defender.hitStunTimer = hitbox.blockstun;
+      defender.setVelocityX(hitbox.knockback * 0.5 * dir);
+      return; // Bloqueou
+    }
+
+    // Hit limpo
+    defender.hp -= hitbox.damage;
+    if (defender.hp < 0) defender.hp = 0;
+    defender.setVelocityX(hitbox.knockback * dir);
+    defender.hitStunTimer = hitbox.hitstun;
+    defender.stateMachine.transition('hit');
+    hitbox.active = false; // Evitar multi-hit
+  }
+}
+```
+
+## 4.6 VALIDAÇÃO DA FASE 4
+
+- [ ] **4.6.1** Apertar ↑ faz o personagem subir e descer naturalmente
+- [ ] **4.6.2** Dois personagens NÃO passam um pelo outro
+- [ ] **4.6.3** Apertar Z (LP) faz o personagem mudar de cor (startup→active→recovery→idle)
+- [ ] **4.6.4** Se o personagem atacante chegar perto do inimigo durante o "active frame" (vermelho), a barra de vida do inimigo diminui
+- [ ] **4.6.5** A CPU anda em direção ao jogador e ataca
+
 ---
-*Última atualização: 30/09/2026 — Procedimento gerado com base no Manual Técnico SF2 World Warrior + arquitetura CMSW Fight.*
+
+# ══════════════════════════════════════
+# FASE 5 — PROJÉTEIS
+# ══════════════════════════════════════
+
+## 5.1 Projétil com Colisão Manual
+
+- [ ] **5.1.1** Criar `Projectile.ts`:
+  - Extende `Phaser.Physics.Arcade.Sprite`
+  - `allowGravity = false`
+  - `velocityX` definido ao criar (300 px/s)
+  - `hitActive = true` (false após acertar alguém)
+  - Autodestroí após 3 segundos
+
+- [ ] **5.1.2** No `update()` da CombatScene, checar colisão MANUALMENTE:
+```typescript
+this.projectiles.getChildren().forEach((child) => {
+  const proj = child as Projectile;
+  if (!proj.active || !proj.hitActive) return;
+
+  const target = proj.getOwner() === this.player ? this.enemy : this.player;
+  const projRect = new Phaser.Geom.Rectangle(proj.x - 20, proj.y - 20, 40, 40);
+
+  if (!target.isHit && !target.currentHurtbox.invincible &&
+      Phaser.Geom.Intersects.RectangleToRectangle(projRect, target.currentHurtbox)) {
+    target.hp -= proj.damage;
+    if (target.hp < 0) target.hp = 0;
+    target.stateMachine.transition('hit');
+    proj.hitActive = false;
+    proj.destroy();
+  }
+});
+```
+
+## 5.2 VALIDAÇÃO DA FASE 5
+
+- [ ] **5.2.1** Apertar V dispara um projétil que viaja na horizontal
+- [ ] **5.2.2** O projétil causa dano se acertar o inimigo
+- [ ] **5.2.3** O projétil NÃO acerta quem atirou
+- [ ] **5.2.4** O projétil desaparece após acertar ou após 3 segundos
+
+---
+
+# ══════════════════════════════════════
+# FASE 6 — HUD + MATCH MANAGER
+# ══════════════════════════════════════
+
+## 6.1 HUD.ts
+
+- [ ] **6.1.1** Barra de HP do P1 (esquerda, cor verde→amarela→vermelha conforme HP)
+- [ ] **6.1.2** Barra de HP do P2 (direita, mesma lógica, cresce da direita para a esquerda)
+- [ ] **6.1.3** "Damage lag": barra amarela que acompanha o dano com delay
+- [ ] **6.1.4** Timer no centro (99 segundos, fica vermelho nos últimos 10s)
+- [ ] **6.1.5** Nome dos personagens acima das barras
+- [ ] **6.1.6** Estrelas de vitória: ☆☆ → ★☆ → ★★
+- [ ] **6.1.7** Todos os elementos com `setScrollFactor(0)` e `setDepth(100+)`
+
+## 6.2 MatchManager.ts
+
+- [ ] **6.2.1** Best of 3 rounds
+- [ ] **6.2.2** Sequência: "ROUND X" → "FIGHT!" → luta → "K.O." → próximo ou fim
+- [ ] **6.2.3** Timer 99s → quem tem mais HP ganha o round
+- [ ] **6.2.4** P1 ganha 2 → VictoryScene / P1 perde 2 → GameOverScene
+
+## 6.3 VALIDAÇÃO DA FASE 6
+
+- [ ] **6.3.1** Barras de HP aparecem e diminuem ao tomar dano
+- [ ] **6.3.2** Timer conta regressivamente
+- [ ] **6.3.3** "ROUND 1" e "FIGHT!" aparecem no início
+- [ ] **6.3.4** "K.O." aparece quando HP chega a 0
+
+---
+
+# ══════════════════════════════════════
+# FASE 7 — TELAS DO JOGO
+# ══════════════════════════════════════
+
+## 7.1 MainMenuScene
+- [ ] **7.1.1** Título "C&M FIGTH" grande, pulsante
+- [ ] **7.1.2** Opções: 1 PLAYER | TREINO | CONTROLES | CONFIGURAÇÕES
+- [ ] **7.1.3** Navegação por setas ↑↓ + ENTER (teclado) ou toque (mobile)
+
+## 7.2 CharacterSelectScene
+- [ ] **7.2.1** Grid de personagens (Kevin Manja, Vini Dog, ??? travados)
+- [ ] **7.2.2** P1 seleciona com ←→ + ENTER
+- [ ] **7.2.3** Preview do personagem selecionado (imagem grande)
+- [ ] **7.2.4** Após confirmar → CombatScene
+
+## 7.3 VictoryScene
+- [ ] **7.3.1** Personagem vencedor no centro
+- [ ] **7.3.2** Frase de vitória do personagem
+- [ ] **7.3.3** Botão "VOLTAR AO MENU"
+
+## 7.4 GameOverScene
+- [ ] **7.4.1** Texto "GAME OVER"
+- [ ] **7.4.2** Botão "CONTINUE" e "MENU"
+
+## 7.5 TrainingScene
+- [ ] **7.5.1** HP infinito (regenera)
+- [ ] **7.5.2** CPU não age (dummy)
+- [ ] **7.5.3** Tecla R: reset posições
+
+## 7.6 SettingsScene
+- [ ] **7.6.1** Dificuldade CPU: Fácil / Normal / Difícil
+- [ ] **7.6.2** Toggle tela cheia
+- [ ] **7.6.3** Salvar em localStorage
+
+## 7.7 ControlsScene
+- [ ] **7.7.1** Tabela de controles (teclado + gamepad)
+- [ ] **7.7.2** Diagrama visual dos botões
+
+## 7.8 VALIDAÇÃO DA FASE 7
+- [ ] **7.8.1** Todas as telas navegáveis sem travar
+- [ ] **7.8.2** Fluxo completo: Menu → Select → Luta → Vitória → Menu
+
+---
+
+# ══════════════════════════════════════
+# FASE 8 — CONTROLES MOBILE (VirtualGamepad)
+# ══════════════════════════════════════
+
+## 8.1 Layout
+
+- [ ] **8.1.1** D-Pad (canto inferior esquerdo): 4 botões ←↑↓→, raio 35px, alpha 0.6
+- [ ] **8.1.2** Ataques (canto inferior direito): 6 botões em 2 fileiras (LP MP HP / LK MK HK)
+- [ ] **8.1.3** Botão SPECIAL separado (acima dos ataques, roxo)
+- [ ] **8.1.4** Todos com `setScrollFactor(0)`, `setDepth(2000)`, `setInteractive()`
+- [ ] **8.1.5** Feedback visual: escurecer + diminuir escala ao apertar
+- [ ] **8.1.6** Só criar se `this.sys.game.device.input.touch === true`
+
+## 8.2 VALIDAÇÃO DA FASE 8
+
+- [ ] **8.2.1** No celular: D-Pad controla o personagem
+- [ ] **8.2.2** No celular: botões de ataque disparam ataques
+- [ ] **8.2.3** No PC: controles touch NÃO aparecem
+- [ ] **8.2.4** Multi-touch funciona (D-Pad + ataque ao mesmo tempo)
+
+---
+
+# ══════════════════════════════════════
+# FASE 9 — SPRITES E CENÁRIO
+# ══════════════════════════════════════
+
+## 9.1 Regra de Sprites
+
+- **UMA IMAGEM POR POSE.** Nomes: `kevin_idle.png`, `kevin_punch.png`, etc.
+- Se não houver sprite, usar retângulo colorido como fallback (já criado no BootScene)
+- Sprites devem ter fundo transparente (PNG)
+- Tamanho sugerido: ~200x300 pixels por pose
+
+## 9.2 Troca de Sprite por Estado
+
+- [ ] **9.2.1** No Fighter, adicionar `spriteMap: Record<string, string>` carregado do JSON
+- [ ] **9.2.2** Cada estado chama `f.setTexture(f.spriteMap.idle)` no `enter()`
+
+## 9.3 Cenário Parallax
+
+- [ ] **9.3.1** Background: `this.add.image(640, 360, 'stage_bg').setScrollFactor(0.1).setDepth(0)`
+- [ ] **9.3.2** Middleground: scrollFactor 0.4, depth 1
+- [ ] **9.3.3** Floor: scrollFactor 1.0, depth 2
+- [ ] **9.3.4** Personagens: depth 10
+- [ ] **9.3.5** HUD: depth 100+
+
+## 9.4 VALIDAÇÃO DA FASE 9
+
+- [ ] **9.4.1** Sprites aparecem (ou retângulos coloridos como fallback)
+- [ ] **9.4.2** Sprite muda ao atacar/pular/agachar
+- [ ] **9.4.3** Parallax funciona: camadas se movem em velocidades diferentes
+
+---
+
+# ══════════════════════════════════════
+# FASE 10 — POLISH E DEPLOY
+# ══════════════════════════════════════
+
+## 10.1 VFX
+- [ ] **10.1.1** Hit spark (flash branco no ponto de impacto)
+- [ ] **10.1.2** Camera shake ao acertar HP/HK
+- [ ] **10.1.3** Slow motion no KO final (timeScale = 0.15 por 2s)
+
+## 10.2 Performance
+- [ ] **10.2.1** 60fps constante
+- [ ] **10.2.2** Remover todos os `console.log` antes do build
+
+## 10.3 Deploy
+- [ ] **10.3.1** `npm run build` compila sem erros
+- [ ] **10.3.2** GitHub Pages exibe o jogo
+- [ ] **10.3.3** Funciona no Chrome PC, Firefox PC, Chrome Mobile, Safari iOS
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# SEÇÃO D — FRAME DATA COMPLETA (REFERÊNCIA)
+# ═══════════════════════════════════════════════════════════════
+
+| Move   | Startup | Active | Recovery | Damage | Hitstun | Blockstun | Knockback | Cancel | KD  | Hit Level |
+|--------|---------|--------|----------|--------|---------|-----------|-----------|--------|-----|-----------|
+| LP     | 4       | 4      | 8        | 30     | 14      | 10        | 100       | Yes    | No  | HIGH      |
+| MP     | 6       | 5      | 12       | 60     | 18      | 14        | 150       | Yes    | No  | HIGH      |
+| HP     | 8       | 6      | 18       | 100    | 22      | 16        | 200       | No     | No  | HIGH      |
+| LK     | 5       | 4      | 9        | 35     | 14      | 10        | 120       | Yes    | No  | HIGH      |
+| MK     | 7       | 5      | 14       | 70     | 18      | 14        | 160       | Yes    | No  | HIGH      |
+| HK     | 10      | 7      | 20       | 110    | 24      | 18        | 220       | No     | No  | HIGH      |
+| cLP    | 4       | 4      | 8        | 30     | 14      | 10        | 100       | Yes    | No  | MID       |
+| cMP    | 6       | 5      | 12       | 60     | 18      | 14        | 150       | Yes    | No  | MID       |
+| cHP    | 8       | 6      | 20       | 90     | 20      | 14        | 200       | No     | No  | HIGH      |
+| cLK    | 5       | 4      | 9        | 35     | 14      | 10        | 120       | Yes    | No  | LOW       |
+| cMK    | 7       | 5      | 14       | 70     | 18      | 14        | 160       | Yes    | No  | LOW       |
+| cHK    | 12      | 5      | 22       | 80     | 0       | 0         | 250       | No     | Yes | LOW       |
+| jLP    | 4       | 10     | 0        | 40     | 15      | 11        | 100       | No     | No  | AIR       |
+| jMP    | 6       | 8      | 0        | 70     | 19      | 15        | 150       | No     | No  | AIR       |
+| jHP    | 8       | 6      | 0        | 110    | 23      | 17        | 200       | No     | No  | AIR       |
+| jLK    | 5       | 10     | 0        | 45     | 15      | 11        | 120       | No     | No  | AIR       |
+| jMK    | 7       | 8      | 0        | 80     | 19      | 15        | 160       | No     | No  | AIR       |
+| jHK    | 10      | 6      | 0        | 120    | 24      | 19        | 220       | No     | No  | AIR       |
+| Throw  | 2       | 3      | 20       | 120    | —       | —         | 500       | No     | Yes | UNBLOCK   |
+| Spec1  | 20      | 999    | 25       | 80     | 40      | 20        | 300       | No     | No  | HIGH      |
+| Spec2  | 4       | 8      | 30       | 120    | 25      | 0         | 400       | No     | Yes | HIGH      |
+
+---
+
+# ═══════════════════════════════════════════════════════════════
+# SEÇÃO E — CHECKLIST FINAL (TUDO QUE DEVE FUNCIONAR)
+# ═══════════════════════════════════════════════════════════════
+
+### Combate
+- [ ] Socos leves, médios e fortes funcionam (Z, X, C)
+- [ ] Chutes leves, médios e fortes funcionam (A, S, D)
+- [ ] Ataques agachados funcionam (↓ + ataque)
+- [ ] Ataques aéreos funcionam (pulo + ataque)
+- [ ] Projétil funciona e acerta o inimigo
+- [ ] Defesa funciona (segurar ← quando levando hit)
+- [ ] Agarrão funciona (LP+LK perto)
+- [ ] Barra de vida diminui ao tomar hit
+
+### Movimentação
+- [ ] Andar para frente e para trás
+- [ ] Pular (neutro, frente, trás)
+- [ ] Agachar
+- [ ] Personagens não se atravessam
+- [ ] Personagens sempre se encaram
+- [ ] Personagens não saem da tela
+
+### IA (CPU)
+- [ ] CPU anda em direção ao jogador
+- [ ] CPU ataca quando perto
+- [ ] CPU pula de vez em quando
+- [ ] CPU usa projétil quando longe
+
+### Controles
+- [ ] Teclado funciona
+- [ ] Gamepad Xbox/PS funciona
+- [ ] Touch funciona no celular
+
+### UI
+- [ ] Barra de HP P1 e P2
+- [ ] Timer
+- [ ] "ROUND X" e "FIGHT!"
+- [ ] "K.O."
+- [ ] Menu de pausa (ESC)
+
+### Deploy
+- [ ] `npm run build` sem erros
+- [ ] GitHub Pages funciona
+- [ ] Funciona no Chrome, Firefox, Safari (PC e Mobile)
+
+---
+
+*Última atualização: 01/10/2026 — v2.0 — Reescrito com base na análise real do código-fonte e diagnóstico de todos os bugs.*
