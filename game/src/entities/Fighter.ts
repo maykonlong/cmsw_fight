@@ -217,7 +217,9 @@ class WalkState extends State {
 // JUMP
 // ─────────────────────────────────────────────────────────────────
 class JumpState extends State {
+    private timer = 0;
     enter(f: Fighter) {
+        this.timer = 0;
         f.setVelocityY(-f.jumpForce);
         if (!f.inputManager) return;
         if (f.inputManager.isLeftDown)  f.setVelocityX(-f.speed * 0.85);
@@ -225,6 +227,7 @@ class JumpState extends State {
     }
 
     execute(f: Fighter) {
+        this.timer++;
         if (!f.inputManager) return;
         const inp = f.inputManager;
 
@@ -236,7 +239,7 @@ class JumpState extends State {
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
 
-        if (f.body?.touching.down && f.body.velocity.y >= 0) {
+        if (this.timer > 5 && f.body?.touching.down) {
             this.stateMachine.transition('land');
         }
     }

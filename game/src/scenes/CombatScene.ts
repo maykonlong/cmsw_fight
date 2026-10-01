@@ -94,6 +94,8 @@ export class CombatScene extends Phaser.Scene {
 
         this.player = CharacterLoader.createFighter(this, 280, FLOOR_Y - 80, this.p1Key, this.inputManager);
         this.player.setDisplaySize(120, 180);
+        this.player.body!.setSize(120, 180);
+        this.player.body!.setOffset((this.player.width - 120) / 2, this.player.height - 180);
         this.physics.add.collider(this.player, floor);
 
         this.player.on('fire_special', (fighter: Fighter) => {
@@ -105,7 +107,10 @@ export class CombatScene extends Phaser.Scene {
         this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, FLOOR_Y - 80, this.p2Key);
         this.enemy.setDisplaySize(120, 180);
         this.enemy.setFlipX(true);
+        this.enemy.body!.setSize(120, 180);
+        this.enemy.body!.setOffset((this.enemy.width - 120) / 2, this.enemy.height - 180);
         this.physics.add.collider(this.enemy, floor);
+        this.physics.add.collider(this.player, this.enemy); // Impede que os personagens passem um pelo outro
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
