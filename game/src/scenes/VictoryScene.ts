@@ -50,9 +50,9 @@ export class VictoryScene extends Phaser.Scene {
         statsBg.lineStyle(2, 0xffdd00, 1);
         statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
 
-        this.add.text(width / 2, height - 220, `WINNER: ${this.winnerId.toUpperCase()}`, {
+        this.add.text(width / 2, height - 220, `WINNER: ${this.winnerId.toUpperCase()} (DEFEATED ${this.loserId.toUpperCase()})`, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '24px',
+            fontSize: '20px',
             color: '#ffffff'
         }).setOrigin(0.5);
 

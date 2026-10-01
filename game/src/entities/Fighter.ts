@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { StateMachine, State } from '../core/StateMachine';
-import { IInputProvider } from '../interfaces/IInputProvider';
+import type { IInputProvider } from '../interfaces/IInputProvider';
 import { Hitbox } from '../engine/Hitbox';
 import { Hurtbox } from '../engine/Hurtbox';
 import { Pushbox } from '../engine/Pushbox';
-import { BASE_MOVES, MoveData } from '../data/moves/base_moves';
+import { BASE_MOVES } from '../data/moves/base_moves';
+import type { MoveData } from '../data/moves/base_moves';
 import { CommandRecognizer } from '../core/CommandRecognizer';
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
@@ -254,7 +255,7 @@ class LandState extends State {
         this.duration = 3; // 3 frames de aterrissagem
         f.setVelocityX(0);
     }
-    execute(f: Fighter) {
+    execute(_f: Fighter) {
         this.duration--;
         if (this.duration <= 0) {
             this.stateMachine.transition('idle');
@@ -325,7 +326,7 @@ class AttackState extends State {
         
         // Copiar dados pro hitbox atual
         f.currentHitbox.damage = this.moveData.damage;
-        f.currentHitbox.type = this.moveData.type;
+        f.currentHitbox.hitType = this.moveData.type;
         f.currentHitbox.hitLevel = this.moveData.hitLevel;
         f.currentHitbox.knockback = this.moveData.knockback;
         f.currentHitbox.hitstun = this.moveData.hitstun;
@@ -480,7 +481,7 @@ class ThrowState extends State {
         // Apenas criamos uma hitbox "UNBLOCKABLE" que se conecta imediatamente
         f.currentHitbox.active = true;
         f.currentHitbox.damage = 120;
-        f.currentHitbox.type = 'throw';
+        f.currentHitbox.hitType = 'throw';
         f.currentHitbox.hitLevel = 'UNBLOCKABLE';
         f.currentHitbox.knockback = 500;
         f.currentHitbox.setTo(0, 0, f.throwRange, 60);

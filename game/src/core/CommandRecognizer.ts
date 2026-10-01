@@ -1,4 +1,4 @@
-import { InputBuffer, BufferedInput } from './InputBuffer';
+import { InputBuffer } from './InputBuffer';
 
 export interface CommandDefinition {
     name: string;
@@ -16,7 +16,6 @@ export const SPECIAL_COMMANDS: CommandDefinition[] = [
 export class CommandRecognizer {
     
     public static checkCommands(buffer: InputBuffer, currentFrame: number, facingLeft: boolean): string | null {
-        // Return the first matched command, order in SPECIAL_COMMANDS matters for priority (e.g. 623P before 236P)
         for (const cmd of SPECIAL_COMMANDS) {
             if (this.matchCommand(cmd, buffer, currentFrame, facingLeft)) {
                 return cmd.name;
@@ -30,7 +29,6 @@ export class CommandRecognizer {
         if (inputs.length === 0) return false;
 
         let seqIndex = cmd.sequence.length - 1;
-        let lastMatchedFrame = -1;
         let pIndex = inputs.length - 1;
 
         // Achar o frame do botão (P ou K)
@@ -49,23 +47,20 @@ export class CommandRecognizer {
             if (!foundButton) return false;
         }
 
-        // Agora busca as direções para trás, começando do mesmo frame do botão (pois direção e botão podem ocorrer no mesmo frame)
+        // Agora busca as direções para trás
         for (let i = pIndex; i >= 0; i--) {
             if (seqIndex < 0) break;
             const input = inputs[i];
             let seqItem = cmd.sequence[seqIndex];
             
             if (seqItem.startsWith('hold_')) {
-                // Carga: o direcional precisa ter sido mantido por pelo menos 45 frames (exemplo)
                 const holdDir = this.mapDirection(seqItem.split('_')[1], facingLeft);
                 let holdFramesCount = 0;
-                // Olha o buffer estendido para ver se segurou
                 const extendedInputs = buffer.getWindow(100, currentFrame);
                 for (let j = i; j >= 0; j--) {
                     if (extendedInputs[j].direction === holdDir) {
                         holdFramesCount++;
                     } else {
-                        // tolerância para soltar a carga (ex: 2 frames)?
                         break;
                     }
                 }
@@ -76,7 +71,6 @@ export class CommandRecognizer {
                 }
             } else {
                 const expectedDir = this.mapDirection(seqItem, facingLeft);
-                // Permite pequenas imprecisões no input
                 if (input.direction === expectedDir || this.isFuzzyMatch(input.direction, expectedDir)) {
                     seqIndex--;
                 }
@@ -102,9 +96,7 @@ export class CommandRecognizer {
         return false;
     }
     
-    // Ajuda a perdoar inputs imperfeitos. Ex: Se precisa de 6, 9 ou 3 também podem ajudar.
     private static isFuzzyMatch(actual: string, expected: string): boolean {
-        // Exemplo muito simplificado:
         if (expected === '6' && (actual === '3' || actual === '9')) return true;
         if (expected === '4' && (actual === '1' || actual === '7')) return true;
         if (expected === '2' && (actual === '1' || actual === '3')) return true;

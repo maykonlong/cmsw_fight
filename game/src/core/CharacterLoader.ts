@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { Fighter } from '../entities/Fighter';
-import { InputManager } from './InputManager';
 
 export interface CharacterData {
     id: string;

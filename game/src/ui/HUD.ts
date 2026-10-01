@@ -117,6 +117,13 @@ export class HUD {
     }
 
     public update() {
+        if (this.p1.name && this.p1NameText.text !== this.p1.name) {
+            this.p1NameText.setText(this.p1.name);
+        }
+        if (this.p2.name && this.p2NameText.text !== this.p2.name) {
+            this.p2NameText.setText(this.p2.name);
+        }
+
         // Damage Lag logic
         if (this.p1DamageHp > this.p1.hp) {
             this.p1DamageHp -= 3;

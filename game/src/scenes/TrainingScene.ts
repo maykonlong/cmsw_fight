@@ -1,11 +1,4 @@
 import { CombatScene } from './CombatScene';
-import { CharacterLoader } from '../core/CharacterLoader';
-import { InputManager } from '../core/InputManager';
-import { StageLoader } from '../core/StageLoader';
-import { CameraSystem } from '../engine/CameraSystem';
-import { VFXManager } from '../engine/VFXManager';
-import { HUD } from '../ui/HUD';
-import { CombatSystem } from '../engine/CombatSystem';
 
 export class TrainingScene extends CombatScene {
     private debugText!: Phaser.GameObjects.Text;

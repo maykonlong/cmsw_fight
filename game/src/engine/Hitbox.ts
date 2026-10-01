@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 export class Hitbox extends Phaser.Geom.Rectangle {
     public active: boolean = false;
     public damage: number = 0;
-    public type: string = 'normal'; // 'normal', 'special', 'throw'
+    public hitType: string = 'normal'; // 'normal', 'special', 'throw'
     public hitLevel: 'HIGH' | 'MID' | 'LOW' | 'AIR' | 'UNBLOCKABLE' = 'MID';
     public knockback: number = 0;
     public hitstun: number = 0;
@@ -13,7 +13,7 @@ export class Hitbox extends Phaser.Geom.Rectangle {
     public offsetX: number = 0;
     public offsetY: number = 0;
 
-    constructor(x: number, y: number, width: number, height: number) {
+    constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
         super(x, y, width, height);
     }
     

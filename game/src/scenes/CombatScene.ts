@@ -18,7 +18,6 @@ export class CombatScene extends Phaser.Scene {
     private enemy!: Fighter;
     private inputManager!: InputManager;
     private projectiles!: Phaser.GameObjects.Group;
-    private matchOver: boolean = false;
     private cameraSystem!: CameraSystem;
     private vfxManager!: VFXManager;
     private p1Shadow!: Phaser.GameObjects.Graphics;
@@ -29,12 +28,11 @@ export class CombatScene extends Phaser.Scene {
     private cpuController!: CPUController;
     private isPaused: boolean = false;
     private pauseMenuOverlay!: Phaser.GameObjects.Container;
+    private floorY: number = 600;
 
     // Dados dos personagens
     private p1Key: string = 'kevin';
     private p2Key: string = 'vini_dog';
-    private p1Name: string = 'KEVIN';
-    private p2Name: string = 'VINI DOG';
 
     constructor(key: string = 'CombatScene') {
         super({ key });
@@ -43,10 +41,6 @@ export class CombatScene extends Phaser.Scene {
     init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string }) {
         this.p1Key = data?.p1 ?? 'kevin';
         this.p2Key = data?.p2 ?? 'vini_dog';
-        this.p1Name = data?.p1Name ?? 'KEVIN';
-        this.p2Name = data?.p2Name ?? 'VINI DOG';
-        this.matchOver = false;
-        this.roundTime = 99;
     }
 
     preload() {
@@ -56,18 +50,16 @@ export class CombatScene extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.scale;
-
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('stage_cmsw', true);
 
         // ── CENÁRIO ──────────────────────────────────────────────
         const stageInfo = StageLoader.createStage(this, 'cmsw_hq');
-        const FLOOR_Y = stageInfo.groundY;
+        this.floorY = stageInfo.groundY;
 
         // Chão (retângulo invisível para física)
-        const floor = this.add.rectangle(stageInfo.width / 2, FLOOR_Y + 60, stageInfo.width, 120, 0x8B6914);
-        floor.setVisible(false); // Fica invisível, apenas para colisão
+        const floor = this.add.rectangle(stageInfo.width / 2, this.floorY + 60, stageInfo.width, 120, 0x8B6914);
+        floor.setVisible(false);
         this.physics.add.existing(floor, true);
 
         this.cameraSystem = new CameraSystem(this);
@@ -92,7 +84,7 @@ export class CombatScene extends Phaser.Scene {
         this.p2Shadow.fillStyle(0x000000, 0.4);
         this.p2Shadow.fillEllipse(0, 0, 70, 20);
 
-        this.player = CharacterLoader.createFighter(this, 280, FLOOR_Y - 80, this.p1Key, this.inputManager);
+        this.player = CharacterLoader.createFighter(this, 280, this.floorY - 80, this.p1Key, this.inputManager);
         this.player.setDisplaySize(120, 180);
         this.player.body!.setSize(120, 180);
         this.player.body!.setOffset((this.player.width - 120) / 2, this.player.height - 180);
@@ -104,14 +96,12 @@ export class CombatScene extends Phaser.Scene {
             this.projectiles.add(proj);
         });
 
-        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, FLOOR_Y - 80, this.p2Key);
+        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - 80, this.p2Key);
         this.enemy.setDisplaySize(120, 180);
         this.enemy.setFlipX(true);
         this.enemy.body!.setSize(120, 180);
         this.enemy.body!.setOffset((this.enemy.width - 120) / 2, this.enemy.height - 180);
         this.physics.add.collider(this.enemy, floor);
-        // NOTA: Colisão física direta (physics.add.collider) entre fighters removida.
-        // A aproximação física é tratada exclusivamente via Pushbox manual no update().
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
@@ -123,8 +113,7 @@ export class CombatScene extends Phaser.Scene {
         this.cpuController = new CPUController(this.enemy, this.player);
         this.enemy.inputManager = this.cpuController;
 
-        // Colisões de combate (Agora gerenciadas via CombatSystem no update)
-
+        // Projéteis
         this.physics.add.overlap(this.projectiles, this.enemy, (_enemyObj, projObj) => {
             const proj = projObj as Projectile;
             if (proj.hitActive && !this.enemy.isHit && proj.getOwner() !== this.enemy) {
@@ -224,22 +213,17 @@ export class CombatScene extends Phaser.Scene {
 
         // Update shadows
         this.p1Shadow.x = this.player.x;
-        this.p1Shadow.y = this.player.y + 90; // Approx feet position
+        this.p1Shadow.y = this.player.y + 90;
         this.p2Shadow.x = this.enemy.x;
         this.p2Shadow.y = this.enemy.y + 90;
-        
-        // Scale shadow based on height (jump)
-        const p1Height = (this.player.y + 90) - this.p1Shadow.y; // If not flat
         
         // Update camera
         this.cameraSystem.update(this.player, this.enemy);
 
         // ── MANUAL PUSHBOX COLLISION ──────────────────────────────────
-        // Lógica de Fighting Games: personagens não podem atravessar um ao outro
-        // Se a distância X for muito curta e ambos estiverem no chão, empurramos
         const distanceX = Math.abs(this.player.x - this.enemy.x);
-        const minDistance = 70; // 70 pixels de largura do pushbox
-        if (distanceX < minDistance && this.player.y >= FLOOR_Y - 90 && this.enemy.y >= FLOOR_Y - 90) {
+        const minDistance = 70;
+        if (distanceX < minDistance && this.player.y >= this.floorY - 90 && this.enemy.y >= this.floorY - 90) {
             const overlap = minDistance - distanceX;
             if (this.player.x < this.enemy.x) {
                 this.player.x -= overlap / 2;
@@ -250,8 +234,8 @@ export class CombatScene extends Phaser.Scene {
             }
         }
 
-        // Auto-Face (Os personagens sempre se encaram se estiverem no chão)
-        if (this.player.y >= FLOOR_Y - 90 && this.enemy.y >= FLOOR_Y - 90) {
+        // Auto-Face
+        if (this.player.y >= this.floorY - 90 && this.enemy.y >= this.floorY - 90) {
             if (this.player.x < this.enemy.x) {
                 this.player.setFlipX(false);
                 this.enemy.setFlipX(true);
@@ -263,7 +247,7 @@ export class CombatScene extends Phaser.Scene {
 
         // Check Box collisions
         if (CombatSystem.checkHitboxCollision(this.player.currentHitbox, this.enemy.currentHurtbox)) {
-            if (this.player.currentHitbox.type === 'throw') {
+            if (this.player.currentHitbox.hitType === 'throw') {
                 if (CombatSystem.checkThrowRange(this.player, this.enemy)) {
                     this.enemy.stateMachine.transition('thrown');
                     this.vfxManager.cameraShake(0.02);
@@ -281,12 +265,11 @@ export class CombatScene extends Phaser.Scene {
                     AudioManager.getInstance().playSFX('hit_heavy');
                 }
             }
-            // Evitar multi-hit no mesmo ataque
             this.player.currentHitbox.active = false;
         }
 
         if (CombatSystem.checkHitboxCollision(this.enemy.currentHitbox, this.player.currentHurtbox)) {
-            if (this.enemy.currentHitbox.type === 'throw') {
+            if (this.enemy.currentHitbox.hitType === 'throw') {
                 if (CombatSystem.checkThrowRange(this.enemy, this.player)) {
                     this.player.stateMachine.transition('thrown');
                     this.vfxManager.cameraShake(0.02);

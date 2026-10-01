@@ -1,5 +1,5 @@
 import { Fighter } from '../entities/Fighter';
-import { IInputProvider } from '../interfaces/IInputProvider';
+import type { IInputProvider } from '../interfaces/IInputProvider';
 
 export class CPUController implements IInputProvider {
     private me: Fighter;
@@ -69,7 +69,8 @@ export class CPUController implements IInputProvider {
 
         const distanceX = Math.abs(this.me.x - this.target.x);
         const distanceY = Math.abs(this.me.y - this.target.y);
-        const targetIsAttacking = this.target.stateMachine?.currentState?.name === 'attack';
+        const targetState = this.target.stateMachine?.state ?? '';
+        const targetIsAttacking = targetState.startsWith('stand_') || targetState.startsWith('crouch_') || targetState.startsWith('air_') || targetState === 'special';
 
         // 1. Defesa (Block)
         if (targetIsAttacking && distanceX < 200 && Math.random() < 0.5) {

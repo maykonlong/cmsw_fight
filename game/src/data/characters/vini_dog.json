@@ -1,17 +1,17 @@
 {
   "id": "vini_dog",
-  "name": "VINI DOG",
-  "catchphrase": "Bora Smokar?",
-  "archetype": "Zoner",
-  "health": 1000,
+  "name": "Vini Dog",
+  "catchphrase": "Au au, perdeu playboy!",
+  "archetype": "Rushdown",
+  "health": 900,
   "stunMax": 200,
   "throwRange": 60,
   "movement": {
-    "walkForward": 230,
-    "walkBackward": 170,
-    "jumpVelocityY": -700,
-    "jumpVelocityX": 200,
-    "weight": 1.1
+    "walkForward": 300,
+    "walkBackward": 220,
+    "jumpVelocityY": -750,
+    "jumpVelocityX": 250,
+    "weight": 1.0
   },
   "sprites": {
     "idle": "vini_dog_idle",
@@ -50,19 +50,35 @@
   ],
   "specials": [
     {
-      "id": "dog_dash",
-      "name": "Dog Dash",
+      "id": "aura_dog",
+      "name": "Aura do Cachorro",
       "command": "214K",
-      "type": "special",
-      "damage": 90,
-      "chipDamage": 5,
-      "startup": 12,
-      "active": 15,
-      "recovery": 20,
-      "hitstun": 20,
-      "blockstun": 15,
-      "knockback": 250,
+      "type": "projectile",
+      "damage": 80,
+      "chipDamage": 8,
+      "startup": 18,
+      "active": 999,
+      "recovery": 22,
+      "hitstun": 35,
+      "blockstun": 18,
+      "knockback": 280,
       "electricEffect": false,
+      "cooldown": 80,
+      "projectileSpeed": 420
+    },
+    {
+      "id": "mordida_fatal",
+      "name": "Mordida Fatal",
+      "command": "623P",
+      "type": "reversal",
+      "damage": 120,
+      "chipDamage": 12,
+      "startup": 4,
+      "active": 8,
+      "recovery": 28,
+      "hitstun": 25,
+      "blockstun": 0,
+      "knockback": 400,
       "knockdown": true
     }
   ],
@@ -82,7 +98,7 @@
   },
   "victory": {
     "animation": "win",
-    "phrase": "Resolva sua treta aqui"
+    "phrase": "Au au, perdeu playboy!"
   },
   "defeat": {
     "animation": "ko",

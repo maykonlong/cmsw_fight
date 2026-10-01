@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { IInputProvider } from '../interfaces/IInputProvider';
+import type { IInputProvider } from '../interfaces/IInputProvider';
 import { InputBuffer } from './InputBuffer';
 
 export class InputManager implements IInputProvider {

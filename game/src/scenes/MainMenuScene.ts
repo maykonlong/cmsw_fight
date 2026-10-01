@@ -178,9 +178,4 @@ export class MainMenuScene extends Phaser.Scene {
         this.canSelect = true; // since we pop state or start new
         this.scene.start('ControlsScene');
     }
-
-    private showCredits() {
-        this.canSelect = true;
-        this.cameras.main.fadeIn(300, 0, 0, 0);
-    }
 }

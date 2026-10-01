@@ -4,7 +4,7 @@ import { AudioManager } from '../engine/AudioManager';
 const CHARACTERS = [
     {
         key: 'kevin',
-        name: 'KEVIN',
+        name: 'KEVIN MANJA',
         specialty: 'Especial: Beijo Elétrico',
         color: 0x3399ff,
         colorHex: '#3399ff',
