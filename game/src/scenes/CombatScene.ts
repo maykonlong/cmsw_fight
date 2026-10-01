@@ -69,6 +69,7 @@ export class CombatScene extends Phaser.Scene {
 
         // Foco automático no canvas para captura imediata de teclado
         if (this.sys.game.canvas) {
+            this.sys.game.canvas.setAttribute('tabindex', '0');
             this.sys.game.canvas.focus();
         }
         this.input.on('pointerdown', () => {
@@ -227,15 +228,21 @@ export class CombatScene extends Phaser.Scene {
 
     // ── GAME LOOP ────────────────────────────────────────────────
     update() {
-        // Sempre atualizar inputManager para sincronia contínua de teclas
-        this.inputManager.update();
-
-        if (this.isPaused) return;
-        if (!this.matchManager.isMatchActive()) return;
+        if (this.isPaused) {
+            this.inputManager.update();
+            return;
+        }
+        if (!this.matchManager.isMatchActive()) {
+            this.inputManager.update();
+            return;
+        }
 
         this.cpuController.update();
         this.player.update();
         this.enemy.update();
+        // Atualiza o input DEPOIS dos fighters para que estes leiam os botões
+        // "just pressed" deste frame antes de serem limpos no fim do tick.
+        this.inputManager.update();
         this.hud.update();
 
         // Update shadows

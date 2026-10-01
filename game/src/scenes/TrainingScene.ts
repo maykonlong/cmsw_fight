@@ -68,8 +68,8 @@ export class TrainingScene extends CombatScene {
         // Debug Text
         this.debugText.setText([
             `TRAINING MODE`,
-            `P1 State: ${player.stateMachine.currentState.name}`,
-            `P2 State: ${enemy.stateMachine.currentState.name}`,
+            `P1 State: ${player.stateMachine.state}`,
+            `P2 State: ${enemy.stateMachine.state}`,
             `[R] Reset Position`,
             `[H] Toggle Hitboxes`
         ]);

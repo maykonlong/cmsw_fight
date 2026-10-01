@@ -1,5 +1,6 @@
 import { Fighter } from '../entities/Fighter';
 import type { IInputProvider } from '../interfaces/IInputProvider';
+import { InputBuffer } from '../core/InputBuffer';
 
 export class CPUController implements IInputProvider {
     private me: Fighter;
@@ -22,7 +23,7 @@ export class CPUController implements IInputProvider {
     private reactionDelay = 15; // frames between decisions
     private timer = 0;
     private actionCooldown = 0;
-    public buffer = { inputs: [] as any[] };
+    public buffer = new InputBuffer();
     public currentFrame = 0;
 
     constructor(me: Fighter, target: Fighter) {

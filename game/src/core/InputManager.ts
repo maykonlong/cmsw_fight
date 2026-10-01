@@ -97,7 +97,27 @@ export class InputManager implements IInputProvider {
     public virtualSpecialJustPressed: boolean = false;
 
     get pad() {
-        return this.scene.input.gamepad?.pad1;
+        const raw = (this.scene.input as any)?.gamepad?.pad1;
+        if (!raw) return null;
+        // Normaliza para um objeto seguro, evitando crash se a API do gamepad mudar entre versões do Phaser.
+        const axis = (i: number) => (raw.axes && raw.axes[i] && typeof raw.axes[i].getValue === 'function') ? raw.axes[i].getValue() : 0;
+        return {
+            left: Boolean(raw.left),
+            right: Boolean(raw.right),
+            up: Boolean(raw.up),
+            down: Boolean(raw.down),
+            A: Boolean(raw.A),
+            B: Boolean(raw.B),
+            X: Boolean(raw.X),
+            Y: Boolean(raw.Y),
+            R1: Boolean(raw.R1),
+            R2: Boolean(raw.R2),
+            L1: Boolean(raw.L1),
+            axes: {
+                0: { getValue: () => axis(0) },
+                1: { getValue: () => axis(1) },
+            }
+        };
     }
 
     get isLeftDown(): boolean { 

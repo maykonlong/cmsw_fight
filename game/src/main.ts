@@ -29,6 +29,7 @@ const config: Phaser.Types.Core.GameConfig = {
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
     input: {
+        keyboard: true,
         gamepad: true
     },
     scene: [BootScene, MainMenuScene, CharacterSelectScene, VsScene, CombatScene, TrainingScene, VictoryScene, GameOverScene, SettingsScene, ControlsScene]

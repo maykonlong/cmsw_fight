@@ -62,8 +62,9 @@ export class CombatSystem {
         if (defender.isBlocking) {
             let blocked = false;
             // HIGH pode ser defendido em pé. LOW só agachado. MID pode ser ambos. AIR geralmente só em pé.
-            const isDefendingLow = defender.stateMachine.currentState.constructor.name === 'BlockState' && (defender.stateMachine.currentState as any).type === 'LOW';
-            const isDefendingHigh = defender.stateMachine.currentState.constructor.name === 'BlockState' && (defender.stateMachine.currentState as any).type === 'HIGH';
+            const currentState = defender.stateMachine.state;
+            const isDefendingLow = currentState === 'block_low';
+            const isDefendingHigh = currentState === 'block_high';
 
             if (hitbox.hitLevel === 'HIGH' && isDefendingHigh) blocked = true;
             else if (hitbox.hitLevel === 'LOW' && isDefendingLow) blocked = true;

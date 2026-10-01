@@ -12,8 +12,10 @@ export class VirtualGamepad {
     }
 
     private createControls() {
-        // Se for desktop (PC/Mac), não exibir os botões de touch na tela
-        if (this.scene.sys.game.device.os.desktop) {
+        // Só exibe os botões de touch em dispositivos com tela de toque.
+        // (Evita crash caso a API `device.os.desktop` tenha mudado no Phaser 4.)
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (!hasTouch) {
             return;
         }
 

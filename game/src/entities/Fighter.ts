@@ -152,6 +152,7 @@ class IdleState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
@@ -200,6 +201,7 @@ class WalkState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
@@ -308,6 +310,7 @@ class CrouchState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
 
         if (!inp.isDownDown) {
             this.stateMachine.transition('idle'); return;
