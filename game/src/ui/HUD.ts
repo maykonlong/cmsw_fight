@@ -97,7 +97,7 @@ export class HUD {
         }
 
         // On-screen Key Guide Banner
-        this.scene.add.text(width / 2, 16, 'CONTROLES: [←↑↓→ / WASD] Movimento  |  [Z,X,C / J,K,L] Socos  |  [A,S,D / U,I,O] Chutes  |  [V / SPACE] Especial', {
+        this.scene.add.text(width / 2, 16, 'CONTROLES: [←↑↓→ / WASD] Movimento  |  [Z,X,C / J,K,L] Socos  |  [V,B,N / U,I,O] Chutes  |  [ESPAÇO / E] Especial', {
             fontFamily: 'Arial',
             fontSize: '13px',
             color: '#ffdd00',

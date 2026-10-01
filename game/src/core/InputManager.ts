@@ -18,37 +18,39 @@ export class InputManager implements IInputProvider {
         if (!scene.input.keyboard) throw new Error("Keyboard not available");
         this.cursors = scene.input.keyboard.createCursorKeys();
         
-        // Mapeamento de botões (Setas + ZXCV e WASD + JKL/UIO + Space)
+        // Cada KeyCode é registrado EXATAMENTE UMA VEZ para evitar sobrescrever ouvintes
         this.keys = {
-            // Direcionais WASD alternativos
-            W_KEY: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-            A_KEY: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-            S_KEY: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-            D_KEY: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+            // Movimento WASD
+            W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+            A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+            S: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+            D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
 
-            // Ataques Primários (Z, X, C, A, S, D, V)
-            LP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
-            MP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
-            HP: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C),
-            LK: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-            MK: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-            HK: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-            Special: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V),
+            // Socos (Z, X, C ou J, K, L)
+            Z: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
+            X: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
+            C: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C),
+            J: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
+            K: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
+            L: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
 
-            // Ataques Secundários (J, K, L, U, I, O, Space)
-            LP2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
-            MP2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
-            HP2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
-            LK2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U),
-            MK2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
-            HK2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O),
-            Special2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+            // Chutes (V, B, N ou U, I, O)
+            V: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V),
+            B: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B),
+            N: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N),
+            U: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U),
+            I: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
+            O: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O),
+
+            // Especial (ESPAÇO ou E)
+            SPACE: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+            E: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
         };
 
         this.buffer = new InputBuffer();
     }
 
-    // Estados Virtuais (Touch / Mouse / UI)
+    // Estados Virtuais (Touch / UI)
     public virtualLeft: boolean = false;
     public virtualRight: boolean = false;
     public virtualUp: boolean = false;
@@ -77,25 +79,25 @@ export class InputManager implements IInputProvider {
 
     get isLeftDown(): boolean { 
         return this.cursors.left.isDown || 
-               this.keys.A_KEY.isDown || 
+               this.keys.A.isDown ||
                this.virtualLeft || 
                Boolean(this.pad && (this.pad.left || this.pad.axes[0].getValue() < -0.5)); 
     }
     get isRightDown(): boolean { 
         return this.cursors.right.isDown || 
-               this.keys.D_KEY.isDown || 
+               this.keys.D.isDown ||
                this.virtualRight || 
                Boolean(this.pad && (this.pad.right || this.pad.axes[0].getValue() > 0.5)); 
     }
     get isUpDown(): boolean { 
         return this.cursors.up.isDown || 
-               this.keys.W_KEY.isDown || 
+               this.keys.W.isDown ||
                this.virtualUp || 
                Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5)); 
     }
     get isDownDown(): boolean { 
         return this.cursors.down.isDown || 
-               this.keys.S_KEY.isDown || 
+               this.keys.S.isDown ||
                this.virtualDown || 
                Boolean(this.pad && (this.pad.down || this.pad.axes[1].getValue() > 0.5)); 
     }
@@ -104,56 +106,56 @@ export class InputManager implements IInputProvider {
         const padUp = Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5));
         const padJustUp = padUp && !this.prevPadState.up;
         return Phaser.Input.Keyboard.JustDown(this.cursors.up) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.W_KEY) ||
+               Phaser.Input.Keyboard.JustDown(this.keys.W) ||
                this.virtualUpJustPressed || padJustUp; 
     }
     get isLPJustPressed(): boolean { 
         const padX = Boolean(this.pad && this.pad.X);
         const padJustX = padX && !this.prevPadState.X;
-        return Phaser.Input.Keyboard.JustDown(this.keys.LP) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.LP2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.Z) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.J) ||
                this.virtualLPJustPressed || padJustX; 
     }
     get isMPJustPressed(): boolean { 
         const padY = Boolean(this.pad && this.pad.Y);
         const padJustY = padY && !this.prevPadState.Y;
-        return Phaser.Input.Keyboard.JustDown(this.keys.MP) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.MP2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.X) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.K) ||
                this.virtualMPJustPressed || padJustY; 
     }
     get isHPJustPressed(): boolean { 
         const padRB = Boolean(this.pad && this.pad.R1);
         const padJustRB = padRB && !this.prevPadState.RB;
-        return Phaser.Input.Keyboard.JustDown(this.keys.HP) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.HP2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.C) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.L) ||
                this.virtualHPJustPressed || padJustRB; 
     }
     get isLKJustPressed(): boolean { 
         const padA = Boolean(this.pad && this.pad.A);
         const padJustA = padA && !this.prevPadState.A;
-        return Phaser.Input.Keyboard.JustDown(this.keys.LK) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.LK2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.V) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.U) ||
                this.virtualLKJustPressed || padJustA; 
     }
     get isMKJustPressed(): boolean { 
         const padB = Boolean(this.pad && this.pad.B);
         const padJustB = padB && !this.prevPadState.B;
-        return Phaser.Input.Keyboard.JustDown(this.keys.MK) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.MK2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.B) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.I) ||
                this.virtualMKJustPressed || padJustB; 
     }
     get isHKJustPressed(): boolean { 
         const padRT = Boolean(this.pad && this.pad.R2);
         const padJustRT = padRT && !this.prevPadState.RT;
-        return Phaser.Input.Keyboard.JustDown(this.keys.HK) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.HK2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.N) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.O) ||
                this.virtualHKJustPressed || padJustRT; 
     }
     get isSpecialJustPressed(): boolean { 
         const padLB = Boolean(this.pad && this.pad.L1);
         const padJustLB = padLB && !this.prevPadState.LB;
-        return Phaser.Input.Keyboard.JustDown(this.keys.Special) || 
-               Phaser.Input.Keyboard.JustDown(this.keys.Special2) ||
+        return Phaser.Input.Keyboard.JustDown(this.keys.SPACE) || 
+               Phaser.Input.Keyboard.JustDown(this.keys.E) ||
                this.virtualSpecialJustPressed || padJustLB; 
     }
 

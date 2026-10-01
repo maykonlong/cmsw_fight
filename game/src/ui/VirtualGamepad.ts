@@ -12,6 +12,11 @@ export class VirtualGamepad {
     }
 
     private createControls() {
+        // Se for desktop (PC/Mac), não exibir os botões de touch na tela
+        if (this.scene.sys.game.device.os.desktop) {
+            return;
+        }
+
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
 

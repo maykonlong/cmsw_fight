@@ -53,6 +53,19 @@ export class CombatScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('stage_cmsw', true);
 
+        // Foco automático no canvas para captura imediata de teclado
+        if (this.sys.game.canvas) {
+            this.sys.game.canvas.focus();
+        }
+        this.input.on('pointerdown', () => {
+            if (this.sys.game.canvas) {
+                this.sys.game.canvas.focus();
+            }
+        });
+        if (this.input.keyboard) {
+            this.input.keyboard.enabled = true;
+        }
+
         // ── CENÁRIO ──────────────────────────────────────────────
         const stageInfo = StageLoader.createStage(this, 'cmsw_hq');
         this.floorY = stageInfo.groundY;

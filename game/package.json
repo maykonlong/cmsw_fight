@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "jimp": "^1.6.1",
+    "pngjs": "^7.0.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
   },

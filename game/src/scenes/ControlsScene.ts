@@ -21,22 +21,22 @@ export class ControlsScene extends Phaser.Scene {
         const textStyle = { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'left' as const };
 
         const controlsText = [
-            "  AÇÃO             TECLADO P1       GAMEPAD XBOX     TOUCH MOBILE",
-            "------------------------------------------------------------------",
-            "  Movimento        Setas ← ↑ ↓ →   D-Pad / LS       D-Pad na Tela",
-            "  Soco Leve (LP)   Z               Botão X          Botão LP",
-            "  Soco Médio (MP)  X               Botão Y          Botão MP",
-            "  Soco Forte (HP)  C               RB (R1)          Botão HP",
-            "  Chute Leve (LK)  A               Botão A          Botão LK",
-            "  Chute Médio (MK) S               Botão B          Botão MK",
-            "  Chute Forte (HK) D               RT (R2)          Botão HK",
-            "  Especial         V               LB (L1)          Botão SPECIAL",
-            "  Agarrão (Throw)  Z + A Juntos    X + A Juntos     LP + LK Juntos",
-            "  Pausar           ESC             Start            Botão Pause",
-            "------------------------------------------------------------------",
+            "  AÇÃO             TECLADO P1               GAMEPAD XBOX     TOUCH MOBILE",
+            "--------------------------------------------------------------------------",
+            "  Movimento        Setas / WASD             D-Pad / LS       D-Pad na Tela",
+            "  Soco Leve (LP)   Z  ou  J                 Botão X          Botão LP",
+            "  Soco Médio (MP)  X  ou  K                 Botão Y          Botão MP",
+            "  Soco Forte (HP)  C  ou  L                 RB (R1)          Botão HP",
+            "  Chute Leve (LK)  V  ou  U                 Botão A          Botão LK",
+            "  Chute Médio (MK) B  ou  I                 Botão B          Botão MK",
+            "  Chute Forte (HK) N  ou  O                 RT (R2)          Botão HK",
+            "  Especial         ESPAÇO  ou  E            LB (L1)          Botão SPEC",
+            "  Agarrão (Throw)  Z+V ou J+U (LP+LK)       X + A Juntos     LP + LK Juntos",
+            "  Pausar           ESC                      Start            Botão Pause",
+            "--------------------------------------------------------------------------",
             "  DICAS DE LUTA:",
-            "  • Para Defender: Mantenha pressionado para TRÁS enquanto o inimigo ataca.",
-            "  • Para Agarrar: Chegue bem perto do oponente e aperte Z+A (LP+LK)."
+            "  • Para Defender: Mantenha pressionado TRÁS (← ou A) enquanto o oponente ataca.",
+            "  • Para Agarrar: Chegue bem perto do oponente e pressione Soco Leve + Chute Leve (Z+V)."
         ];
 
         this.add.text(width / 2, 340, controlsText.join('\n'), textStyle).setOrigin(0.5);
