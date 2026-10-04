@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ArcadeTheme } from '../ui/ArcadeTheme';
 
 export class BootScene extends Phaser.Scene {
     constructor() {
@@ -39,13 +40,13 @@ export class BootScene extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
-        this.cameras.main.setBackgroundColor('#000000');
+        ArcadeTheme.background(this, 'red');
 
         const studioText = this.add.text(width / 2, height / 2 - 50, 'C&M SOFTWARE', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontFamily: 'Impact, "Arial Black", sans-serif',
             fontSize: '64px',
             color: '#ffffff',
-            stroke: '#ff0000',
+            stroke: '#d52821',
             strokeThickness: 8,
         }).setOrigin(0.5).setAlpha(0);
 

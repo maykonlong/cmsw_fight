@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Fighter } from '../entities/Fighter';
+import { ARCADE } from './ArcadeTheme';
 
 export class HUD {
     private scene: Phaser.Scene;
@@ -43,16 +44,20 @@ export class HUD {
         
         // P1 Bars
         const p1Bg = this.scene.add.graphics().setDepth(100).setScrollFactor(0);
-        p1Bg.fillStyle(0x000000, 0.8);
+        p1Bg.fillStyle(0x050713, 0.9);
         p1Bg.fillRect(50, 40, this.barWidth, this.barHeight);
+        p1Bg.lineStyle(3, ARCADE.blue, 1);
+        p1Bg.strokeRect(50, 40, this.barWidth, this.barHeight);
         
         this.p1DamageBar = this.scene.add.graphics().setDepth(101).setScrollFactor(0);
         this.p1HpBar = this.scene.add.graphics().setDepth(102).setScrollFactor(0);
         
         // P2 Bars
         const p2Bg = this.scene.add.graphics().setDepth(100).setScrollFactor(0);
-        p2Bg.fillStyle(0x000000, 0.8);
+        p2Bg.fillStyle(0x050713, 0.9);
         p2Bg.fillRect(width - 50 - this.barWidth, 40, this.barWidth, this.barHeight);
+        p2Bg.lineStyle(3, ARCADE.red, 1);
+        p2Bg.strokeRect(width - 50 - this.barWidth, 40, this.barWidth, this.barHeight);
         
         this.p2DamageBar = this.scene.add.graphics().setDepth(101).setScrollFactor(0);
         this.p2HpBar = this.scene.add.graphics().setDepth(102).setScrollFactor(0);
@@ -76,8 +81,10 @@ export class HUD {
 
         // Timer
         const timerBg = this.scene.add.graphics().setDepth(100).setScrollFactor(0);
-        timerBg.fillStyle(0x000000, 0.9);
+        timerBg.fillStyle(0x050713, 0.95);
         timerBg.fillRect(width / 2 - 40, 20, 80, 60);
+        timerBg.lineStyle(3, ARCADE.yellow, 1);
+        timerBg.strokeRect(width / 2 - 40, 20, 80, 60);
 
         this.timerText = this.scene.add.text(width / 2, 50, '99', {
             fontFamily: '"Arial Black", Gadget, sans-serif',

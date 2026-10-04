@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 const CHARACTERS = [
     {
@@ -72,10 +73,9 @@ export class CharacterSelectScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('char_select', true);
 
-        // Fundo escuro
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a0a2e, 0x1a0a2e, 1);
-        bg.fillRect(0, 0, width, height);
+        ArcadeTheme.background(this, 'blue');
+        ArcadeTheme.panel(this, 34, 108, width - 68, 252, ARCADE.blue);
+        ArcadeTheme.panel(this, 34, 390, width - 68, 300, ARCADE.red);
 
         // Botão VOLTAR
         const btnBack = this.add.text(60, 36, '[ VOLTAR ]', {
@@ -126,7 +126,7 @@ export class CharacterSelectScene extends Phaser.Scene {
             const cy = gridY;
 
             const card = this.add.graphics();
-            card.lineStyle(3, char.locked ? 0x333333 : char.color, 1);
+            card.lineStyle(4, char.locked ? 0x333333 : char.color, 1);
             card.fillStyle(char.locked ? 0x111111 : 0x1a1a2e, 1);
             card.strokeRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);
             card.fillRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);

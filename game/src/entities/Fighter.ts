@@ -29,6 +29,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public hitStunTimer: number = 0;
 
     public throwRange: number = 60;
+    public characterId: string;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: IInputProvider) {
         super(scene, x, y, texture);
@@ -37,6 +38,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
         this.setCollideWorldBounds(true);
         this.inputManager = inputManager;
+        this.characterId = texture.replace(/_(idle|punch|kick|crouch|jump|hit|ko|win)$/, '');
 
         // Init Boxes
         this.currentHitbox = new Hitbox(0, 0, 0, 0);
@@ -115,10 +117,12 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     public setPoseTexture(pose: string) {
-        const baseKey = this.texture.key.replace(/_(idle|punch|kick|crouch|jump|hit|ko|win)$/, '');
+        const baseKey = this.texture.key.replace(/_(idle|walk|block|punch|kick|crouch|jump|hit|ko|win)$/, '');
         const targetKey = `${baseKey}_${pose}`;
         if (this.scene.textures.exists(targetKey)) {
             this.setTexture(targetKey);
+        } else if (this.scene.textures.exists(`${baseKey}_idle`)) {
+            this.setTexture(`${baseKey}_idle`);
         } else if (this.scene.textures.exists(baseKey)) {
             this.setTexture(baseKey);
         }
@@ -161,14 +165,13 @@ class IdleState extends State {
         if (inp.isDownDown) {
             this.stateMachine.transition('crouch'); return;
         }
-        if (inp.isLeftDown || inp.isRightDown) {
-            this.stateMachine.transition('walk'); return;
-        }
-        
         const isFacingLeft = f.flipX;
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
         if (holdBack) {
             this.stateMachine.transition('block_high'); return;
+        }
+        if (inp.isLeftDown || inp.isRightDown) {
+            this.stateMachine.transition('walk'); return;
         }
 
         if (inp.isThrowJustPressed) {
@@ -210,7 +213,6 @@ class WalkState extends State {
         if (inp.isDownDown) {
             this.stateMachine.transition('crouch'); return;
         }
-
         if (inp.isLeftDown) {
             f.setVelocityX(-f.speed);
             f.setFlipX(true);
@@ -219,6 +221,12 @@ class WalkState extends State {
             f.setFlipX(false);
         } else {
             this.stateMachine.transition('idle'); return;
+        }
+
+        const isFacingLeft = f.flipX;
+        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
+        if (holdBack) {
+            this.stateMachine.transition('block_high'); return;
         }
 
         if (inp.isThrowJustPressed) {
@@ -421,6 +429,7 @@ class BlockState extends State {
     enter(f: Fighter) {
         f.setVelocityX(0);
         f.isBlocking = true;
+        f.setPoseTexture('block');
         f.setTint(0x888888);
         if (this.type === 'LOW') {
             f.setScale(f.scaleX, f.scaleY * 0.75);

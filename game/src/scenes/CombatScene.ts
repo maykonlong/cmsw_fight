@@ -12,6 +12,7 @@ import { MatchManager } from '../engine/MatchManager';
 import { HUD } from '../ui/HUD';
 import { CPUController } from '../engine/CPUController';
 import { AudioManager } from '../engine/AudioManager';
+import { ARCADE } from '../ui/ArcadeTheme';
 
 export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
@@ -99,39 +100,67 @@ export class CombatScene extends Phaser.Scene {
 
         // Sombras
         this.p1Shadow = this.add.graphics();
+        this.p1Shadow.setDepth(3);
         this.p1Shadow.fillStyle(0x000000, 0.4);
         this.p1Shadow.fillEllipse(0, 0, 70, 20);
 
         this.p2Shadow = this.add.graphics();
+        this.p2Shadow.setDepth(3);
         this.p2Shadow.fillStyle(0x000000, 0.4);
         this.p2Shadow.fillEllipse(0, 0, 70, 20);
 
         this.player = CharacterLoader.createFighter(this, 280, this.floorY - 80, this.p1Key, this.inputManager);
+        this.player.setDepth(5);
         this.player.setDisplaySize(120, 180);
         this.player.body!.setSize(120, 180);
-        this.player.body!.setOffset((this.player.width - 120) / 2, this.player.height - 180);
+        this.player.body!.setOffset(0, 0);
         this.physics.add.collider(this.player, floor);
 
         this.player.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
-            const tex = fighter.texture.key.includes('vini') ? 'aura_cachorro' : 'aura_beijo';
-            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y - 20, tex, fighter, 400 * dir, 40, 'electric');
-            proj.setDisplaySize(80, 50);
+            const isKevin = fighter.characterId === 'kevin';
+            const tex = isKevin ? 'aura_beijo' : 'aura_cachorro';
+            const proj = new Projectile(
+                this,
+                fighter.x + (isKevin ? 72 : 82) * dir,
+                fighter.y - (isKevin ? 42 : 30),
+                tex,
+                fighter,
+                (isKevin ? 450 : 420) * dir,
+                40,
+                isKevin ? 'electric' : 'normal'
+            );
+            proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
+            proj.setFlipX(dir < 0);
+            proj.setDepth(8);
             this.projectiles.add(proj);
         });
 
         this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - 80, this.p2Key);
+        this.enemy.setDepth(5);
         this.enemy.setDisplaySize(120, 180);
         this.enemy.setFlipX(true);
         this.enemy.body!.setSize(120, 180);
-        this.enemy.body!.setOffset((this.enemy.width - 120) / 2, this.enemy.height - 180);
+        this.enemy.body!.setOffset(0, 0);
         this.physics.add.collider(this.enemy, floor);
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
             const dir = fighter.flipX ? -1 : 1;
-            const tex = fighter.texture.key.includes('vini') ? 'aura_cachorro' : 'aura_beijo';
-            const proj = new Projectile(this, fighter.x + (70 * dir), fighter.y - 20, tex, fighter, 400 * dir, 40, 'electric');
-            proj.setDisplaySize(80, 50);
+            const isKevin = fighter.characterId === 'kevin';
+            const tex = isKevin ? 'aura_beijo' : 'aura_cachorro';
+            const proj = new Projectile(
+                this,
+                fighter.x + (isKevin ? 72 : 82) * dir,
+                fighter.y - (isKevin ? 42 : 30),
+                tex,
+                fighter,
+                (isKevin ? 450 : 420) * dir,
+                40,
+                isKevin ? 'electric' : 'normal'
+            );
+            proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
+            proj.setFlipX(dir < 0);
+            proj.setDepth(8);
             this.projectiles.add(proj);
         });
         
@@ -188,22 +217,29 @@ export class CombatScene extends Phaser.Scene {
         const bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0, 0);
         this.pauseMenuOverlay.add(bg);
 
-        const title = this.add.text(width / 2, height / 2 - 100, 'PAUSED', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
+        const panel = this.add.graphics();
+        panel.fillStyle(0x080b22, 0.95);
+        panel.fillRect(width / 2 - 230, height / 2 - 150, 460, 300);
+        panel.lineStyle(4, ARCADE.yellow, 1);
+        panel.strokeRect(width / 2 - 230, height / 2 - 150, 460, 300);
+        this.pauseMenuOverlay.add(panel);
+
+        const title = this.add.text(width / 2, height / 2 - 100, 'PAUSE', {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
             fontSize: '60px',
-            color: '#ffffff'
+            color: '#fff8d6', stroke: '#d52821', strokeThickness: 6,
         }).setOrigin(0.5);
         this.pauseMenuOverlay.add(title);
 
         const btnResume = this.add.text(width / 2, height / 2 + 20, 'RESUME', {
-            fontFamily: 'Arial Black', fontSize: '30px', color: '#00ff00'
+            fontFamily: 'Impact, Arial Black', fontSize: '30px', color: '#ffe34d', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         
         btnResume.on('pointerdown', () => this.togglePause());
         this.pauseMenuOverlay.add(btnResume);
 
         const btnQuit = this.add.text(width / 2, height / 2 + 80, 'QUIT TO MENU', {
-            fontFamily: 'Arial Black', fontSize: '30px', color: '#ff0000'
+            fontFamily: 'Impact, Arial Black', fontSize: '30px', color: '#ff6b4f', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         
         btnQuit.on('pointerdown', () => {
@@ -237,12 +273,21 @@ export class CombatScene extends Phaser.Scene {
             return;
         }
 
+        // O input precisa ser atualizado antes dos lutadores consumirem o frame.
+        this.inputManager.update();
         this.cpuController.update();
         this.player.update();
         this.enemy.update();
-        // Atualiza o input DEPOIS dos fighters para que estes leiam os botões
-        // "just pressed" deste frame antes de serem limpos no fim do tick.
-        this.inputManager.update();
+
+        // Mantém os pés na linha do cenário mesmo quando a escala FIT altera
+        // a posição calculada pelo Arcade Physics em diferentes telas.
+        const groundCenterY = this.floorY - 90;
+        for (const fighter of [this.player, this.enemy]) {
+            if (fighter.y > groundCenterY && (fighter.body?.velocity.y ?? 0) >= 0) {
+                fighter.y = groundCenterY;
+                fighter.setVelocityY(0);
+            }
+        }
         this.hud.update();
 
         // Update shadows

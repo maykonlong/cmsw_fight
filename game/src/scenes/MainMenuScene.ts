@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class MainMenuScene extends Phaser.Scene {
     private selectedIndex: number = 0;
@@ -26,10 +27,8 @@ export class MainMenuScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('menu_bgm', true);
 
-        // Fundo gradiente escuro com overlay
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0d0221, 0x0d0221, 0x1a0533, 0x1a0533, 1);
-        bg.fillRect(0, 0, width, height);
+        ArcadeTheme.background(this, 'blue');
+        ArcadeTheme.panel(this, width / 2 - 270, 92, 540, 570, ARCADE.blue);
 
         // Sprites dos lutadores ao fundo (silhuetas)
         if (this.textures.exists('kevin')) {
@@ -66,21 +65,15 @@ export class MainMenuScene extends Phaser.Scene {
 
         // Linha decorativa superior e inferior
         const topLine = this.add.graphics();
-        topLine.fillStyle(0xff2200, 1);
+        topLine.fillStyle(ARCADE.red, 1);
         topLine.fillRect(0, 0, width, 6);
 
         const btmLine = this.add.graphics();
-        btmLine.fillStyle(0xff2200, 1);
+        btmLine.fillStyle(ARCADE.red, 1);
         btmLine.fillRect(0, height - 6, width, 6);
 
         // Título principal
-        const title = this.add.text(width / 2, 140, 'C&M FIGTH', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '96px',
-            color: '#ffffff',
-            stroke: '#ff2200',
-            strokeThickness: 10,
-        }).setOrigin(0.5);
+        const title = ArcadeTheme.title(this, 'C&M FIGHT', width / 2, 140, 82);
 
         this.tweens.add({
             targets: title,
@@ -163,8 +156,8 @@ export class MainMenuScene extends Phaser.Scene {
     private updateSelection() {
         this.menuItems.forEach((item, i) => {
             if (i === this.selectedIndex) {
-                item.setColor('#ffdd00');
-                item.setStroke('#ff2200', 5);
+                item.setColor('#ffe34d');
+                item.setStroke('#d52821', 5);
                 item.setScale(1.12);
             } else {
                 item.setColor('#cccccc');

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class GameOverScene extends Phaser.Scene {
     private countdown: number = 9;
@@ -16,12 +17,13 @@ export class GameOverScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('game_over', false);
 
-        this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0, 0);
+        ArcadeTheme.background(this, 'red');
+        ArcadeTheme.panel(this, width / 2 - 260, 60, 520, height - 120, ARCADE.red);
 
-        const title = this.add.text(width / 2, 100, 'GAME OVER', {
+        const title = this.add.text(width / 2, 100, 'K.O.', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '80px',
-            color: '#ff0000',
+            color: '#ffdd33',
             stroke: '#550000',
             strokeThickness: 10
         }).setOrigin(0.5).setAlpha(0);
@@ -37,7 +39,7 @@ export class GameOverScene extends Phaser.Scene {
         this.add.text(width / 2, 280, 'CONTINUE?', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '40px',
-            color: '#ffffff'
+            color: '#fff8d6',
         }).setOrigin(0.5);
 
         this.countText = this.add.text(width / 2, 400, '9', {

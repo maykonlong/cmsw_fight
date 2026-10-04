@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class ControlsScene extends Phaser.Scene {
     private onKeyDown?: (e: KeyboardEvent) => void;
@@ -10,15 +11,10 @@ export class ControlsScene extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
-        this.add.rectangle(0, 0, width, height, 0x0d0221).setOrigin(0, 0);
+        ArcadeTheme.background(this, 'blue');
+        ArcadeTheme.panel(this, 55, 90, width - 110, height - 190, ARCADE.blue);
 
-        this.add.text(width / 2, 60, 'CONTROLES DO JOGO', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '50px',
-            color: '#ffdd00',
-            stroke: '#ff0000',
-            strokeThickness: 6
-        }).setOrigin(0.5);
+        ArcadeTheme.title(this, 'CONTROLES DO JOGO', width / 2, 62, 48);
 
         const textStyle = { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'left' as const };
 
@@ -43,11 +39,11 @@ export class ControlsScene extends Phaser.Scene {
 
         this.add.text(width / 2, 340, controlsText.join('\n'), textStyle).setOrigin(0.5);
 
-        const btnBack = this.add.text(width / 2, height - 70, '[ VOLTAR AO MENU ]', {
+        const btnBack = this.add.text(width / 2, height - 70, '← VOLTAR AO MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '36px',
-            color: '#ffdd00',
-            stroke: '#ff0000',
+            color: '#ffe34d',
+            stroke: '#d52821',
             strokeThickness: 5,
             padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });

@@ -15,6 +15,8 @@
   },
   "sprites": {
     "idle": "kevin_idle",
+    "walk": "kevin_walk",
+    "block": "kevin_idle",
     "punch": "kevin_punch",
     "kick": "kevin_kick",
     "crouch": "kevin_crouch",

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class SettingsScene extends Phaser.Scene {
     private selectedIndex: number = 0;
@@ -19,15 +20,10 @@ export class SettingsScene extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
-        this.add.rectangle(0, 0, width, height, 0x111122).setOrigin(0, 0);
+        ArcadeTheme.background(this, 'red');
+        ArcadeTheme.panel(this, width / 2 - 330, 110, 660, 500, ARCADE.red);
 
-        this.add.text(width / 2, 80, 'CONFIGURAÇÕES', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '60px',
-            color: '#ffdd00',
-            stroke: '#ff0000',
-            strokeThickness: 6
-        }).setOrigin(0.5);
+        ArcadeTheme.title(this, 'CONFIGURAÇÕES', width / 2, 80, 54);
 
         this.audioManager = AudioManager.getInstance();
         this.audioManager.setScene(this);

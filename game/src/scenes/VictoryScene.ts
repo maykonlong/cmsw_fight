@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class VictoryScene extends Phaser.Scene {
     private winnerId!: string;
@@ -24,8 +25,8 @@ export class VictoryScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('victory', false);
 
-        // Fundo escurecido
-        this.add.rectangle(0, 0, width, height, 0x000000, 0.8).setOrigin(0, 0);
+        ArcadeTheme.background(this, 'blue');
+        ArcadeTheme.panel(this, width / 2 - 285, 50, 570, height - 100, ARCADE.yellow);
 
         // Winner Sprite (Placeholder/Actual)
         if (this.textures.exists(this.winnerId)) {
@@ -35,19 +36,13 @@ export class VictoryScene extends Phaser.Scene {
         }
 
         // Título
-        this.add.text(width / 2, 80, 'VICTORY!', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '80px',
-            color: '#ffdd00',
-            stroke: '#ff0000',
-            strokeThickness: 8
-        }).setOrigin(0.5);
+        ArcadeTheme.title(this, 'YOU WIN!', width / 2, 80, 70);
 
         // Stats Box
         const statsBg = this.add.graphics();
-        statsBg.fillStyle(0x111111, 0.8);
+        statsBg.fillStyle(0x050713, 0.92);
         statsBg.fillRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
-        statsBg.lineStyle(2, 0xffdd00, 1);
+        statsBg.lineStyle(3, ARCADE.yellow, 1);
         statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
 
         this.add.text(width / 2, height - 220, `WINNER: ${this.winnerId.toUpperCase()} (DEFEATED ${this.loserId.toUpperCase()})`, {

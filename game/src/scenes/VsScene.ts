@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 interface VsData {
     p1: string;
@@ -22,10 +23,7 @@ export class VsScene extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
-        // Background escuro dramático
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0d0221, 0x1a0000, 0x0d0221, 0x1a0000, 1);
-        bg.fillRect(0, 0, width, height);
+        ArcadeTheme.background(this, 'red');
 
         const getTex = (key: string) => {
             if (this.textures.exists(key + '_idle')) return key + '_idle';
@@ -43,7 +41,7 @@ export class VsScene extends Phaser.Scene {
         }
 
         const p1Bg = this.add.graphics();
-        p1Bg.fillStyle(0x3399ff, 0.15);
+        p1Bg.fillStyle(ARCADE.blue, 0.24);
         p1Bg.fillRect(0, 0, width / 2 - 60, height);
 
         this.add.text(180, height - 80, this.data_.p1Name, {
@@ -70,7 +68,7 @@ export class VsScene extends Phaser.Scene {
         }
 
         const p2Bg = this.add.graphics();
-        p2Bg.fillStyle(0xff4400, 0.15);
+        p2Bg.fillStyle(ARCADE.red, 0.24);
         p2Bg.fillRect(width / 2 + 60, 0, width / 2 - 60, height);
 
         this.add.text(width - 180, height - 80, this.data_.p2Name, {
