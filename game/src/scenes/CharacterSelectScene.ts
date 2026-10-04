@@ -68,7 +68,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.scale;
+        const { width } = this.scale;
 
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('char_select', true);
@@ -105,7 +105,9 @@ export class CharacterSelectScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Instruções
-        this.add.text(width / 2, 82, 'P1: ← → ENTER / CLIQUE NO PERSONAGEM', {
+        this.add.text(width / 2, 82, this.mode === '2p'
+            ? 'P1: ← → ENTER  |  P2: A D J  |  CONFIRME OS DOIS'
+            : 'P1: ← → ENTER / CLIQUE NO PERSONAGEM', {
             fontFamily: 'Arial',
             fontSize: '18px',
             color: '#aaaaaa',
@@ -248,6 +250,7 @@ export class CharacterSelectScene extends Phaser.Scene {
             else if (key === 'a') this.moveP2(-1);
             else if (key === 'd') this.moveP2(1);
             else if (key === 'enter' || key === ' ' || key === 'z') this.confirmP1();
+            else if (this.mode === '2p' && (key === 'j' || key === 'e')) this.confirmP2();
             else if (key === 'escape' || key === 'backspace') goBack();
         };
 
@@ -306,6 +309,13 @@ export class CharacterSelectScene extends Phaser.Scene {
         if (this.mode === '1p') {
             this.p2Confirmed = true;
         }
+        this.checkBothConfirmed();
+    }
+
+    private confirmP2() {
+        if (this.p2Confirmed) return;
+        this.p2Confirmed = true;
+        this.p2NameText.setColor('#ffdd00');
         this.checkBothConfirmed();
     }
 

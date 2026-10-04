@@ -31,11 +31,11 @@ export class MainMenuScene extends Phaser.Scene {
         ArcadeTheme.panel(this, width / 2 - 270, 92, 540, 570, ARCADE.blue);
 
         // Sprites dos lutadores ao fundo (silhuetas)
-        if (this.textures.exists('kevin')) {
-            const kevinBg = this.add.image(200, height - 10, 'kevin')
+        if (this.textures.exists('kevin_idle')) {
+            const kevinBg = this.add.image(200, height - 10, 'kevin_idle')
                 .setOrigin(0.5, 1)
-                .setScale(0.85)
-                .setAlpha(0.2)
+                .setDisplaySize(225, 375)
+                .setAlpha(0.32)
                 .setTint(0x4488ff);
             this.tweens.add({
                 targets: kevinBg,
@@ -46,11 +46,11 @@ export class MainMenuScene extends Phaser.Scene {
                 ease: 'Sine.easeInOut'
             });
         }
-        if (this.textures.exists('vini_dog')) {
-            const viniBg = this.add.image(width - 200, height - 10, 'vini_dog')
+        if (this.textures.exists('vini_dog_idle')) {
+            const viniBg = this.add.image(width - 200, height - 10, 'vini_dog_idle')
                 .setOrigin(0.5, 1)
-                .setScale(0.85)
-                .setAlpha(0.2)
+                .setDisplaySize(225, 375)
+                .setAlpha(0.32)
                 .setTint(0xff4444)
                 .setFlipX(true);
             this.tweens.add({

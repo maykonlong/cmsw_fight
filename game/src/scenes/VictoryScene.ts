@@ -7,16 +7,18 @@ export class VictoryScene extends Phaser.Scene {
     private loserId!: string;
     private p1Wins!: number;
     private p2Wins!: number;
+    private mode: string = '1p';
 
     constructor() {
         super({ key: 'VictoryScene' });
     }
 
-    init(data: { winner: string, loser: string, p1Wins: number, p2Wins: number }) {
+    init(data: { winner: string, loser: string, p1Wins: number, p2Wins: number, mode?: string }) {
         this.winnerId = data.winner || 'kevin';
         this.loserId = data.loser || 'vini_dog';
         this.p1Wins = data.p1Wins || 0;
         this.p2Wins = data.p2Wins || 0;
+        this.mode = data.mode || '1p';
     }
 
     create() {
@@ -29,14 +31,14 @@ export class VictoryScene extends Phaser.Scene {
         ArcadeTheme.panel(this, width / 2 - 285, 50, 570, height - 100, ARCADE.yellow);
 
         // Winner Sprite (Placeholder/Actual)
-        if (this.textures.exists(this.winnerId)) {
-            this.add.image(width / 2, height / 2, this.winnerId).setDisplaySize(280, 420);
+        if (this.textures.exists(`${this.winnerId}_win`)) {
+            this.add.image(width / 2, height / 2, `${this.winnerId}_win`).setDisplaySize(280, 420);
         } else {
             this.add.rectangle(width / 2, height / 2, 280, 420, 0x00ff00);
         }
 
         // Título
-        ArcadeTheme.title(this, 'YOU WIN!', width / 2, 80, 70);
+        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'YOU WIN!', width / 2, 80, 70);
 
         // Stats Box
         const statsBg = this.add.graphics();
@@ -45,7 +47,7 @@ export class VictoryScene extends Phaser.Scene {
         statsBg.lineStyle(3, ARCADE.yellow, 1);
         statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
 
-        this.add.text(width / 2, height - 220, `WINNER: ${this.winnerId.toUpperCase()} (DEFEATED ${this.loserId.toUpperCase()})`, {
+        this.add.text(width / 2, height - 220, `VENCEDOR: ${this.winnerId.toUpperCase()}  |  ADVERSÁRIO: ${this.loserId.toUpperCase()}`, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '20px',
             color: '#ffffff'
@@ -67,7 +69,7 @@ export class VictoryScene extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         playAgainBtn.on('pointerdown', () => {
-            this.scene.start('CharacterSelectScene');
+            this.scene.start('CharacterSelectScene', { mode: this.mode });
         });
 
         const menuBtn = this.add.text(width / 2 + 150, height - 80, 'MAIN MENU', {

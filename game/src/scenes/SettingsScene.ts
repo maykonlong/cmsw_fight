@@ -18,7 +18,7 @@ export class SettingsScene extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.scale;
+        const { width } = this.scale;
 
         ArcadeTheme.background(this, 'red');
         ArcadeTheme.panel(this, width / 2 - 330, 110, 660, 500, ARCADE.red);

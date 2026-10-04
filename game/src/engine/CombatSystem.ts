@@ -55,8 +55,8 @@ export class CombatSystem {
     }
 
     // attackerState pode ser passado para checar se está em startup para dar counter
-    public static applyHit(attacker: any, defender: any, hitbox: Hitbox, isCounterHit: boolean = false) {
-        if (defender.isHit) return;
+    public static applyHit(attacker: any, defender: any, hitbox: Hitbox, isCounterHit: boolean = false): 'hit' | 'blocked' | 'none' {
+        if (defender.isHit) return 'none';
 
         // Block logic (5.3 e 5.4)
         if (defender.isBlocking) {
@@ -82,7 +82,7 @@ export class CombatSystem {
                 // Assumindo 0 por enquanto.
                 const dir = attacker.x < defender.x ? 1 : -1;
                 defender.setVelocityX(hitbox.knockback * 0.5 * dir); // Empurrão menor
-                return; // Bloqueou com sucesso
+                return 'blocked';
             }
         }
         
@@ -96,5 +96,6 @@ export class CombatSystem {
         
         defender.hitStunTimer = hitbox.hitstun;
         defender.stateMachine.transition('hit', hitbox.hitType);
+        return 'hit';
     }
 }

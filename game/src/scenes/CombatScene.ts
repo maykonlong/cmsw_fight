@@ -18,6 +18,7 @@ export class CombatScene extends Phaser.Scene {
     private player!: Fighter;
     private enemy!: Fighter;
     private inputManager!: InputManager;
+    private secondPlayerInput?: InputManager;
     private projectiles!: Phaser.GameObjects.Group;
     private cameraSystem!: CameraSystem;
     private vfxManager!: VFXManager;
@@ -26,7 +27,8 @@ export class CombatScene extends Phaser.Scene {
 
     private hud!: HUD;
     private matchManager!: MatchManager;
-    private cpuController!: CPUController;
+    private cpuController?: CPUController;
+    private mode: string = '1p';
     private isPaused: boolean = false;
     private pauseMenuOverlay!: Phaser.GameObjects.Container;
     private floorY: number = 600;
@@ -39,13 +41,16 @@ export class CombatScene extends Phaser.Scene {
         super({ key });
     }
 
-    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string }) {
+    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string; mode?: string }) {
         this.p1Key = data?.p1 ?? 'kevin';
         this.p2Key = data?.p2 ?? 'vini_dog';
+        this.mode = data?.mode ?? '1p';
+        this.secondPlayerInput = undefined;
+        this.cpuController = undefined;
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'crouch', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = ['idle', 'walk', 'jump', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
         if (!this.textures.exists('kevin')) this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
@@ -95,7 +100,7 @@ export class CombatScene extends Phaser.Scene {
         this.vfxManager = new VFXManager(this, this.cameraSystem);
 
         // ── PERSONAGENS ──────────────────────────────────────────
-        this.inputManager = new InputManager(this);
+        this.inputManager = new InputManager(this, false, this.mode === '2p');
         this.projectiles = this.add.group();
 
         // Sombras
@@ -109,11 +114,8 @@ export class CombatScene extends Phaser.Scene {
         this.p2Shadow.fillStyle(0x000000, 0.4);
         this.p2Shadow.fillEllipse(0, 0, 70, 20);
 
-        this.player = CharacterLoader.createFighter(this, 280, this.floorY - 80, this.p1Key, this.inputManager);
+        this.player = CharacterLoader.createFighter(this, 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, this.p1Key, this.inputManager);
         this.player.setDepth(5);
-        this.player.setDisplaySize(120, 180);
-        this.player.body!.setSize(120, 180);
-        this.player.body!.setOffset(0, 0);
         this.physics.add.collider(this.player, floor);
 
         this.player.on('fire_special', (fighter: Fighter) => {
@@ -131,17 +133,17 @@ export class CombatScene extends Phaser.Scene {
                 isKevin ? 'electric' : 'normal'
             );
             proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
+            (proj.body as Phaser.Physics.Arcade.Body)
+                .setSize(proj.width * 0.78, proj.height * 0.6)
+                .setOffset(proj.width * 0.11, proj.height * 0.2);
             proj.setFlipX(dir < 0);
             proj.setDepth(8);
             this.projectiles.add(proj);
         });
 
-        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - 80, this.p2Key);
+        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, this.p2Key);
         this.enemy.setDepth(5);
-        this.enemy.setDisplaySize(120, 180);
         this.enemy.setFlipX(true);
-        this.enemy.body!.setSize(120, 180);
-        this.enemy.body!.setOffset(0, 0);
         this.physics.add.collider(this.enemy, floor);
         
         this.enemy.on('fire_special', (fighter: Fighter) => {
@@ -159,36 +161,32 @@ export class CombatScene extends Phaser.Scene {
                 isKevin ? 'electric' : 'normal'
             );
             proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
+            (proj.body as Phaser.Physics.Arcade.Body)
+                .setSize(proj.width * 0.78, proj.height * 0.6)
+                .setOffset(proj.width * 0.11, proj.height * 0.2);
             proj.setFlipX(dir < 0);
             proj.setDepth(8);
             this.projectiles.add(proj);
         });
         
         // Attach AI
-        this.cpuController = new CPUController(this.enemy, this.player);
-        this.enemy.inputManager = this.cpuController;
+        if (this.mode === '2p') {
+            this.secondPlayerInput = new InputManager(this, true, true);
+            this.enemy.inputManager = this.secondPlayerInput;
+        } else {
+            this.cpuController = new CPUController(this.enemy, this.player);
+            this.enemy.inputManager = this.cpuController;
+        }
 
         // Projéteis
-        this.physics.add.overlap(this.projectiles, this.enemy, (_enemyObj, projObj) => {
+        this.physics.add.overlap(this.projectiles, this.enemy, (projObj) => {
             const proj = projObj as Projectile;
-            if (proj.hitActive && !this.enemy.isHit && proj.getOwner() !== this.enemy) {
-                proj.hitActive = false;
-                this.enemy.takeDamage(proj.damage, 0, proj.x, proj.damageType);
-                this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
-                AudioManager.getInstance().playSFX('electric_hit');
-                proj.destroy();
-            }
+            this.resolveProjectileHit(proj, this.enemy);
         });
 
-        this.physics.add.overlap(this.projectiles, this.player, (_playerObj, projObj) => {
+        this.physics.add.overlap(this.projectiles, this.player, (projObj) => {
             const proj = projObj as Projectile;
-            if (proj.hitActive && !this.player.isHit && proj.getOwner() !== this.player) {
-                proj.hitActive = false;
-                this.player.takeDamage(proj.damage, 0, proj.x, proj.damageType);
-                this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
-                AudioManager.getInstance().playSFX('electric_hit');
-                proj.destroy();
-            }
+            this.resolveProjectileHit(proj, this.player);
         });
 
         // ── HUD ──────────────────────────────────────────────────
@@ -198,7 +196,7 @@ export class CombatScene extends Phaser.Scene {
         new VirtualGamepad(this, this.inputManager);
 
         // ── MATCH MANAGER ─────────────────────────────────────────
-        this.matchManager = new MatchManager(this, this.player, this.enemy, this.hud, this.vfxManager);
+        this.matchManager = new MatchManager(this, this.player, this.enemy, this.hud, this.vfxManager, this.mode);
         this.matchManager.startRoundSequence();
 
         // ── PAUSE MENU ────────────────────────────────────────────
@@ -249,8 +247,24 @@ export class CombatScene extends Phaser.Scene {
         this.pauseMenuOverlay.add(btnQuit);
     }
 
+    private resolveProjectileHit(proj: Projectile, target: Fighter) {
+        if (!this.matchManager?.isMatchActive() || !proj.hitActive || target.isHit || proj.getOwner() === target) return;
+        proj.hitActive = false;
+        if (target.isBlocking) {
+            target.hp = Math.max(0, target.hp - 4);
+            this.vfxManager.spawnBlockSpark(proj.x, proj.y);
+            AudioManager.getInstance().playSFX('block');
+        } else {
+            target.takeDamage(proj.damage, 160, proj.x, proj.damageType);
+            this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
+            AudioManager.getInstance().playSFX(proj.damageType === 'electric' ? 'electric_hit' : 'hit_heavy');
+        }
+        proj.destroy();
+    }
+
     private togglePause() {
         this.isPaused = !this.isPaused;
+        this.matchManager.setPaused(this.isPaused);
         if (this.isPaused) {
             this.physics.pause();
             this.anims.pauseAll();
@@ -266,22 +280,28 @@ export class CombatScene extends Phaser.Scene {
     update() {
         if (this.isPaused) {
             this.inputManager.update();
+            this.secondPlayerInput?.update();
+            InputManager.endFrame();
             return;
         }
         if (!this.matchManager.isMatchActive()) {
             this.inputManager.update();
+            this.secondPlayerInput?.update();
+            InputManager.endFrame();
             return;
         }
 
         // O input precisa ser atualizado antes dos lutadores consumirem o frame.
         this.inputManager.update();
-        this.cpuController.update();
+        this.secondPlayerInput?.update();
+        this.cpuController?.update();
         this.player.update();
         this.enemy.update();
+        InputManager.endFrame();
 
         // Mantém os pés na linha do cenário mesmo quando a escala FIT altera
         // a posição calculada pelo Arcade Physics em diferentes telas.
-        const groundCenterY = this.floorY - 90;
+        const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
         for (const fighter of [this.player, this.enemy]) {
             if (fighter.y > groundCenterY && (fighter.body?.velocity.y ?? 0) >= 0) {
                 fighter.y = groundCenterY;
@@ -292,17 +312,17 @@ export class CombatScene extends Phaser.Scene {
 
         // Update shadows
         this.p1Shadow.x = this.player.x;
-        this.p1Shadow.y = this.player.y + 90;
+        this.p1Shadow.y = this.floorY;
         this.p2Shadow.x = this.enemy.x;
-        this.p2Shadow.y = this.enemy.y + 90;
+        this.p2Shadow.y = this.floorY;
         
         // Update camera
-        this.cameraSystem.update(this.player, this.enemy);
+        // Arena fixa: zoom dinâmico diminuía visualmente os lutadores e o HUD.
 
         // ── MANUAL PUSHBOX COLLISION ──────────────────────────────────
         const distanceX = Math.abs(this.player.x - this.enemy.x);
-        const minDistance = 70;
-        if (distanceX < minDistance && this.player.y >= this.floorY - 90 && this.enemy.y >= this.floorY - 90) {
+        const minDistance = 75;
+        if (distanceX < minDistance && this.player.y >= groundCenterY && this.enemy.y >= groundCenterY) {
             const overlap = minDistance - distanceX;
             if (this.player.x < this.enemy.x) {
                 this.player.x -= overlap / 2;
@@ -312,9 +332,11 @@ export class CombatScene extends Phaser.Scene {
                 this.enemy.x -= overlap / 2;
             }
         }
+        this.player.x = Phaser.Math.Clamp(this.player.x, 95, this.scale.width - 95);
+        this.enemy.x = Phaser.Math.Clamp(this.enemy.x, 95, this.scale.width - 95);
 
         // Auto-Face
-        if (this.player.y >= this.floorY - 90 && this.enemy.y >= this.floorY - 90) {
+        if (this.player.y >= groundCenterY && this.enemy.y >= groundCenterY) {
             if (this.player.x < this.enemy.x) {
                 this.player.setFlipX(false);
                 this.enemy.setFlipX(true);
@@ -333,11 +355,11 @@ export class CombatScene extends Phaser.Scene {
                     AudioManager.getInstance().playSFX('throw');
                 }
             } else {
-                CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
-                if (this.enemy.isBlocking) {
+                const result = CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
+                if (result === 'blocked') {
                     this.vfxManager.spawnBlockSpark(this.player.currentHitbox.x, this.player.currentHitbox.y);
                     AudioManager.getInstance().playSFX('block');
-                } else {
+                } else if (result === 'hit') {
                     this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
@@ -355,11 +377,11 @@ export class CombatScene extends Phaser.Scene {
                     AudioManager.getInstance().playSFX('throw');
                 }
             } else {
-                CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
-                if (this.player.isBlocking) {
+                const result = CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
+                if (result === 'blocked') {
                     this.vfxManager.spawnBlockSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y);
                     AudioManager.getInstance().playSFX('block');
-                } else {
+                } else if (result === 'hit') {
                     this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
@@ -370,8 +392,6 @@ export class CombatScene extends Phaser.Scene {
         }
 
         // Pushbox resolve
-        CombatSystem.resolvePushbox(this.player.pushbox, this.enemy.pushbox, this.player, this.enemy);
-
         // Check Match Over
         this.matchManager.checkWinCondition();
     }

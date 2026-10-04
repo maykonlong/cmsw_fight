@@ -7,7 +7,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'crouch', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = ['idle', 'walk', 'jump', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
         // Carrega todas as imagens de poses individuais do Kevin
         this.load.image('kevin', 'assets/sprites/kevin.png');

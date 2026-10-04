@@ -10,6 +10,7 @@ export class MatchManager {
     private p2: Fighter;
     private hud: HUD;
     private vfx: VFXManager;
+    private mode: string;
 
     public p1Wins: number = 0;
     public p2Wins: number = 0;
@@ -19,22 +20,28 @@ export class MatchManager {
     private matchActive: boolean = false;
     private timerEvent?: Phaser.Time.TimerEvent;
 
-    constructor(scene: Phaser.Scene, p1: Fighter, p2: Fighter, hud: HUD, vfx: VFXManager) {
+    constructor(scene: Phaser.Scene, p1: Fighter, p2: Fighter, hud: HUD, vfx: VFXManager, mode: string = '1p') {
         this.scene = scene;
         this.p1 = p1;
         this.p2 = p2;
         this.hud = hud;
         this.vfx = vfx;
+        this.mode = mode;
     }
 
     public isMatchActive(): boolean {
         return this.matchActive;
     }
 
+    public setPaused(paused: boolean) {
+        if (this.timerEvent) this.timerEvent.paused = paused;
+    }
+
     public startRoundSequence() {
         this.matchActive = false; // Block inputs
-        this.p1.stateMachine.transition('idle');
-        this.p2.stateMachine.transition('idle');
+        const groundY = this.scene.cache.json.get('cmsw_hq')?.groundY ?? 590;
+        this.resetFighter(this.p1, 280, groundY - Fighter.CENTER_ABOVE_FLOOR);
+        this.resetFighter(this.p2, this.scene.scale.width - 280, groundY - Fighter.CENTER_ABOVE_FLOOR);
         this.p1.hp = this.p1.maxHp;
         this.p2.hp = this.p2.maxHp;
         this.roundTime = 99;
@@ -86,6 +93,19 @@ export class MatchManager {
                 });
             }
         });
+    }
+
+    private resetFighter(fighter: Fighter, x: number, y: number) {
+        fighter.setPosition(x, y);
+        fighter.setVelocity(0, 0);
+        fighter.setAngle(0);
+        fighter.setAlpha(1);
+        fighter.clearTint();
+        fighter.isHit = false;
+        fighter.isBlocking = false;
+        fighter.currentHitbox.active = false;
+        fighter.currentHurtbox.invincible = false;
+        fighter.stateMachine.transition('idle');
     }
 
     private startTimer() {
@@ -187,12 +207,15 @@ export class MatchManager {
     private nextRoundOrEndMatch() {
         if (this.p1Wins >= 2 || this.p2Wins >= 2) {
             // End Match
-            if (this.p1Wins >= 2) {
+            if (this.p1Wins >= 2 || this.mode === '2p') {
+                const winner = this.p1Wins >= 2 ? this.p1 : this.p2;
+                const loser = winner === this.p1 ? this.p2 : this.p1;
                 this.scene.scene.start('VictoryScene', {
-                    winner: this.p1.texture.key,
-                    loser: this.p2.texture.key,
+                    winner: winner.characterId,
+                    loser: loser.characterId,
                     p1Wins: this.p1Wins,
-                    p2Wins: this.p2Wins
+                    p2Wins: this.p2Wins,
+                    mode: this.mode
                 });
             } else {
                 this.scene.scene.start('GameOverScene');

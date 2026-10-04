@@ -20,7 +20,7 @@ export class CPUController implements IInputProvider {
     private _specialJust = false;
     private _throwJust = false;
 
-    private reactionDelay = 15; // frames between decisions
+    private reactionDelay = 20;
     private timer = 0;
     private actionCooldown = 0;
     public buffer = new InputBuffer();
@@ -83,7 +83,7 @@ export class CPUController implements IInputProvider {
         // 2. Agarrão (Throw)
         if (distanceX < 50 && distanceY < 50 && Math.random() < 0.4) {
             this._throwJust = true;
-            this.actionCooldown = 30;
+            this.actionCooldown = 55;
             return;
         }
 
@@ -94,14 +94,14 @@ export class CPUController implements IInputProvider {
             else if (r < 0.45) this._mkJust = true;
             else if (r < 0.65) this._hpJust = true;
             else this._hkJust = true;
-            this.actionCooldown = 20;
+            this.actionCooldown = 48;
             return;
         }
 
         // 4. Especial (Longe / Projétil)
         if (distanceX > 200 && Math.random() < 0.15) {
             this._specialJust = true;
-            this.actionCooldown = 40;
+            this.actionCooldown = 90;
             return;
         }
 

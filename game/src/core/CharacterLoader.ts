@@ -67,7 +67,7 @@ export class CharacterLoader {
         fighter.hp = data.health;
         fighter.speed = data.movement.walkForward; // Simplified
         fighter.jumpForce = Math.abs(data.movement.jumpVelocityY);
-        fighter.throwRange = data.throwRange;
+        fighter.throwRange = Math.max(95, data.throwRange);
         fighter.name = data.name; // We can add a name field to Fighter
 
         // Note: specials and other data will be injected into Fighter's state machine soon.

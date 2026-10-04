@@ -4,6 +4,8 @@ import { InputBuffer } from './InputBuffer';
 
 export class InputManager implements IInputProvider {
     private scene: Phaser.Scene;
+    private playerTwo: boolean;
+    private splitControls: boolean;
     
     // Rastrear botoes de gamepad do frame anterior para o "JustPressed"
     private prevPadState = { A: false, B: false, X: false, Y: false, RB: false, RT: false, LB: false, up: false };
@@ -16,8 +18,10 @@ export class InputManager implements IInputProvider {
     private static justPressedKeys: Set<string> = new Set();
     private static listenersAttached: boolean = false;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, playerTwo: boolean = false, splitControls: boolean = false) {
         this.scene = scene;
+        this.playerTwo = playerTwo;
+        this.splitControls = splitControls;
         this.buffer = new InputBuffer();
         this.attachDOMListeners();
     }
@@ -97,6 +101,7 @@ export class InputManager implements IInputProvider {
     public virtualSpecialJustPressed: boolean = false;
 
     get pad() {
+        if (this.playerTwo) return null;
         const raw = (this.scene.input as any)?.gamepad?.pad1;
         if (!raw) return null;
         // Normaliza para um objeto seguro, evitando crash se a API do gamepad mudar entre versões do Phaser.
@@ -121,22 +126,22 @@ export class InputManager implements IInputProvider {
     }
 
     get isLeftDown(): boolean { 
-        return this.isDown('arrowleft', 'a', 'keya') || 
+        return (this.playerTwo ? this.isDown('a', 'keya') : this.splitControls ? this.isDown('arrowleft') : this.isDown('arrowleft', 'a', 'keya')) ||
                this.virtualLeft || 
                Boolean(this.pad && (this.pad.left || this.pad.axes[0].getValue() < -0.5)); 
     }
     get isRightDown(): boolean { 
-        return this.isDown('arrowright', 'd', 'keyd') || 
+        return (this.playerTwo ? this.isDown('d', 'keyd') : this.splitControls ? this.isDown('arrowright') : this.isDown('arrowright', 'd', 'keyd')) ||
                this.virtualRight || 
                Boolean(this.pad && (this.pad.right || this.pad.axes[0].getValue() > 0.5)); 
     }
     get isUpDown(): boolean { 
-        return this.isDown('arrowup', 'w', 'keyw') || 
+        return (this.playerTwo ? this.isDown('w', 'keyw') : this.splitControls ? this.isDown('arrowup') : this.isDown('arrowup', 'w', 'keyw')) ||
                this.virtualUp || 
                Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5)); 
     }
     get isDownDown(): boolean { 
-        return this.isDown('arrowdown', 's', 'keys') || 
+        return (this.playerTwo ? this.isDown('s', 'keys') : this.splitControls ? this.isDown('arrowdown') : this.isDown('arrowdown', 's', 'keys')) ||
                this.virtualDown || 
                Boolean(this.pad && (this.pad.down || this.pad.axes[1].getValue() > 0.5)); 
     }
@@ -144,49 +149,49 @@ export class InputManager implements IInputProvider {
     get isUpJustPressed(): boolean { 
         const padUp = Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5));
         const padJustUp = padUp && !this.prevPadState.up;
-        return this.isJustPressed('arrowup', 'w', 'keyw') || 
+        return (this.playerTwo ? this.isJustPressed('w', 'keyw') : this.splitControls ? this.isJustPressed('arrowup') : this.isJustPressed('arrowup', 'w', 'keyw')) ||
                this.virtualUpJustPressed || padJustUp; 
     }
     get isLPJustPressed(): boolean { 
         const padX = Boolean(this.pad && this.pad.X);
         const padJustX = padX && !this.prevPadState.X;
-        return this.isJustPressed('z', 'keyz', 'j', 'keyj') || 
+        return (this.playerTwo ? this.isJustPressed('j', 'keyj') : this.splitControls ? this.isJustPressed('z', 'keyz') : this.isJustPressed('z', 'keyz', 'j', 'keyj')) ||
                this.virtualLPJustPressed || padJustX; 
     }
     get isMPJustPressed(): boolean { 
         const padY = Boolean(this.pad && this.pad.Y);
         const padJustY = padY && !this.prevPadState.Y;
-        return this.isJustPressed('x', 'keyx', 'k', 'keyk') || 
+        return (this.playerTwo ? this.isJustPressed('k', 'keyk') : this.splitControls ? this.isJustPressed('x', 'keyx') : this.isJustPressed('x', 'keyx', 'k', 'keyk')) ||
                this.virtualMPJustPressed || padJustY; 
     }
     get isHPJustPressed(): boolean { 
         const padRB = Boolean(this.pad && this.pad.R1);
         const padJustRB = padRB && !this.prevPadState.RB;
-        return this.isJustPressed('c', 'keyc', 'l', 'keyl') || 
+        return (this.playerTwo ? this.isJustPressed('l', 'keyl') : this.splitControls ? this.isJustPressed('c', 'keyc') : this.isJustPressed('c', 'keyc', 'l', 'keyl')) ||
                this.virtualHPJustPressed || padJustRB; 
     }
     get isLKJustPressed(): boolean { 
         const padA = Boolean(this.pad && this.pad.A);
         const padJustA = padA && !this.prevPadState.A;
-        return this.isJustPressed('v', 'keyv', 'u', 'keyu') || 
+        return (this.playerTwo ? this.isJustPressed('u', 'keyu') : this.splitControls ? this.isJustPressed('v', 'keyv') : this.isJustPressed('v', 'keyv', 'u', 'keyu')) ||
                this.virtualLKJustPressed || padJustA; 
     }
     get isMKJustPressed(): boolean { 
         const padB = Boolean(this.pad && this.pad.B);
         const padJustB = padB && !this.prevPadState.B;
-        return this.isJustPressed('b', 'keyb', 'i', 'keyi') || 
+        return (this.playerTwo ? this.isJustPressed('i', 'keyi') : this.splitControls ? this.isJustPressed('b', 'keyb') : this.isJustPressed('b', 'keyb', 'i', 'keyi')) ||
                this.virtualMKJustPressed || padJustB; 
     }
     get isHKJustPressed(): boolean { 
         const padRT = Boolean(this.pad && this.pad.R2);
         const padJustRT = padRT && !this.prevPadState.RT;
-        return this.isJustPressed('n', 'keyn', 'o', 'keyo') || 
+        return (this.playerTwo ? this.isJustPressed('o', 'keyo') : this.splitControls ? this.isJustPressed('n', 'keyn') : this.isJustPressed('n', 'keyn', 'o', 'keyo')) ||
                this.virtualHKJustPressed || padJustRT; 
     }
     get isSpecialJustPressed(): boolean { 
         const padLB = Boolean(this.pad && this.pad.L1);
         const padJustLB = padLB && !this.prevPadState.LB;
-        return this.isJustPressed(' ', 'space', 'e', 'keye') || 
+        return (this.playerTwo ? this.isJustPressed('e', 'keye') : this.splitControls ? this.isJustPressed(' ', 'space') : this.isJustPressed(' ', 'space', 'e', 'keye')) ||
                this.virtualSpecialJustPressed || padJustLB; 
     }
 
@@ -249,7 +254,9 @@ export class InputManager implements IInputProvider {
             this.prevPadState.LB = Boolean(this.pad.L1);
         }
 
-        // Limpar justPressedKeys no final de cada tick do game loop
+    }
+
+    public static endFrame(): void {
         InputManager.justPressedKeys.clear();
     }
 }

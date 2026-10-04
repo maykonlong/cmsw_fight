@@ -9,6 +9,9 @@ import type { MoveData } from '../data/moves/base_moves';
 import { CommandRecognizer } from '../core/CommandRecognizer';
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
+    public static readonly DISPLAY_WIDTH = 180;
+    public static readonly DISPLAY_HEIGHT = 340;
+    public static readonly CENTER_ABOVE_FLOOR = 150;
     public stateMachine: StateMachine;
     public inputManager?: IInputProvider;
     public speed: number = 250;
@@ -38,17 +41,17 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
         this.setCollideWorldBounds(true);
         this.inputManager = inputManager;
-        this.characterId = texture.replace(/_(idle|punch|kick|crouch|jump|hit|ko|win)$/, '');
+        this.characterId = texture.replace(/_(idle|walk|block|punch|kick|special|crouch|jump|hit|ko|win)$/, '');
 
         // Init Boxes
         this.currentHitbox = new Hitbox(0, 0, 0, 0);
-        this.currentHurtbox = new Hurtbox(0, 0, 80, 160);
-        this.currentHurtbox.offsetX = -40;
-        this.currentHurtbox.offsetY = -160;
+        this.currentHurtbox = new Hurtbox(0, 0, 100, 265);
+        this.currentHurtbox.offsetX = -50;
+        this.currentHurtbox.offsetY = -112;
 
-        this.pushbox = new Pushbox(0, 0, 60, 120);
-        this.pushbox.offsetX = -30;
-        this.pushbox.offsetY = -120;
+        this.pushbox = new Pushbox(0, 0, 75, 180);
+        this.pushbox.offsetX = -37.5;
+        this.pushbox.offsetY = -30;
 
         // Registrando estados usando MoveData base para normais
         this.stateMachine = new StateMachine('idle', {
@@ -97,6 +100,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             // Especial
             special:     new SpecialState(),
         }, [this]);
+        this.applyVisualSize();
     }
 
     update() {
@@ -121,15 +125,22 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     public setPoseTexture(pose: string) {
-        const baseKey = this.texture.key.replace(/_(idle|walk|block|punch|kick|crouch|jump|hit|ko|win)$/, '');
-        const targetKey = `${baseKey}_${pose}`;
+        const targetKey = `${this.characterId}_${pose}`;
         if (this.scene.textures.exists(targetKey)) {
             this.setTexture(targetKey);
-        } else if (this.scene.textures.exists(`${baseKey}_idle`)) {
-            this.setTexture(`${baseKey}_idle`);
-        } else if (this.scene.textures.exists(baseKey)) {
-            this.setTexture(baseKey);
+        } else if (this.scene.textures.exists(`${this.characterId}_idle`)) {
+            this.setTexture(`${this.characterId}_idle`);
+        } else if (this.scene.textures.exists(this.characterId)) {
+            this.setTexture(this.characterId);
         }
+        this.applyVisualSize();
+    }
+
+    private applyVisualSize() {
+        this.setDisplaySize(Fighter.DISPLAY_WIDTH, Fighter.DISPLAY_HEIGHT);
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.setSize(this.width * 0.49, this.height * 0.9);
+        body.setOffset(this.width * 0.255, this.height * 0.04);
     }
 
     takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
@@ -162,7 +173,7 @@ class IdleState extends State {
         }
         if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
-        const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
+        const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
         if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }
@@ -210,7 +221,7 @@ class WalkState extends State {
         }
         if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
-        const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
+        const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
         if (inp.isUpJustPressed && isGrounded) {
             this.stateMachine.transition('jump'); return;
         }
@@ -303,15 +314,13 @@ class CrouchState extends State {
     enter(f: Fighter) {
         f.setPoseTexture('crouch');
         f.setVelocityX(0);
-        f.setScale(f.scaleX, f.scaleY * 0.75);
-        f.currentHurtbox.height = 100;
-        f.currentHurtbox.offsetY = -100;
+        f.currentHurtbox.height = 135;
+        f.currentHurtbox.offsetY = 18;
     }
 
     exit(f: Fighter) {
-        f.setScale(f.scaleX, f.scaleY / 0.75);
-        f.currentHurtbox.height = 160;
-        f.currentHurtbox.offsetY = -160;
+        f.currentHurtbox.height = 265;
+        f.currentHurtbox.offsetY = -112;
     }
 
     execute(f: Fighter) {
@@ -374,7 +383,6 @@ class AttackState extends State {
         f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
         f.currentHitbox.setTo(0, 0, this.moveData.hitboxOffset.w, this.moveData.hitboxOffset.h);
 
-        f.setTint(0x4444ff); // Cor de feedback visual temporária
     }
 
     execute(f: Fighter) {
@@ -383,13 +391,11 @@ class AttackState extends State {
         // Ativa hitbox durante os frames active
         if (this.duration === this.moveData.startup + 1) {
             f.currentHitbox.active = true;
-            f.setTint(0xff4444); // Active frame color
         }
 
         // Desativa hitbox
         if (this.duration === this.moveData.startup + this.moveData.active + 1) {
             f.currentHitbox.active = false;
-            f.setTint(0x4444ff); // Recovery frame color
         }
 
         // Janela de Cancel
@@ -436,9 +442,8 @@ class BlockState extends State {
         f.setPoseTexture('block');
         f.setTint(0x888888);
         if (this.type === 'LOW') {
-            f.setScale(f.scaleX, f.scaleY * 0.75);
-            f.currentHurtbox.height = 100;
-            f.currentHurtbox.offsetY = -100;
+            f.currentHurtbox.height = 135;
+            f.currentHurtbox.offsetY = 18;
         }
     }
 
@@ -446,9 +451,8 @@ class BlockState extends State {
         f.isBlocking = false;
         f.clearTint();
         if (this.type === 'LOW') {
-            f.setScale(f.scaleX, f.scaleY / 0.75);
-            f.currentHurtbox.height = 160;
-            f.currentHurtbox.offsetY = -160;
+            f.currentHurtbox.height = 265;
+            f.currentHurtbox.offsetY = -112;
         }
     }
 
@@ -469,7 +473,7 @@ class BlockState extends State {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// SPECIAL (Provisório)
+// SPECIAL
 // ─────────────────────────────────────────────────────────────────
 class SpecialState extends State {
     private duration = 0;
@@ -482,27 +486,43 @@ class SpecialState extends State {
         this.duration = 45;
         this.fired = false;
         this.cmd = cmd;
-        f.setTint(0xff00ff);
+        f.currentHitbox.active = false;
+        f.setTint(f.characterId.includes('vini') ? 0x66ccff : 0xff77dd);
     }
 
     execute(f: Fighter) {
         this.duration--;
 
-        if (!this.fired && this.duration === 25) {
+        if (!this.fired && this.duration === 32) {
             this.fired = true;
             if (this.cmd === '623P') {
-                // Dragon punch - add upward velocity and hitbox
                 f.setVelocityY(-600);
+                f.currentHitbox.setTo(0, 0, 110, 145);
+                f.currentHitbox.offsetX = 15;
+                f.currentHitbox.offsetY = -110;
+                f.currentHitbox.damage = 110;
+                f.currentHitbox.knockback = 280;
+                f.currentHitbox.hitstun = 28;
+                f.currentHitbox.blockstun = 18;
+                f.currentHitbox.hitLevel = 'HIGH';
+                f.currentHitbox.hitType = 'special';
+                f.currentHitbox.active = true;
             } else {
-                // Fireball
                 f.emit('fire_special', f);
             }
         }
+
+        if (this.cmd === '623P' && this.duration === 18) f.currentHitbox.active = false;
 
         if (this.duration <= 0) {
             f.clearTint();
             this.stateMachine.transition('idle');
         }
+    }
+
+    exit(f: Fighter) {
+        f.currentHitbox.active = false;
+        f.clearTint();
     }
 }
 
@@ -564,6 +584,8 @@ class HitState extends State {
 
     enter(f: Fighter, type: 'normal' | 'electric' = 'normal') {
         f.isHit = true;
+        f.currentHitbox.active = false;
+        f.setPoseTexture('hit');
         this.type = type;
 
         if (type === 'electric') {
@@ -580,7 +602,7 @@ class HitState extends State {
 
         if (this.type === 'electric') {
             const yellow = f.hitStunTimer % 4 < 2;
-            f.setTint(yellow ? 0xffff00 : 0x00ffff);
+            f.setTint(yellow ? 0xffa7ec : 0xffffff);
         } else {
             if (Math.abs(f.body!.velocity.x) > 5) {
                 f.setVelocityX(f.body!.velocity.x * 0.75);

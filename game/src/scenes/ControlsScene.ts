@@ -34,7 +34,8 @@ export class ControlsScene extends Phaser.Scene {
             "--------------------------------------------------------------------------",
             "  DICAS DE LUTA:",
             "  • Para Defender: Mantenha pressionado TRÁS (← ou A) enquanto o oponente ataca.",
-            "  • Para Agarrar: Chegue bem perto do oponente e pressione Soco Leve + Chute Leve (Z+V)."
+            "  • Para Agarrar: Chegue bem perto do oponente e pressione Soco Leve + Chute Leve (Z+V).",
+            "  2 JOGADORES: P1 usa Setas + Z/X/C/V/B/N + Espaço; P2 usa WASD + J/K/L/U/I/O + E."
         ];
 
         this.add.text(width / 2, 340, controlsText.join('\n'), textStyle).setOrigin(0.5);
