@@ -24,6 +24,7 @@ export class BootScene extends Phaser.Scene {
         // Efeitos especiais e itens
         this.load.image('aura_beijo', 'assets/sprites/aura_beijo.png');
         this.load.image('aura_cachorro', 'assets/sprites/aura_cachorro.png');
+        this.load.image('hit_spark', 'assets/sprites/hit_spark.png');
         this.load.image('banheiro_portatil', 'assets/sprites/banheiro_portatil.png');
 
         // Cenários

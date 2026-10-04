@@ -8,27 +8,11 @@
   "width": 1280,
   "layers": [
     {
-      "id": "sky",
+      "id": "arena",
       "image": "stage_bg",
       "parallaxX": 0.05,
       "parallaxY": 0,
       "depth": 0
-    },
-    {
-      "id": "middleground",
-      "image": "stage_mg",
-      "parallaxX": 0.3,
-      "parallaxY": 0,
-      "depth": 1,
-      "animation": "bounce",
-      "animSpeed": 0.8
-    },
-    {
-      "id": "floor",
-      "image": "stage_fg",
-      "parallaxX": 1.0,
-      "parallaxY": 0,
-      "depth": 2
     }
   ],
   "ambientEffects": [

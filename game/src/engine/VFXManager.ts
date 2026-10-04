@@ -11,6 +11,22 @@ export class VFXManager {
     }
 
     public spawnHitSpark(x: number, y: number, type: 'light' | 'medium' | 'heavy') {
+        if (this.scene.textures.exists('hit_spark')) {
+            const sparkSprite = this.scene.add.image(x, y, 'hit_spark')
+                .setDisplaySize(type === 'heavy' ? 110 : 78, type === 'heavy' ? 110 : 78)
+                .setDepth(30)
+                .setBlendMode(Phaser.BlendModes.ADD);
+            this.scene.tweens.add({
+                targets: sparkSprite,
+                scale: 0.25,
+                alpha: 0,
+                angle: type === 'heavy' ? 18 : -12,
+                duration: 150,
+                ease: 'Cubic.easeOut',
+                onComplete: () => sparkSprite.destroy()
+            });
+            return;
+        }
         const sizeMap = { light: 0.5, medium: 1.0, heavy: 1.5 };
         const spark = this.scene.add.circle(x, y, 20 * sizeMap[type], 0xffa500);
         spark.setDepth(10);

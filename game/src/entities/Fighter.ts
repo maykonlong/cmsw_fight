@@ -116,6 +116,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    public getDefaultSpecialCommand(): string {
+        return this.characterId.includes('vini') ? '214K' : '236P';
+    }
+
     public setPoseTexture(pose: string) {
         const baseKey = this.texture.key.replace(/_(idle|walk|block|punch|kick|crouch|jump|hit|ko|win)$/, '');
         const targetKey = `${baseKey}_${pose}`;
@@ -156,7 +160,7 @@ class IdleState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
@@ -204,7 +208,7 @@ class WalkState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as any).blocked?.down || f.body.touching.down || f.y >= 450));
         if (inp.isUpJustPressed && isGrounded) {
@@ -318,7 +322,7 @@ class CrouchState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', '236P'); return; }
+        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         if (!inp.isDownDown) {
             this.stateMachine.transition('idle'); return;

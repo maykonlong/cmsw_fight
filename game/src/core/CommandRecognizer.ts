@@ -28,56 +28,51 @@ export class CommandRecognizer {
         const inputs = buffer.getWindow(cmd.windowFrames, currentFrame);
         if (inputs.length === 0) return false;
 
-        let seqIndex = cmd.sequence.length - 1;
-        let pIndex = inputs.length - 1;
+        let scanIndex = inputs.length - 1;
+        let sequenceIndex = cmd.sequence.length - 1;
 
-        // Achar o frame do botão (P ou K)
-        const lastCmdItem = cmd.sequence[seqIndex];
-        let foundButton = false;
-        
-        if (lastCmdItem === 'P' || lastCmdItem === 'K') {
-            for (let i = inputs.length - 1; i >= 0; i--) {
-                if (this.matchesButton(lastCmdItem, inputs[i].buttons)) {
-                    pIndex = i;
-                    seqIndex--;
-                    foundButton = true;
+        // O golpe precisa ser o último evento da sequência.
+        const button = cmd.sequence[sequenceIndex];
+        if (button === 'P' || button === 'K') {
+            while (scanIndex >= 0 && !this.matchesButton(button, inputs[scanIndex].buttons)) scanIndex--;
+            if (scanIndex < 0) return false;
+            sequenceIndex--;
+        }
+
+        // Procura cada direção de trás para frente, ignorando repetições e neutros.
+        // Isso permite executar o comando com teclado, analógico ou touch sem exigir
+        // uma janela artificial de apenas um frame por direção.
+        while (sequenceIndex >= 0 && scanIndex >= 0) {
+            const sequenceItem = cmd.sequence[sequenceIndex];
+
+            if (sequenceItem.startsWith('hold_')) {
+                const holdDir = this.mapDirection(sequenceItem.split('_')[1], facingLeft);
+                let heldFrames = 0;
+                while (scanIndex >= 0 && inputs[scanIndex].direction === holdDir) {
+                    heldFrames++;
+                    scanIndex--;
+                }
+                if (heldFrames < 20) return false;
+                sequenceIndex--;
+                continue;
+            }
+
+            const expectedDir = this.mapDirection(sequenceItem, facingLeft);
+            let matched = false;
+            while (scanIndex >= 0) {
+                const actualDir = inputs[scanIndex].direction;
+                scanIndex--;
+                if (actualDir === '5') continue;
+                if (actualDir === expectedDir || this.isFuzzyMatch(actualDir, expectedDir)) {
+                    matched = true;
                     break;
                 }
             }
-            if (!foundButton) return false;
+            if (!matched) return false;
+            sequenceIndex--;
         }
 
-        // Agora busca as direções para trás
-        for (let i = pIndex; i >= 0; i--) {
-            if (seqIndex < 0) break;
-            const input = inputs[i];
-            let seqItem = cmd.sequence[seqIndex];
-            
-            if (seqItem.startsWith('hold_')) {
-                const holdDir = this.mapDirection(seqItem.split('_')[1], facingLeft);
-                let holdFramesCount = 0;
-                const extendedInputs = buffer.getWindow(100, currentFrame);
-                for (let j = i; j >= 0; j--) {
-                    if (extendedInputs[j].direction === holdDir) {
-                        holdFramesCount++;
-                    } else {
-                        break;
-                    }
-                }
-                if (holdFramesCount >= 45) {
-                    seqIndex--;
-                } else {
-                    return false;
-                }
-            } else {
-                const expectedDir = this.mapDirection(seqItem, facingLeft);
-                if (input.direction === expectedDir || this.isFuzzyMatch(input.direction, expectedDir)) {
-                    seqIndex--;
-                }
-            }
-        }
-        
-        return seqIndex < 0;
+        return sequenceIndex < 0;
     }
 
     private static mapDirection(dir: string, facingLeft: boolean): string {

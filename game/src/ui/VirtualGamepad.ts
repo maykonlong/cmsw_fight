@@ -75,6 +75,7 @@ export class VirtualGamepad {
         };
         
         btn.on('pointerup', pointerUp);
+        btn.on('pointerupoutside', pointerUp);
         btn.on('pointerout', pointerUp);
     }
 
