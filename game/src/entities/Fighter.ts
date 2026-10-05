@@ -184,12 +184,12 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     private applyVisualSize() {
-        // Poses largas precisam de canvas mais largo, não de um corpo menor.
-        // A altura e a escala dos pixels permanecem constantes entre quadros.
-        const displayWidth = this.width >= 400
-            ? this.width * (Fighter.DISPLAY_HEIGHT / this.height)
-            : Fighter.DISPLAY_WIDTH;
-        this.setDisplaySize(displayWidth, Fighter.DISPLAY_HEIGHT);
+        // Mantém a proporção de aspecto exata da textura (aspectRatio) para evitar distorção visual
+        const targetHeight = Fighter.DISPLAY_HEIGHT; // 340
+        const aspectRatio = (this.width > 0 && this.height > 0) ? (this.width / this.height) : (180 / 340);
+        const targetWidth = Math.round(targetHeight * aspectRatio);
+        this.setDisplaySize(targetWidth, targetHeight);
+
         const body = this.body as Phaser.Physics.Arcade.Body;
         const bodyWidth = 88 / this.scaleX;
         const bodyHeight = 306 / this.scaleY;
@@ -713,14 +713,12 @@ class BlockState extends State {
 class SpecialState extends State {
     private duration = 0;
     private fired = false;
-    private cmd: string = '';
 
-    enter(f: Fighter, cmd: string = '236P') {
+    enter(f: Fighter, _cmd: string = '236P') {
         f.setPoseTexture('special');
         f.setVelocityX(0);
         this.duration = 45;
         this.fired = false;
-        this.cmd = cmd;
         f.currentHitbox.active = false;
         f.setTint(f.characterId.includes('vini') ? 0x66ccff : 0xff77dd);
     }
@@ -728,27 +726,11 @@ class SpecialState extends State {
     execute(f: Fighter) {
         this.duration--;
 
-        if (!this.fired && this.duration === 42) {
+        if (!this.fired && this.duration <= 43) {
             this.fired = true;
             f.setPoseTexture('special_2');
-            if (this.cmd === '623P') {
-                f.setVelocityY(-600);
-                f.currentHitbox.setTo(0, 0, 110, 145);
-                f.currentHitbox.offsetX = 15;
-                f.currentHitbox.offsetY = -110;
-                f.currentHitbox.damage = 110;
-                f.currentHitbox.knockback = 280;
-                f.currentHitbox.hitstun = 28;
-                f.currentHitbox.blockstun = 18;
-                f.currentHitbox.hitLevel = 'HIGH';
-                f.currentHitbox.hitType = 'special';
-                f.currentHitbox.active = true;
-            } else {
-                f.emit('fire_special', f);
-            }
+            f.emit('fire_special', f);
         }
-
-        if (this.cmd === '623P' && this.duration === 18) f.currentHitbox.active = false;
 
         if (this.duration <= 0) {
             f.clearTint();
