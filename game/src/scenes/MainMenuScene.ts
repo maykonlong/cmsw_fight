@@ -73,7 +73,7 @@ export class MainMenuScene extends Phaser.Scene {
         btmLine.fillRect(0, height - 6, width, 6);
 
         // Título principal
-        const title = ArcadeTheme.title(this, 'C&M FIGHT', width / 2, 140, 82);
+        const title = ArcadeTheme.title(this, 'CMSW', width / 2, 120, 92);
 
         this.tweens.add({
             targets: title,
@@ -85,7 +85,16 @@ export class MainMenuScene extends Phaser.Scene {
             ease: 'Sine.easeInOut'
         });
 
-        this.add.text(width / 2, 230, '— SELECIONE —', {
+        this.add.text(width / 2, 185, 'COMBAT MARTIAL SOUL WARRIORS', {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '22px',
+            color: '#ffd429',
+            stroke: '#d52821',
+            strokeThickness: 4,
+            letterSpacing: 3,
+        }).setOrigin(0.5);
+
+        this.add.text(width / 2, 235, '— SELECIONE —', {
             fontFamily: 'Arial',
             fontSize: '18px',
             color: '#ff8800',

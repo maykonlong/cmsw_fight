@@ -1,4 +1,4 @@
-# Status Geral do Projeto: CMSW Fight 🥊
+# Status Geral do Projeto: CMSW — Combat Martial Soul Warriors 🥊
 
 *Documento de transição (Handover) - Mantido atualizado para sincronização entre máquinas.*
 

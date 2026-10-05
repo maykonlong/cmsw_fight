@@ -27,7 +27,7 @@ export class ArcadeTheme {
         g.fillStyle(ARCADE.yellow, 1);
         g.fillRect(0, 7, width, 3);
         g.fillRect(0, height - 10, width, 3);
-        scene.add.text(24, 18, 'C&M SOFTWARE // WORLD WARRIORS', {
+        scene.add.text(24, 18, 'CMSW // COMBAT MARTIAL SOUL WARRIORS', {
             fontFamily: 'monospace', fontSize: '12px', color: '#8ea6d9', letterSpacing: 2,
         }).setDepth(-90);
         scene.add.text(width - 24, height - 28, 'INSERT COIN  •  1P / 2P', {

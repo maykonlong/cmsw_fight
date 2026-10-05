@@ -1,0 +1,97 @@
+26 de septiembre
+Request
+
+Header
+{
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-Channel": "MB",
+    "X-RqUID": "1790442205735",
+    "traceparent": "00-cd30df514e833f691f437a97d448bb7d-b87d09cb09e149e0-01",
+    "elastic-apm-traceparent": "00-cd30df514e833f691f437a97d448bb7d-b87d09cb09e149e0-01",
+    "tracestate": "es=s:1",
+    "User-Agent": "Java/11.0.9",
+    "Host": "dp.goupayments.com:5072",
+    "Content-Length": "711",
+    "Via": "1.1 AwAAAHSYEHc-",
+    "X-Client-IP": "10.155.129.106",
+    "X-Global-Transaction-ID": "1cd6e0586ab7fae0dc0b11af",
+    "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ4TFJLZjZYMWpNN0VIeDBQVzVKYk54UXJZamtSOUp5OHFyUzNua2RpMGhVIn0.eyJleHAiOjE3OTA0NDI1MDgsImlhdCI6MTc5MDQ0MjIwOCwianRpIjoib25ydHJvOjc5NjI4NzUyLWM4M2EtNWU1Zi1mMThiLWFhZTMyNGYxNGY3MCIsImlzcyI6Imh0dHBzOi8vYXV0aC1wcmQtY29sLmNtc3cuY29tL3JlYWxtcy9pbnZvaWNlXzg2MDAzNTgyNyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIwYjZiZTlmMC03YjFiLTQxNmYtYWIwNy0yMDJjODM2MjYxMmQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb3JuZXItbmV4dGpzLWludm9pY2UiLCJzaWQiOiJrWUZNSFR1bXh3cmNvcG1YUEZyTXRESVgiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vYXZ2aWxsYXMtY29ybmVyLWludm9pY2UtcHJkLWNvbC5jbXN3LmNvbSJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiaW5zdGl0dXRpb24iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiZGVmYXVsdC1yb2xlcy1pbnZvaWNlXzg2MDAzNTgyNyJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIGVtYWlsIHByb2ZpbGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJVc3VhcmlvIGRlIGludGVncmFjaW9uIElOVk9JQ0UgLSBCQVZWIC0iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJpbnRlZ3JhYmF2diIsImdpdmVuX25hbWUiOiJVc3VhcmlvIGRlIGludGVncmFjaW9uIElOVk9JQ0UgLSBCQVZWIiwiZmFtaWx5X25hbWUiOiItIiwiZW1haWwiOiJjaHVlcnRhc0Bnb3VwYXltZW50cy5jb20ifQ.hhhfEJ08rERgP9tlXOvUxaQiaqhzloeD8JLPA2ruMG_8Yd9-q1MYa-BhjSs9AfuYBIp0AnTIixOaMAnMjSOIRGTMYGUzh6WGU6mTMbeUcdMBU14MuGmSgk4ZETQ-WykmYUwhQ-rTcf8nGGpYtVEYvyl72AbmhLlSSOsKjTYNztuQ2-s3u0bNjnbGGIsOAlZy_VD48MPufsvj3nFRLtFQZVmfyHmBfpvCqa0YQBeeGChteY_rA38XSv6WXNg7kaKTXFiKlyZ9LIgoxU0a_wOOdmHcpoEjkbdLCzaa_yNY8rjpcKjlgjYjb2DqIge-kuxjg7j4dyuvzXww5BYqAhNTtA"
+}
+
+Body
+{
+    "invoice_external_id": "4103",
+    "assignor_uuid": "20040",
+    "wallet_uuid": "95d8e5c0-ec11-43ad-8470-3ab322d1630d",
+    "due_date": "2026-09-27",
+    "billing_amount": "478280.00",
+    "billing_currency": "COP",
+    "request_expiration_date": "2026-09-27",
+    "qr_code_channel": "ECOMM",
+    "iva_information": {
+        "base": "0.00",
+        "percentage": "0.00",
+        "condition": "03"
+    },
+    "inc_information": {
+        "percentage": "0.00",
+        "condition": "03"
+    },
+    "additional_merchant_information": {
+        "terminal_label": "00017290",
+        "transaction_porpose": "05"
+    },
+    "transaction_amount": "478280.00",
+    "merchant_category_code": "5411",
+    "wallet_type": "simple",
+    "qr_type": "DYNAMIC"
+}
+
+Response
+
+Header
+{
+    "Server": "nginx",
+    "Date": "Sat, 26 Sep 2026 17:03:28 GMT",
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Expose-Headers": "X-Request-ID,X-Correlation-ID",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss://avvillas-corner-prd-col.cmsw.com https://avvillas-corner-prd-col.cmsw.com; frame-ancestors 'none',default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:;frame-ancestors 'self';img-src 'self' data: https: ;connect-src 'self' data: https: ; font-src 'self' https://fonts.gstatic.com https://www.gstatic.com ;frame-src * blob:; base-uri 'self'; worker-src 'self' blob:;",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=(),geolocation=(),midi=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()",
+    "Referrer-Policy": "strict-origin-when-cross-origin,strict-origin",
+    "Vary": "Origin",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY,ALLOW-FROM cmsw.com",
+    "X-Xss-Protection": "1; mode=block,1; mode=block",
+    "Set-Cookie": "Path=/; HttpOnly; Secure",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+    "X-Global-Transaction-ID": "1cd6e0586ab7fae0dc0b11af",
+    "X-ApprovalId": "0",
+    "X-RqUID": "1790442205735"
+}
+
+Body
+{
+    "invoice_uuid": "caa4acde9fa74c948910139354bebcff",
+    "invoice_external_id": "4103",
+    "emv": "00020101021291440014CO.COM.GOU.SEC0122QreCtbi2agjVYXmKzemhDW26390014CO.COM.GOU.LLA0417@BVR901409127CrAl49250014CO.COM.GOU.RED0103GOU50300013CO.COM.GOU.CU0109860035827520454115802CO5925Cr Alameda 170 Ph Cr 15 n6011Bogot&#225; D.C.610611111180290016CO.COM.GOU.CANAL0105ECOMM81250015CO.COM.GOU.CIVA01020382260014CO.COM.GOU.IVA01040.0083270015CO.COM.GOU.BASE01040.0084250015CO.COM.GOU.CINC01020385260014CO.COM.GOU.INC01040.0090430016CO.COM.GOU.TRXID0119CINVEUKd3X4NB25Dge5621807080001729008020553031705409478280.0063047484",
+    "qrcode_image": "data:image/png;base64,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",
+    "ts_created": "2026-09-26T12:03:28.552773-05:00",
+    "txid": "CINVEUKd3X4NB25Dge5",
+    "contract_key": "@BVR901409127CrAl",
+    "billing_amount": 47828000,
+    "status": "OPEN",
+    "due_date": "2026-09-27T23:59:59-05:00",
+    "status_history": [
+        {
+            "status": "OPEN",
+            "date_status": "2026-09-26T12:03:28.552782-05:00",
+            "partially_value": null,
+            "origin": "external",
+            "payment_status": null
+        }
+    ]
+}

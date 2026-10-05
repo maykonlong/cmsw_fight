@@ -1,4 +1,4 @@
-# Guia de Criação de Personagens (CMSW Fight)
+# Guia de Criação de Personagens (CMSW — Combat Martial Soul Warriors)
 
 Este guia define o fluxo para adicionar novos lutadores ao jogo. A arquitetura foi desenvolvida para ser totalmente orientada a dados (Data-Driven), ou seja, a criação de um personagem não exige programação avançada, apenas a inserção de imagens (Sprites) e a definição de um arquivo JSON.
 

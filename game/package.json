@@ -1,5 +1,6 @@
 {
-  "name": "game",
+  "name": "cmsw-combat-martial-soul-warriors",
+  "description": "CMSW — Combat Martial Soul Warriors",
   "private": true,
   "version": "0.0.0",
   "type": "module",
