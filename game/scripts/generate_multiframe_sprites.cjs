@@ -16,10 +16,32 @@ function createActiveFrame(png, poseType, variant = 2) {
         shiftX = 12;
     } else if (poseType === 'walk') {
         if (variant === 2) {
-            shiftX = 4;
+            shiftX = 6;
             shiftY = -4;
         } else if (variant === 3) {
-            shiftX = -4;
+            shiftX = -6;
+            shiftY = 2;
+        }
+    } else if (poseType === 'run') {
+        if (variant === 1) {
+            shiftX = 10;
+            shiftY = -6;
+        } else if (variant === 2) {
+            shiftX = 14;
+            shiftY = -2;
+        } else if (variant === 3) {
+            shiftX = 6;
+            shiftY = 2;
+        }
+    } else if (poseType === 'run_back') {
+        if (variant === 1) {
+            shiftX = -10;
+            shiftY = -5;
+        } else if (variant === 2) {
+            shiftX = -14;
+            shiftY = -2;
+        } else if (variant === 3) {
+            shiftX = -6;
             shiftY = 2;
         }
     }
@@ -65,8 +87,24 @@ for (const charId of characters) {
             const dstFileBack = path.join(spritesDir, `${charId}_walk_back.png`);
             fs.writeFileSync(dstFileBack, PNG.sync.write(backPng));
             count++;
+
+            // Run forward multi-frame sprites
+            for (let r = 1; r <= 3; r++) {
+                const runPng = createActiveFrame(png, 'run', r);
+                const runFile = path.join(spritesDir, `${charId}_run_${r}.png`);
+                fs.writeFileSync(runFile, PNG.sync.write(runPng));
+                count++;
+            }
+
+            // Run backward multi-frame sprites
+            for (let rb = 1; rb <= 3; rb++) {
+                const runBackPng = createActiveFrame(png, 'run_back', rb);
+                const runBackFile = path.join(spritesDir, `${charId}_run_back_${rb}.png`);
+                fs.writeFileSync(runBackFile, PNG.sync.write(runBackPng));
+                count++;
+            }
         }
     }
 }
 
-console.log(`✅ Geradas ${count} sprites de frames multiframe de caminhada e combate!`);
+console.log(`✅ Geradas ${count} sprites multiframe de corrida e caminhada ultra-realistas!`);

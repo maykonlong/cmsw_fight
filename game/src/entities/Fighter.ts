@@ -422,11 +422,14 @@ class WalkState extends State {
 // ─────────────────────────────────────────────────────────────────
 // RUN (Corrida) & BACKDASH (Esquiva para trás)
 // ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// RUN (Corrida para Frente) & BACKDASH (Corrida / Recuo para Trás)
+// ─────────────────────────────────────────────────────────────────
 class RunState extends State {
     private runTimer = 0;
     enter(f: Fighter) {
         this.runTimer = 0;
-        f.setPoseTexture('walk');
+        f.setPoseTexture('run_1');
         AudioManager.getInstance().playSFX('swing', 0.2);
     }
 
@@ -435,20 +438,27 @@ class RunState extends State {
         const inp = f.inputManager;
         this.runTimer++;
 
-        if (this.runTimer % 10 < 5) {
-            f.setPoseTexture('walk_2');
-        } else {
-            f.setPoseTexture('walk');
-        }
-
         const isFacingLeft = f.flipX;
         const moveDir = isFacingLeft ? -1 : 1;
-        const runSpeed = f.speed * 1.85; // 460px/s velocissima corrida
+        const runSpeed = f.speed * 1.95; // 490px/s velocíssima corrida para frente
 
         const holdForward = isFacingLeft ? inp.isLeftDown : inp.isRightDown;
         if (!holdForward) {
             this.stateMachine.transition('idle');
             return;
+        }
+
+        // Inclinação realista do corpo para frente durante a arrancada
+        f.setAngle(isFacingLeft ? -6 : 6);
+
+        // Ciclo rápido de passadas em corrida (run_1 -> run_2 -> run_3)
+        const cycle = Math.floor((this.runTimer % 12) / 4);
+        if (cycle === 0) f.setPoseTexture('run_1');
+        else if (cycle === 1) f.setPoseTexture('run_2');
+        else f.setPoseTexture('run_3');
+
+        if (this.runTimer % 10 === 0) {
+            AudioManager.getInstance().playSFX('swing', 0.15);
         }
 
         f.setVelocityX(runSpeed * moveDir);
@@ -463,25 +473,57 @@ class RunState extends State {
         if (inp.isMKJustPressed) { this.stateMachine.transition('stand_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('stand_HK'); return; }
     }
+
+    exit(f: Fighter) {
+        f.setAngle(0);
+    }
 }
 
 class BackdashState extends State {
-    private duration = 0;
+    private runTimer = 0;
     enter(f: Fighter) {
-        this.duration = 14;
-        f.setPoseTexture('jump_1');
-        const isFacingLeft = f.flipX;
-        const backDir = isFacingLeft ? 1 : -1;
-        f.setVelocityX(380 * backDir);
-        f.setVelocityY(-160);
+        this.runTimer = 0;
+        f.setPoseTexture('run_back_1');
         AudioManager.getInstance().playSFX('swing', 0.25);
     }
 
     execute(f: Fighter) {
-        this.duration--;
-        if (this.duration <= 0 || f.isOnGround()) {
-            this.stateMachine.transition('idle');
+        if (!f.inputManager) return;
+        const inp = f.inputManager;
+        this.runTimer++;
+
+        const isFacingLeft = f.flipX;
+        const backDir = isFacingLeft ? 1 : -1;
+        const backRunSpeed = f.speed * 1.7; // 425px/s recuo veloz para trás
+
+        // Inclinação realista do corpo para trás durante o recuo
+        f.setAngle(isFacingLeft ? 6 : -6);
+
+        // Ciclo rápido de passadas para trás (run_back_1 -> run_back_2 -> run_back_3)
+        const cycle = Math.floor((this.runTimer % 12) / 4);
+        if (cycle === 0) f.setPoseTexture('run_back_1');
+        else if (cycle === 1) f.setPoseTexture('run_back_2');
+        else f.setPoseTexture('run_back_3');
+
+        if (this.runTimer % 10 === 0) {
+            AudioManager.getInstance().playSFX('swing', 0.15);
         }
+
+        f.setVelocityX(backRunSpeed * backDir);
+
+        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
+        if (!holdBack && this.runTimer > 12) {
+            this.stateMachine.transition('idle');
+            return;
+        }
+
+        if (inp.isUpJustPressed && f.isOnGround()) {
+            this.stateMachine.transition('jump'); return;
+        }
+    }
+
+    exit(f: Fighter) {
+        f.setAngle(0);
     }
 }
 

@@ -65,7 +65,8 @@ export class CombatScene extends Phaser.Scene {
 
     preload() {
         const poses = [
-            'idle', 'idle_2', 'walk', 'walk_2',
+            'idle', 'idle_2', 'walk', 'walk_2', 'walk_3', 'walk_back',
+            'run_1', 'run_2', 'run_3', 'run_back_1', 'run_back_2', 'run_back_3',
             'jump', 'jump_1', 'jump_2', 'jump_3',
             'air_punch', 'air_punch_2', 'air_kick', 'air_kick_2',
             'air_kick_up', 'air_kick_up_2', 'air_kick_diag', 'air_kick_diag_2',
