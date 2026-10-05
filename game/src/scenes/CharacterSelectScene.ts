@@ -317,21 +317,78 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     private checkBothConfirmed() {
-        const bothDone = this.p1Confirmed && (this.mode === '1p' || this.p2Confirmed);
+        const bothDone = this.p1Confirmed && (this.mode === '1p' || this.mode === 'training' || this.p2Confirmed);
         if (bothDone) {
             this.removeListeners();
-            this.time.delayedCall(400, () => {
-                this.cameras.main.fadeOut(300, 0, 0, 0);
-                this.time.delayedCall(320, () => {
-                    this.scene.start('VsScene', {
-                        p1: CHARACTERS[this.p1Index].key,
-                        p2: CHARACTERS[this.p2Index].key,
-                        p1Name: CHARACTERS[this.p1Index].name,
-                        p2Name: CHARACTERS[this.p2Index].name,
-                        mode: this.mode,
-                    });
+            if (this.mode === 'training') {
+                this.showStageSelectOverlay();
+            } else {
+                this.startVsWithStage();
+            }
+        }
+    }
+
+    private startVsWithStage(stageKey?: string) {
+        this.time.delayedCall(400, () => {
+            this.cameras.main.fadeOut(300, 0, 0, 0);
+            this.time.delayedCall(320, () => {
+                this.scene.start('VsScene', {
+                    p1: CHARACTERS[this.p1Index].key,
+                    p2: CHARACTERS[this.p2Index].key,
+                    p1Name: CHARACTERS[this.p1Index].name,
+                    p2Name: CHARACTERS[this.p2Index].name,
+                    mode: this.mode,
+                    stage: stageKey
                 });
             });
-        }
+        });
+    }
+
+    private showStageSelectOverlay() {
+        const { width, height } = this.scale;
+        const container = this.add.container(0, 0).setDepth(3000);
+        const bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.85).setOrigin(0, 0);
+        container.add(bg);
+
+        const panel = this.add.graphics();
+        panel.fillStyle(0x0a0f2d, 0.95);
+        panel.fillRect(width / 2 - 320, height / 2 - 200, 640, 400);
+        panel.lineStyle(4, 0xffd700, 1);
+        panel.strokeRect(width / 2 - 320, height / 2 - 200, 640, 400);
+        container.add(panel);
+
+        const title = this.add.text(width / 2, height / 2 - 150, 'SELECIONE O CENÁRIO DE TREINO', {
+            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontSize: '28px',
+            color: '#ffe34d',
+            stroke: '#000000',
+            strokeThickness: 5
+        }).setOrigin(0.5);
+        container.add(title);
+
+        const stages = [
+            { key: 'kevin_bathroom', label: '🛁 BANHEIRO ARCO-ÍRIS (KEVIN)' },
+            { key: 'vini_tabacaria', label: '💨 TABACARIA & HOOKAH (VINI)' },
+            { key: 'cmsw_hq', label: '🏢 C&M SOFTWARE HQ' }
+        ];
+
+        stages.forEach((stg, i) => {
+            const btn = this.add.text(width / 2, height / 2 - 40 + i * 65, stg.label, {
+                fontFamily: 'Impact, Arial Black',
+                fontSize: '24px',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 4,
+                padding: { x: 15, y: 8 }
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            btn.on('pointerover', () => btn.setColor('#ffe34d'));
+            btn.on('pointerout', () => btn.setColor('#ffffff'));
+            btn.on('pointerdown', () => {
+                container.destroy();
+                this.startVsWithStage(stg.key);
+            });
+            container.add(btn);
+        });
     }
 }

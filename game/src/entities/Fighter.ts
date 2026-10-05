@@ -129,6 +129,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             
             // Especial
             special:     new SpecialState(),
+            air_special: new AirSpecialState(),
         }, [this]);
         this.applyVisualSize();
     }
@@ -453,13 +454,59 @@ class JumpState extends State {
         if (!f.inputManager || f.airAttackUsed) return;
         const inp = f.inputManager;
 
-        // Aerial attacks
+        // Especial no ar (Pular + Magia Especial)
+        if (inp.isSpecialJustPressed || f.bufferedSpecialFrames > 0) {
+            f.bufferedSpecialFrames = 0;
+            this.stateMachine.transition('air_special');
+            return;
+        }
+
+        // Aerial attacks (voadoras)
         if (inp.isLPJustPressed) { this.stateMachine.transition('air_LP'); return; }
         if (inp.isMPJustPressed) { this.stateMachine.transition('air_MP'); return; }
         if (inp.isHPJustPressed) { this.stateMachine.transition('air_HP'); return; }
         if (inp.isLKJustPressed) { this.stateMachine.transition('air_LK'); return; }
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
+    }
+}
+
+class AirSpecialState extends State {
+    private duration = 0;
+    private fired = false;
+
+    enter(f: Fighter) {
+        f.airAttackUsed = true;
+        f.setPoseTexture('special');
+        this.duration = 35;
+        this.fired = false;
+        f.currentHitbox.active = false;
+        f.setTint(f.characterId.includes('vini') ? 0x66ccff : 0xff77dd);
+    }
+
+    execute(f: Fighter) {
+        this.duration--;
+
+        if (!this.fired && this.duration <= 33) {
+            this.fired = true;
+            f.setPoseTexture('special_2');
+            f.emit('fire_special', f);
+        }
+
+        if (f.isOnGround()) {
+            f.clearTint();
+            this.stateMachine.transition('land');
+            return;
+        }
+
+        if (this.duration <= 0) {
+            f.clearTint();
+            this.stateMachine.transition('jump', true);
+        }
+    }
+
+    exit(f: Fighter) {
+        f.clearTint();
     }
 }
 

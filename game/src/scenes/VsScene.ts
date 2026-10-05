@@ -110,11 +110,15 @@ export class VsScene extends Phaser.Scene {
             this.cameras.main.flash(200, 255, 255, 255);
         });
 
-        // Vai para o combate
+        // Vai para o combate ou treino
         this.time.delayedCall(2200, () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
             this.time.delayedCall(420, () => {
-                this.scene.start('CombatScene', this.data_);
+                if (this.data_.mode === 'training') {
+                    this.scene.start('TrainingScene', this.data_);
+                } else {
+                    this.scene.start('CombatScene', this.data_);
+                }
             });
         });
     }

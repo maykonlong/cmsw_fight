@@ -240,7 +240,7 @@ export class CombatScene extends Phaser.Scene {
         // A caixa Arcade é alta para os socos, mas projéteis baixos passam sob
         // um lutador que já ganhou altura suficiente no salto.
         const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
-        if (target.y < groundCenterY - 75 && proj.y > target.y + 85) return;
+        if (!target.isOnGround() || target.y < groundCenterY - 40) return;
         proj.hitActive = false;
         if (target.isBlocking) {
             target.hp = Math.max(0, target.hp - 4);
