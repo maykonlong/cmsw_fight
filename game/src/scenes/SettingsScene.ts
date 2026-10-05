@@ -60,7 +60,6 @@ export class SettingsScene extends Phaser.Scene {
             };
 
             item.on('pointerdown', handlePointer);
-            item.on('pointerup', handlePointer);
 
             item.on('pointerover', () => {
                 this.selectedIndex = i;

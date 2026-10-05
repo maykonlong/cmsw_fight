@@ -21,6 +21,7 @@ export class CPUController implements IInputProvider {
     private _throwJust = false;
 
     private reactionDelay = 20;
+    private attackCooldown = 80;
     private timer = 0;
     private actionCooldown = 0;
     public buffer = new InputBuffer();
@@ -29,6 +30,9 @@ export class CPUController implements IInputProvider {
     constructor(me: Fighter, target: Fighter) {
         this.me = me;
         this.target = target;
+        const difficulty = Number(localStorage.getItem('cmsw_diff') ?? 1);
+        this.reactionDelay = difficulty === 0 ? 36 : difficulty === 2 ? 16 : 28;
+        this.attackCooldown = difficulty === 0 ? 112 : difficulty === 2 ? 50 : 80;
     }
 
     // ═══ IInputProvider Getters ═══
@@ -89,12 +93,17 @@ export class CPUController implements IInputProvider {
 
         // 3. Ataque normal (perto)
         if (distanceX >= 50 && distanceX < 130) {
+            if (Math.random() < (this.reactionDelay === 16 ? 0.12 : 0.28)) {
+                this.stopMoving();
+                this.actionCooldown = 22;
+                return;
+            }
             const r = Math.random();
             if (r < 0.25) this._lpJust = true;
             else if (r < 0.45) this._mkJust = true;
             else if (r < 0.65) this._hpJust = true;
             else this._hkJust = true;
-            this.actionCooldown = 48;
+            this.actionCooldown = this.attackCooldown;
             return;
         }
 

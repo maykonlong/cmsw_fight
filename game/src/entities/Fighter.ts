@@ -33,6 +33,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
     public throwRange: number = 60;
     public characterId: string;
+    public bufferedSpecialFrames: number = 0;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: IInputProvider) {
         super(scene, x, y, texture);
@@ -104,6 +105,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
+        // Um toque durante outro golpe continua válido por uma janela curta.
+        if (this.inputManager?.isSpecialJustPressed) this.bufferedSpecialFrames = 18;
+        else if (this.bufferedSpecialFrames > 0) this.bufferedSpecialFrames--;
         this.stateMachine.step();
         
         // Atualiza a posição das boxes em relação ao personagem e se ele tá virado
@@ -144,7 +148,6 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
-        if (this.isHit) return;
         this.hp -= amount;
         if (this.hp < 0) this.hp = 0;
         const dir = this.x < fromX ? -1 : 1;
@@ -171,7 +174,7 @@ class IdleState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
         if (inp.isUpJustPressed && isGrounded) {
@@ -219,7 +222,7 @@ class WalkState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
         if (inp.isUpJustPressed && isGrounded) {
@@ -331,7 +334,7 @@ class CrouchState extends State {
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (inp.isSpecialJustPressed) { this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
         if (!inp.isDownDown) {
             this.stateMachine.transition('idle'); return;
@@ -409,6 +412,13 @@ class AttackState extends State {
                     return;
                 }
             }
+        }
+
+        if (f.bufferedSpecialFrames > 0 && this.duration > this.moveData.startup + this.moveData.active) {
+            f.bufferedSpecialFrames = 0;
+            f.currentHitbox.active = false;
+            this.stateMachine.transition('special', f.getDefaultSpecialCommand());
+            return;
         }
 
         // Transition out
@@ -672,9 +682,11 @@ class KOState extends State {
     enter(f: Fighter) {
         f.setPoseTexture('ko');
         f.setVelocityX(0);
+        f.setVelocityY(0);
         f.isHit = true;
-        f.setTint(0xff0000);
-        f.setAngle(90);
+        f.currentHitbox.active = false;
+        f.clearTint();
+        f.setAngle(0);
     }
 }
 
@@ -682,17 +694,8 @@ class WinState extends State {
     enter(f: Fighter) {
         f.setVelocityX(0);
         f.clearTint();
-        if (f.texture.key.includes('vini')) {
-            f.setPoseTexture('win');
-        } else {
-            f.setPoseTexture('idle');
-            // Surge Banheiro Portátil no cenário de vitória do Kevin
-            if (f.scene.textures.exists('banheiro_portatil')) {
-                const toilet = f.scene.add.image(f.x + 80, f.y - 20, 'banheiro_portatil').setDepth(150);
-                toilet.setDisplaySize(140, 220);
-            }
-        }
-        f.setVelocityY(-300);
+        f.setPoseTexture('win');
+        f.setVelocityY(0);
     }
 
     execute(f: Fighter) {

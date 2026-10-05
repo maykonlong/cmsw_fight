@@ -4,7 +4,6 @@ import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
 export class VictoryScene extends Phaser.Scene {
     private winnerId!: string;
-    private loserId!: string;
     private p1Wins!: number;
     private p2Wins!: number;
     private mode: string = '1p';
@@ -15,7 +14,6 @@ export class VictoryScene extends Phaser.Scene {
 
     init(data: { winner: string, loser: string, p1Wins: number, p2Wins: number, mode?: string }) {
         this.winnerId = data.winner || 'kevin';
-        this.loserId = data.loser || 'vini_dog';
         this.p1Wins = data.p1Wins || 0;
         this.p2Wins = data.p2Wins || 0;
         this.mode = data.mode || '1p';
@@ -38,7 +36,7 @@ export class VictoryScene extends Phaser.Scene {
         }
 
         // Título
-        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'YOU WIN!', width / 2, 80, 70);
+        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'VITÓRIA!', width / 2, 80, 70);
 
         // Stats Box
         const statsBg = this.add.graphics();
@@ -47,20 +45,22 @@ export class VictoryScene extends Phaser.Scene {
         statsBg.lineStyle(3, ARCADE.yellow, 1);
         statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
 
-        this.add.text(width / 2, height - 220, `VENCEDOR: ${this.winnerId.toUpperCase()}  |  ADVERSÁRIO: ${this.loserId.toUpperCase()}`, {
+        this.add.text(width / 2, height - 220, this.winnerId === 'kevin' ? 'KEVIN MANJA É O CAMPEÃO' : 'VINI DOG É O CAMPEÃO', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '20px',
-            color: '#ffffff'
+            fontSize: '26px',
+            color: '#ffe279',
+            stroke: '#af2231',
+            strokeThickness: 3,
         }).setOrigin(0.5);
 
-        this.add.text(width / 2, height - 180, `P1 WINS: ${this.p1Wins}  |  P2 WINS: ${this.p2Wins}`, {
+        this.add.text(width / 2, height - 180, `RODADAS  ${this.p1Wins}  ×  ${this.p2Wins}`, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '18px',
+            fontSize: '24px',
             color: '#dddddd'
         }).setOrigin(0.5);
 
         // Botões
-        const playAgainBtn = this.add.text(width / 2 - 150, height - 80, 'REMATCH', {
+        const playAgainBtn = this.add.text(width / 2 - 150, height - 80, 'REVANCHE', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '24px',
             color: '#ffffff',
@@ -72,7 +72,7 @@ export class VictoryScene extends Phaser.Scene {
             this.scene.start('CharacterSelectScene', { mode: this.mode });
         });
 
-        const menuBtn = this.add.text(width / 2 + 150, height - 80, 'MAIN MENU', {
+        const menuBtn = this.add.text(width / 2 + 150, height - 80, 'MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '24px',
             color: '#ffffff',

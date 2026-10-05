@@ -24,7 +24,6 @@ export class HUD {
     // State
     private p1DamageHp: number;
     private p2DamageHp: number;
-    private maxHp: number = 1000;
     private barWidth: number = 440;
     private barHeight: number = 30;
 
@@ -34,7 +33,6 @@ export class HUD {
         this.p2 = p2;
         this.p1DamageHp = p1.hp;
         this.p2DamageHp = p2.hp;
-        this.maxHp = p1.maxHp;
 
         this.createHUD();
     }
@@ -116,6 +114,8 @@ export class HUD {
     }
 
     public setWins(p1Wins: number, p2Wins: number) {
+        this.p1DamageHp = this.p1.hp;
+        this.p2DamageHp = this.p2.hp;
         for (let i = 0; i < 2; i++) {
             this.p1WinIcons[i].setText(i < p1Wins ? '★' : '☆');
             this.p2WinIcons[i].setText(i < p2Wins ? '★' : '☆');
@@ -160,21 +160,21 @@ export class HUD {
         // P1
         this.p1DamageBar.clear();
         this.p1DamageBar.fillStyle(0xffff00, 1);
-        this.p1DamageBar.fillRect(50, 40, (this.p1DamageHp / this.maxHp) * this.barWidth, this.barHeight);
+        this.p1DamageBar.fillRect(50, 40, (this.p1DamageHp / this.p1.maxHp) * this.barWidth, this.barHeight);
 
         this.p1HpBar.clear();
-        const p1Percent = this.p1.hp / this.maxHp;
+        const p1Percent = this.p1.hp / this.p1.maxHp;
         this.p1HpBar.fillStyle(this.getBarColor(p1Percent), 1);
         this.p1HpBar.fillRect(50, 40, p1Percent * this.barWidth, this.barHeight);
 
         // P2 (Grows from right to left, so X is shifted)
         this.p2DamageBar.clear();
         this.p2DamageBar.fillStyle(0xffff00, 1);
-        const p2DamW = (this.p2DamageHp / this.maxHp) * this.barWidth;
+        const p2DamW = (this.p2DamageHp / this.p2.maxHp) * this.barWidth;
         this.p2DamageBar.fillRect(width - 50 - p2DamW, 40, p2DamW, this.barHeight);
 
         this.p2HpBar.clear();
-        const p2Percent = this.p2.hp / this.maxHp;
+        const p2Percent = this.p2.hp / this.p2.maxHp;
         const p2W = p2Percent * this.barWidth;
         this.p2HpBar.fillStyle(this.getBarColor(p2Percent), 1);
         this.p2HpBar.fillRect(width - 50 - p2W, 40, p2W, this.barHeight);

@@ -10,26 +10,13 @@ export class TrainingScene extends CombatScene {
     }
 
     init(data: any) {
-        super.init(data);
-        // We'll replace the key via plugin or just have this class registered as 'TrainingScene'
+        super.init({ ...data, mode: 'training' });
     }
 
     create() {
         super.create();
 
-        // Remove match manager round start
-        // Accessing private/protected fields is tricky in TS if they are private.
-        // I will use `(this as any)` to hack around it since we are extending a scene with private fields.
         const anyThis = this as any;
-        
-        // Remove match manager logic (dummy it)
-        if (anyThis.matchManager) {
-            anyThis.matchManager.isMatchActive = () => true;
-            anyThis.matchManager.checkWinCondition = () => {}; // Never win
-        }
-
-        // Make enemy dummy (remove CPUController)
-        anyThis.enemy.inputManager = undefined; // No input
 
         // Setup debug UI
         this.debugText = this.add.text(10, 100, '', {
@@ -42,15 +29,21 @@ export class TrainingScene extends CombatScene {
         this.hitboxGraphics = this.add.graphics().setDepth(999);
 
         // Keys
-        this.input.keyboard?.on('keydown-R', () => {
+        const onReset = () => {
             anyThis.player.setPosition(280, anyThis.player.y);
             anyThis.enemy.setPosition(this.scale.width - 280, anyThis.enemy.y);
             anyThis.player.hp = anyThis.player.maxHp;
             anyThis.enemy.hp = anyThis.enemy.maxHp;
-        });
+        };
 
-        this.input.keyboard?.on('keydown-H', () => {
+        const onHitboxes = () => {
             this.showHitboxes = !this.showHitboxes;
+        };
+        this.input.keyboard?.on('keydown-R', onReset);
+        this.input.keyboard?.on('keydown-H', onHitboxes);
+        this.events.once('shutdown', () => {
+            this.input.keyboard?.off('keydown-R', onReset);
+            this.input.keyboard?.off('keydown-H', onHitboxes);
         });
     }
 

@@ -93,7 +93,6 @@ export class CharacterSelectScene extends Phaser.Scene {
         };
 
         btnBack.on('pointerdown', goBack);
-        btnBack.on('pointerup', goBack);
 
         // Título da tela
         this.add.text(width / 2, 36, 'ESCOLHA SEU LUTADOR', {
@@ -150,7 +149,6 @@ export class CharacterSelectScene extends Phaser.Scene {
                     this.confirmP1();
                 };
                 img.on('pointerdown', handleSelect);
-                img.on('pointerup', handleSelect);
             } else {
                 this.add.text(cx, cy, char.locked ? '?' : char.name[0], {
                     fontFamily: '"Arial Black"',
@@ -173,7 +171,6 @@ export class CharacterSelectScene extends Phaser.Scene {
                     this.confirmP1();
                 };
                 label.on('pointerdown', handleSelect);
-                label.on('pointerup', handleSelect);
             }
         });
 

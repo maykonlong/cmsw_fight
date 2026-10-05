@@ -16,29 +16,32 @@ export class ControlsScene extends Phaser.Scene {
 
         ArcadeTheme.title(this, 'CONTROLES DO JOGO', width / 2, 62, 48);
 
-        const textStyle = { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'left' as const };
-
-        const controlsText = [
-            "  AÇÃO             TECLADO P1               GAMEPAD XBOX     TOUCH MOBILE",
-            "--------------------------------------------------------------------------",
-            "  Movimento        Setas / WASD             D-Pad / LS       D-Pad na Tela",
-            "  Soco Leve (LP)   Z  ou  J                 Botão X          Botão LP",
-            "  Soco Médio (MP)  X  ou  K                 Botão Y          Botão MP",
-            "  Soco Forte (HP)  C  ou  L                 RB (R1)          Botão HP",
-            "  Chute Leve (LK)  V  ou  U                 Botão A          Botão LK",
-            "  Chute Médio (MK) B  ou  I                 Botão B          Botão MK",
-            "  Chute Forte (HK) N  ou  O                 RT (R2)          Botão HK",
-            "  Especial         ESPAÇO  ou  E            LB (L1)          Botão SPEC",
-            "  Agarrão (Throw)  Z+V ou J+U (LP+LK)       X + A Juntos     LP + LK Juntos",
-            "  Pausar           ESC                      Start            Botão Pause",
-            "--------------------------------------------------------------------------",
-            "  DICAS DE LUTA:",
-            "  • Para Defender: Mantenha pressionado TRÁS (← ou A) enquanto o oponente ataca.",
-            "  • Para Agarrar: Chegue bem perto do oponente e pressione Soco Leve + Chute Leve (Z+V).",
-            "  2 JOGADORES: P1 usa Setas + Z/X/C/V/B/N + Espaço; P2 usa WASD + J/K/L/U/I/O + E."
-        ];
-
-        this.add.text(width / 2, 340, controlsText.join('\n'), textStyle).setOrigin(0.5);
+        const heading = { fontFamily: 'Impact, "Arial Black", sans-serif', fontSize: '34px', color: '#ffe270', stroke: '#ab2435', strokeThickness: 4 };
+        const keys = { fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '25px', color: '#f5f2e8', lineSpacing: 10 };
+        this.add.text(140, 150, 'JOGADOR 1', heading);
+        this.add.text(140, 200, [
+            'Mover     SETAS',
+            'Soco      Z  X  C',
+            'Chute     V  B  N',
+            'Beijo     ESPAÇO',
+            'Agarrão   Z + V',
+            'Defesa    SEGURE TRÁS',
+        ].join('\n'), keys);
+        this.add.text(700, 150, 'JOGADOR 2', heading);
+        this.add.text(700, 200, [
+            'Mover     W A S D',
+            'Soco      J  K  L',
+            'Chute     U  I  O',
+            'Cachorro  E',
+            'Agarrão   J + U',
+            'Defesa    SEGURE TRÁS',
+        ].join('\n'), keys);
+        this.add.text(width / 2, 520, 'CONTROLE: DIRECIONAL + X/Y/RB + A/B/RT · ESPECIAL LB', {
+            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '24px', color: '#82dafa'
+        }).setOrigin(0.5);
+        this.add.text(width / 2, 565, 'TOUCH: DIRECIONAL + BOTÕES NA TELA     •     PAUSA: ESC', {
+            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '24px', color: '#82dafa'
+        }).setOrigin(0.5);
 
         const btnBack = this.add.text(width / 2, height - 70, '← VOLTAR AO MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
@@ -55,7 +58,6 @@ export class ControlsScene extends Phaser.Scene {
         };
 
         btnBack.on('pointerdown', goBack);
-        btnBack.on('pointerup', goBack);
         btnBack.on('pointerover', () => btnBack.setScale(1.1));
         btnBack.on('pointerout', () => btnBack.setScale(1.0));
 

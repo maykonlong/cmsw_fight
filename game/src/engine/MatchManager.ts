@@ -49,6 +49,11 @@ export class MatchManager {
         this.hud.setWins(this.p1Wins, this.p2Wins);
         this.hud.update(); // Initial fill
 
+        if (this.mode === 'training') {
+            this.matchActive = true;
+            return;
+        }
+
         const { width, height } = this.scene.scale;
         
         AudioManager.getInstance().playVoice(`round_${this.currentRound}`);
@@ -104,6 +109,7 @@ export class MatchManager {
         fighter.isHit = false;
         fighter.isBlocking = false;
         fighter.currentHitbox.active = false;
+        fighter.bufferedSpecialFrames = 0;
         fighter.currentHurtbox.invincible = false;
         fighter.stateMachine.transition('idle');
     }
@@ -127,7 +133,7 @@ export class MatchManager {
     }
 
     public checkWinCondition() {
-        if (!this.matchActive) return;
+        if (!this.matchActive || this.mode === 'training') return;
 
         if (this.p1.hp <= 0 && this.p2.hp <= 0) {
             this.roundEndSequence('DOUBLE KO');
@@ -172,9 +178,9 @@ export class MatchManager {
         this.matchActive = false;
         if (this.timerEvent) this.timerEvent.remove();
 
-        this.vfx.hitStop(10);
-        this.vfx.cameraShake(0.02);
-        this.vfx.slowMotion(2000);
+        this.vfx.hitStop(8);
+        this.vfx.cameraShake(0.018);
+        this.vfx.screenFlash(110);
 
         if (message === 'K.O.' || message === 'DOUBLE KO') {
             AudioManager.getInstance().playVoice('ko');
@@ -182,22 +188,33 @@ export class MatchManager {
 
         const { width, height } = this.scene.scale;
         
+        const band = this.scene.add.rectangle(width / 2, height / 2, width, 206, 0x10071e, 0.85)
+            .setDepth(199).setAlpha(0);
+        const upperRule = this.scene.add.rectangle(width / 2, height / 2 - 102, width, 5, 0xffce56)
+            .setDepth(200).setAlpha(0);
+        const lowerRule = this.scene.add.rectangle(width / 2, height / 2 + 102, width, 5, 0xffce56)
+            .setDepth(200).setAlpha(0);
         const koText = this.scene.add.text(width / 2, height / 2, message, {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '120px',
-            color: '#ff0000',
-            stroke: '#ffffff',
-            strokeThickness: 10
-        }).setOrigin(0.5).setDepth(200).setAlpha(0);
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: message === 'K.O.' ? '148px' : '94px',
+            fontStyle: 'italic',
+            color: '#fff0a2',
+            stroke: '#bc1c31',
+            strokeThickness: 12,
+            shadow: { offsetX: 7, offsetY: 8, color: '#03020e', blur: 2, fill: true }
+        }).setOrigin(0.5).setDepth(201).setAlpha(0).setScale(0.65);
 
         this.scene.tweens.add({
-            targets: koText,
+            targets: [band, upperRule, lowerRule, koText],
             alpha: 1,
-            scale: 1.2,
-            duration: 1000,
+            duration: 250,
             onComplete: () => {
-                this.scene.time.delayedCall(3000, () => {
+                this.scene.tweens.add({ targets: koText, scale: 1.05, duration: 180, ease: 'Back.easeOut' });
+                this.scene.time.delayedCall(1800, () => {
                     koText.destroy();
+                    band.destroy();
+                    upperRule.destroy();
+                    lowerRule.destroy();
                     this.nextRoundOrEndMatch();
                 });
             }

@@ -118,62 +118,20 @@ export class CombatScene extends Phaser.Scene {
         this.player.setDepth(5);
         this.physics.add.collider(this.player, floor);
 
-        this.player.on('fire_special', (fighter: Fighter) => {
-            const dir = fighter.flipX ? -1 : 1;
-            const isKevin = fighter.characterId === 'kevin';
-            const tex = isKevin ? 'aura_beijo' : 'aura_cachorro';
-            const proj = new Projectile(
-                this,
-                fighter.x + (isKevin ? 72 : 82) * dir,
-                fighter.y - (isKevin ? 42 : 30),
-                tex,
-                fighter,
-                (isKevin ? 450 : 420) * dir,
-                40,
-                isKevin ? 'electric' : 'normal'
-            );
-            proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
-            (proj.body as Phaser.Physics.Arcade.Body)
-                .setSize(proj.width * 0.78, proj.height * 0.6)
-                .setOffset(proj.width * 0.11, proj.height * 0.2);
-            proj.setFlipX(dir < 0);
-            proj.setDepth(8);
-            this.projectiles.add(proj);
-        });
+        this.player.on('fire_special', (fighter: Fighter) => this.fireSpecial(fighter));
 
         this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, this.p2Key);
         this.enemy.setDepth(5);
         this.enemy.setFlipX(true);
         this.physics.add.collider(this.enemy, floor);
         
-        this.enemy.on('fire_special', (fighter: Fighter) => {
-            const dir = fighter.flipX ? -1 : 1;
-            const isKevin = fighter.characterId === 'kevin';
-            const tex = isKevin ? 'aura_beijo' : 'aura_cachorro';
-            const proj = new Projectile(
-                this,
-                fighter.x + (isKevin ? 72 : 82) * dir,
-                fighter.y - (isKevin ? 42 : 30),
-                tex,
-                fighter,
-                (isKevin ? 450 : 420) * dir,
-                40,
-                isKevin ? 'electric' : 'normal'
-            );
-            proj.setDisplaySize(isKevin ? 108 : 172, isKevin ? 84 : 94);
-            (proj.body as Phaser.Physics.Arcade.Body)
-                .setSize(proj.width * 0.78, proj.height * 0.6)
-                .setOffset(proj.width * 0.11, proj.height * 0.2);
-            proj.setFlipX(dir < 0);
-            proj.setDepth(8);
-            this.projectiles.add(proj);
-        });
+        this.enemy.on('fire_special', (fighter: Fighter) => this.fireSpecial(fighter));
         
         // Attach AI
         if (this.mode === '2p') {
             this.secondPlayerInput = new InputManager(this, true, true);
             this.enemy.inputManager = this.secondPlayerInput;
-        } else {
+        } else if (this.mode !== 'training') {
             this.cpuController = new CPUController(this.enemy, this.player);
             this.enemy.inputManager = this.cpuController;
         }
@@ -202,10 +160,12 @@ export class CombatScene extends Phaser.Scene {
         // ── PAUSE MENU ────────────────────────────────────────────
         this.createPauseMenu();
 
-        this.input.keyboard?.on('keydown-ESC', () => {
+        const onEscape = () => {
             if (!this.matchManager.isMatchActive()) return;
             this.togglePause();
-        });
+        };
+        this.input.keyboard?.on('keydown-ESC', onEscape);
+        this.events.once('shutdown', () => this.input.keyboard?.off('keydown-ESC', onEscape));
     }
 
     private createPauseMenu() {
@@ -242,13 +202,14 @@ export class CombatScene extends Phaser.Scene {
         
         btnQuit.on('pointerdown', () => {
             this.togglePause();
-            this.scene.start('MainMenuScene');
+            // Espera o clique terminar para ele não selecionar TREINO no menu novo.
+            this.time.delayedCall(80, () => this.scene.start('MainMenuScene'));
         });
         this.pauseMenuOverlay.add(btnQuit);
     }
 
     private resolveProjectileHit(proj: Projectile, target: Fighter) {
-        if (!this.matchManager?.isMatchActive() || !proj.hitActive || target.isHit || proj.getOwner() === target) return;
+        if (!this.matchManager?.isMatchActive() || !proj.hitActive || proj.getOwner() === target) return;
         proj.hitActive = false;
         if (target.isBlocking) {
             target.hp = Math.max(0, target.hp - 4);
@@ -260,6 +221,32 @@ export class CombatScene extends Phaser.Scene {
             AudioManager.getInstance().playSFX(proj.damageType === 'electric' ? 'electric_hit' : 'hit_heavy');
         }
         proj.destroy();
+    }
+
+    private fireSpecial(fighter: Fighter) {
+        if (!this.matchManager?.isMatchActive()) return;
+        const direction = fighter.flipX ? -1 : 1;
+        const isKevin = fighter.characterId === 'kevin';
+        const special = this.cache.json.get(fighter.characterId)?.specials?.[0];
+        const projectile = new Projectile(
+            this,
+            fighter.x + (isKevin ? 76 : 86) * direction,
+            fighter.y - (isKevin ? 42 : 30),
+            isKevin ? 'aura_beijo' : 'aura_cachorro',
+            fighter,
+            (special?.projectileSpeed ?? (isKevin ? 450 : 420)) * direction,
+            special?.damage ?? 80,
+            isKevin ? 'electric' : 'normal'
+        );
+        projectile.setDisplaySize(isKevin ? 132 : 172, isKevin ? 94 : 94);
+        (projectile.body as Phaser.Physics.Arcade.Body)
+            .setSize(projectile.width * 0.78, projectile.height * 0.6)
+            .setOffset(projectile.width * 0.11, projectile.height * 0.2);
+        projectile.setFlipX(direction < 0);
+        projectile.setDepth(8);
+        this.projectiles.add(projectile);
+        AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast');
+        if (isKevin) this.vfxManager.screenFlash(60);
     }
 
     private togglePause() {
