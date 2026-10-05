@@ -9,18 +9,22 @@ export class BootScene extends Phaser.Scene {
     preload() {
         const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'crouch_punch', 'sweep', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
-        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2)
+        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2, incluindo frames _2)
         this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
             this.load.image(`kevin_${p}`, `assets/sprites/kevin_${p}.png`);
             this.load.image(`kevin_p2_${p}`, `assets/sprites/kevin_p2_${p}.png`);
+            this.load.image(`kevin_${p}_2`, `assets/sprites/kevin_${p}_2.png`);
+            this.load.image(`kevin_p2_${p}_2`, `assets/sprites/kevin_p2_${p}_2.png`);
         });
 
-        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2)
+        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2, incluindo frames _2)
         this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
         poses.forEach(p => {
             this.load.image(`vini_dog_${p}`, `assets/sprites/vini_dog_${p}.png`);
             this.load.image(`vini_dog_p2_${p}`, `assets/sprites/vini_dog_p2_${p}.png`);
+            this.load.image(`vini_dog_${p}_2`, `assets/sprites/vini_dog_${p}_2.png`);
+            this.load.image(`vini_dog_p2_${p}_2`, `assets/sprites/vini_dog_p2_${p}_2.png`);
         });
 
         // Efeitos especiais e itens

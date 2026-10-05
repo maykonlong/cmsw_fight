@@ -235,13 +235,22 @@ class IdleState extends State {
 // WALK
 // ─────────────────────────────────────────────────────────────────
 class WalkState extends State {
+    private walkTimer = 0;
     enter(f: Fighter) {
+        this.walkTimer = 0;
         f.setPoseTexture('walk');
     }
 
     execute(f: Fighter) {
         if (!f.inputManager) return;
         const inp = f.inputManager;
+
+        this.walkTimer++;
+        if (this.walkTimer % 16 < 8) {
+            f.setPoseTexture('walk_2');
+        } else {
+            f.setPoseTexture('walk');
+        }
 
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
@@ -445,11 +454,27 @@ class AttackState extends State {
 
         // Ativa hitbox durante os frames active
         if (this.duration === this.moveData.startup + 1) {
+            const isAir = this.moveData.hitLevel === 'AIR';
+            const isCrouch = this.moveData.input.startsWith('c');
+            const poseName = isAir
+                ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
+                : isCrouch
+                    ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
+                    : (this.moveData.input.includes('K') ? 'kick' : 'punch');
+            f.setPoseTexture(`${poseName}_2`);
             f.currentHitbox.active = true;
         }
 
         // Desativa hitbox
         if (this.duration === this.moveData.startup + this.moveData.active + 1) {
+            const isAir = this.moveData.hitLevel === 'AIR';
+            const isCrouch = this.moveData.input.startsWith('c');
+            const poseName = isAir
+                ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
+                : isCrouch
+                    ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
+                    : (this.moveData.input.includes('K') ? 'kick' : 'punch');
+            f.setPoseTexture(poseName);
             f.currentHitbox.active = false;
         }
 
@@ -556,6 +581,7 @@ class SpecialState extends State {
 
         if (!this.fired && this.duration === 32) {
             this.fired = true;
+            f.setPoseTexture('special_2');
             if (this.cmd === '623P') {
                 f.setVelocityY(-600);
                 f.currentHitbox.setTo(0, 0, 110, 145);
