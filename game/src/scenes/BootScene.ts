@@ -7,7 +7,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'crouch_punch', 'sweep', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
         // Carrega todas as imagens de poses individuais do Kevin
         this.load.image('kevin', 'assets/sprites/kevin.png');
@@ -36,6 +36,11 @@ export class BootScene extends Phaser.Scene {
         this.load.json('kevin', 'data/characters/kevin.json');
         this.load.json('vini_dog', 'data/characters/vini_dog.json');
         this.load.json('cmsw_hq', 'data/stages/cmsw_hq.json');
+
+        // Efeitos CC0 de Kenney (licença em assets/audio/sfx/License.txt).
+        for (const key of ['hit_light', 'hit_medium', 'hit_heavy', 'block', 'electric_hit', 'throw', 'land']) {
+            this.load.audio(key, `assets/audio/sfx/${key}.ogg`);
+        }
     }
 
     create() {

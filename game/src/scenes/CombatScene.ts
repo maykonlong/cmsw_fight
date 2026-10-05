@@ -50,7 +50,7 @@ export class CombatScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'crouch_punch', 'sweep', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
         if (!this.textures.exists('kevin')) this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
@@ -355,7 +355,7 @@ export class CombatScene extends Phaser.Scene {
                     this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
-                    AudioManager.getInstance().playSFX('hit_heavy');
+                    AudioManager.getInstance().playSFX(this.player.currentHitbox.soundHit);
                 }
             }
             this.player.currentHitbox.active = false;
@@ -377,7 +377,7 @@ export class CombatScene extends Phaser.Scene {
                     this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, 'heavy');
                     this.vfxManager.hitStop(4);
                     this.vfxManager.cameraShake(0.01);
-                    AudioManager.getInstance().playSFX('hit_heavy');
+                    AudioManager.getInstance().playSFX(this.enemy.currentHitbox.soundHit);
                 }
             }
             this.enemy.currentHitbox.active = false;

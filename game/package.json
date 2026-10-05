@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:sprites": "node scripts/check_fighter_sprites.cjs"
   },
   "devDependencies": {
     "jimp": "^1.6.1",

@@ -92,6 +92,11 @@ export class AudioManager {
     public playSFX(key: string, volumeScale: number = 1.0) {
         if (!this.scene) return;
 
+        if (key === 'swing') {
+            this.playWhoosh(this.sfxVolume * volumeScale);
+            return;
+        }
+
         if (this.scene.cache.audio.exists(key)) {
             this.scene.sound.play(key, { volume: this.sfxVolume * volumeScale });
         } else {
@@ -141,6 +146,30 @@ export class AudioManager {
         oscillator.start();
         oscillator.stop(context.currentTime + duration);
         oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+    }
+
+    private playWhoosh(volume: number) {
+        if (volume <= 0) return;
+        const context = this.getSynthContext();
+        if (!context) return;
+        const duration = 0.11;
+        const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate);
+        const samples = buffer.getChannelData(0);
+        for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        const filter = context.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1500, context.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(400, context.currentTime + duration);
+        const gain = context.createGain();
+        gain.gain.setValueAtTime(0.0001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * 0.14), context.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+        source.connect(filter).connect(gain).connect(context.destination);
+        source.start();
+        source.stop(context.currentTime + duration);
+        source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
     }
 
     private playSynthMusic(key: string, loop: boolean) {

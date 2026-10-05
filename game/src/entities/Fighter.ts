@@ -7,6 +7,7 @@ import { Pushbox } from '../engine/Pushbox';
 import { BASE_MOVES } from '../data/moves/base_moves';
 import type { MoveData } from '../data/moves/base_moves';
 import { CommandRecognizer } from '../core/CommandRecognizer';
+import { AudioManager } from '../engine/AudioManager';
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public static readonly DISPLAY_WIDTH = 180;
@@ -148,10 +149,17 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     private applyVisualSize() {
-        this.setDisplaySize(Fighter.DISPLAY_WIDTH, Fighter.DISPLAY_HEIGHT);
+        // Poses largas precisam de canvas mais largo, não de um corpo menor.
+        // A altura e a escala dos pixels permanecem constantes entre quadros.
+        const displayWidth = this.width >= 400
+            ? this.width * (Fighter.DISPLAY_HEIGHT / this.height)
+            : Fighter.DISPLAY_WIDTH;
+        this.setDisplaySize(displayWidth, Fighter.DISPLAY_HEIGHT);
         const body = this.body as Phaser.Physics.Arcade.Body;
-        body.setSize(this.width * 0.49, this.height * 0.9);
-        body.setOffset(this.width * 0.255, this.height * 0.04);
+        const bodyWidth = 88 / this.scaleX;
+        const bodyHeight = 306 / this.scaleY;
+        body.setSize(bodyWidth, bodyHeight);
+        body.setOffset((this.width - bodyWidth) / 2, this.height * 0.04);
     }
 
     takeDamage(amount: number, pushbackForce: number, fromX: number, type: 'normal' | 'electric' = 'normal') {
@@ -187,6 +195,12 @@ class IdleState extends State {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
+            if (inp.isLPJustPressed) { this.stateMachine.transition('crouch_LP'); return; }
+            if (inp.isMPJustPressed) { this.stateMachine.transition('crouch_MP'); return; }
+            if (inp.isHPJustPressed) { this.stateMachine.transition('crouch_HP'); return; }
+            if (inp.isLKJustPressed) { this.stateMachine.transition('crouch_LK'); return; }
+            if (inp.isMKJustPressed) { this.stateMachine.transition('crouch_MK'); return; }
+            if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
         const isFacingLeft = f.flipX;
@@ -234,6 +248,12 @@ class WalkState extends State {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
+            if (inp.isLPJustPressed) { this.stateMachine.transition('crouch_LP'); return; }
+            if (inp.isMPJustPressed) { this.stateMachine.transition('crouch_MP'); return; }
+            if (inp.isHPJustPressed) { this.stateMachine.transition('crouch_HP'); return; }
+            if (inp.isLKJustPressed) { this.stateMachine.transition('crouch_LK'); return; }
+            if (inp.isMKJustPressed) { this.stateMachine.transition('crouch_MK'); return; }
+            if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
         const isFacingLeft = f.flipX;
@@ -310,6 +330,7 @@ class LandState extends State {
         f.setPoseTexture('idle');
         f.setVelocityX(0);
         f.setVelocityY(0);
+        AudioManager.getInstance().playSFX('land', 0.45);
     }
     execute(_f: Fighter) {
         this.duration--;
@@ -382,8 +403,14 @@ class AttackState extends State {
         
         const isAir = this.moveData.hitLevel === 'AIR';
         if (isAir) f.airAttackUsed = true;
-        const poseName = `${isAir ? 'air_' : ''}${this.moveData.input.includes('K') ? 'kick' : 'punch'}`;
+        const isCrouch = this.moveData.input.startsWith('c');
+        const poseName = isAir
+            ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
+            : isCrouch
+                ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
+                : (this.moveData.input.includes('K') ? 'kick' : 'punch');
         f.setPoseTexture(poseName);
+        AudioManager.getInstance().playSFX('swing', 0.32);
         
         // Copiar dados pro hitbox atual
         f.currentHitbox.damage = this.moveData.damage;
@@ -393,6 +420,7 @@ class AttackState extends State {
         f.currentHitbox.knockback = this.moveData.knockback;
         f.currentHitbox.hitstun = this.moveData.hitstun;
         f.currentHitbox.blockstun = this.moveData.blockstun;
+        f.currentHitbox.soundHit = this.moveData.soundHit;
         
         f.currentHitbox.offsetX = this.moveData.hitboxOffset.x;
         f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
@@ -467,7 +495,7 @@ class BlockState extends State {
     enter(f: Fighter) {
         f.setVelocityX(0);
         f.isBlocking = true;
-        f.setPoseTexture('block');
+        f.setPoseTexture(this.type === 'LOW' ? 'crouch' : 'block');
         f.setTint(0x888888);
         if (this.type === 'LOW') {
             f.currentHurtbox.height = 135;
@@ -620,7 +648,7 @@ class HitState extends State {
             f.hitStunTimer = 50;
             f.setVelocityX(0);
         } else {
-            f.hitStunTimer = 22;
+            f.hitStunTimer = Math.max(1, f.hitStunTimer || 22);
             f.setTint(0xffffff);
         }
     }
@@ -651,12 +679,13 @@ class KnockdownState extends State {
     enter(f: Fighter) {
         f.isHit = true;
         this.timer = 50; // hard knockdown 50 frames
-        f.setAngle(90);
+        f.setVelocityX(0);
+        f.currentHitbox.active = false;
+        f.setPoseTexture('ko');
     }
-    execute(f: Fighter) {
+    execute(_f: Fighter) {
         this.timer--;
         if (this.timer <= 0) {
-            f.setAngle(0);
             this.stateMachine.transition('wakeup');
         }
     }
