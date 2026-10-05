@@ -31,8 +31,8 @@ export class CPUController implements IInputProvider {
         this.me = me;
         this.target = target;
         const difficulty = Number(localStorage.getItem('cmsw_diff') ?? 1);
-        this.reactionDelay = difficulty === 0 ? 36 : difficulty === 2 ? 16 : 28;
-        this.attackCooldown = difficulty === 0 ? 112 : difficulty === 2 ? 50 : 80;
+        this.reactionDelay = difficulty === 0 ? 34 : difficulty === 2 ? 14 : 24;
+        this.attackCooldown = difficulty === 0 ? 100 : difficulty === 2 ? 45 : 70;
     }
 
     // ═══ IInputProvider Getters ═══
@@ -77,30 +77,62 @@ export class CPUController implements IInputProvider {
         const distanceX = Math.abs(this.me.x - this.target.x);
         const distanceY = Math.abs(this.me.y - this.target.y);
         const targetState = this.target.stateMachine?.state ?? '';
-        const targetIsAttacking = targetState.startsWith('stand_') || targetState.startsWith('crouch_') || targetState.startsWith('air_') || targetState === 'special';
+        const targetIsJumping = targetState === 'jump' || targetState.startsWith('air_');
+        const targetIsCastingSpecial = targetState === 'special' || targetState === 'super_special';
+        const targetIsAttacking = targetState.startsWith('stand_') || targetState.startsWith('crouch_') || targetIsJumping || targetIsCastingSpecial;
 
-        // 1. Defesa (Block)
-        if (targetIsAttacking && distanceX < 200 && Math.random() < 0.5) {
-            this.moveAway();
-            this.actionCooldown = 10;
+        // 1. REAÇÃO ANTI-AÉREA (Inspirado em RL Footsies Models)
+        // Se o oponente pulou em direção à CPU, executa chute anti-aéreo alto imediato
+        if (targetIsJumping && distanceX < 190 && distanceY > 40) {
+            this.stopMoving();
+            this._hkJust = true; // Anti-Air Heavy Kick
+            this.actionCooldown = 32;
             return;
         }
 
-        // 2. Agarrão (Throw)
-        // A arena separa lutadores no chão em pelo menos 75 px.
-        if (distanceX < 95 && distanceY < 50 && Math.random() < 0.4) {
-            this._throwJust = true;
-            this.actionCooldown = 55;
-            return;
-        }
-
-        // 3. Ataque normal (perto)
-        if (distanceX >= 50 && distanceX < 130) {
-            if (Math.random() < (this.reactionDelay === 16 ? 0.12 : 0.28)) {
-                this.stopMoving();
-                this.actionCooldown = 22;
-                return;
+        // 2. RESPOSTA A PROJÉTEIS (Esquiva Roll AB ou Pulo Punição)
+        // Se o jogador soltou magias/especial, a CPU rola por baixo com invulnerabilidade ou pula por cima
+        if (targetIsCastingSpecial && distanceX > 130) {
+            if (Math.random() < 0.6) {
+                // AB Roll (Soco Leve + Chute Leve juntos)
+                this._lpJust = true;
+                this._lkJust = true;
+                this.actionCooldown = 26;
+            } else {
+                // Pulo para a frente para punir a recuperação da magia
+                this._upJust = true;
+                this._up = true;
+                this.moveTowards();
+                this.actionCooldown = 28;
             }
+            return;
+        }
+
+        // 3. EXECUÇÃO DE SUPER ESPECIAL (Desperation Move Punish)
+        // Se a CPU tiver 1+ barra de poder e o jogador estiver perto ou em recuperação de golpe
+        const hasSuper = (this.me.superStocks > 0 || this.me.superGauge >= 1000);
+        if (hasSuper && distanceX < 230 && (targetIsAttacking || Math.random() < 0.35)) {
+            this._specialJust = true;
+            this.actionCooldown = 90;
+            return;
+        }
+
+        // 4. DEFESA INTELIGENTE (Block Guard)
+        if (targetIsAttacking && distanceX < 200 && Math.random() < 0.65) {
+            this.moveAway();
+            this.actionCooldown = 12;
+            return;
+        }
+
+        // 5. AGARRÃO EM CURTA DISTÂNCIA (Throw Mixup)
+        if (distanceX < 95 && distanceY < 50 && Math.random() < 0.45) {
+            this._throwJust = true;
+            this.actionCooldown = 50;
+            return;
+        }
+
+        // 6. ATAQUE NORMAL & COMBOS (Footsies Mid/Close Range)
+        if (distanceX >= 50 && distanceX < 135) {
             const r = Math.random();
             if (r < 0.25) this._lpJust = true;
             else if (r < 0.45) this._mkJust = true;
@@ -110,15 +142,15 @@ export class CPUController implements IInputProvider {
             return;
         }
 
-        // 4. Especial (Longe / Projétil)
-        if (distanceX > 200 && Math.random() < 0.15) {
+        // 7. ESPECIAL REGULAR (Pressão de Projétil à Distância)
+        if (distanceX > 210 && Math.random() < 0.22 && this.me.specialCooldown <= 0) {
             this._specialJust = true;
-            this.actionCooldown = 90;
+            this.actionCooldown = 85;
             return;
         }
 
-        // 5. Pulo
-        if (Math.random() < 0.04) {
+        // 8. PULO / APROXIMAÇÃO AÉREA
+        if (Math.random() < 0.05) {
             this._upJust = true;
             this._up = true;
             if (distanceX > 150) this.moveTowards();
@@ -128,8 +160,8 @@ export class CPUController implements IInputProvider {
             this._up = false;
         }
 
-        // 6. Movimento
-        if (distanceX > 130) {
+        // 9. MOVIMENTAÇÃO DE ARENA (Footsies Weaving)
+        if (distanceX > 135) {
             this.moveTowards();
         } else {
             this.stopMoving();
