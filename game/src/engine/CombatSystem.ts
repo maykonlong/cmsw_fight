@@ -58,30 +58,28 @@ export class CombatSystem {
     public static applyHit(attacker: any, defender: any, hitbox: Hitbox, isCounterHit: boolean = false): 'hit' | 'blocked' | 'none' {
         if (defender.isHit) return 'none';
 
-        // Block logic (5.3 e 5.4)
-        if (defender.isBlocking) {
-            let blocked = false;
-            // HIGH pode ser defendido em pé. LOW só agachado. MID pode ser ambos. AIR geralmente só em pé.
-            const currentState = defender.stateMachine.state;
-            const isDefendingLow = currentState === 'block_low';
-            const isDefendingHigh = currentState === 'block_high';
+        // Auto-Guard: Defender bloqueia se estiver no estado de bloqueio OU segurando/andando para trás
+        const isHoldingBack = Boolean(defender.isHoldingBack);
+        const isHoldingLowBack = Boolean(defender.isHoldingLowBack);
+        const isCurrentlyBlocking = Boolean(defender.isBlocking);
+        const canAutoBlock = (isHoldingBack || isHoldingLowBack || isCurrentlyBlocking) && hitbox.hitLevel !== 'UNBLOCKABLE';
 
+        if (canAutoBlock) {
+            const currentState = defender.stateMachine.state;
+            const isDefendingLow = currentState === 'block_low' || isHoldingLowBack;
+            const isDefendingHigh = currentState === 'block_high' || (isHoldingBack && !isHoldingLowBack);
+
+            let blocked = false;
             if (hitbox.hitLevel === 'HIGH' && isDefendingHigh) blocked = true;
             else if (hitbox.hitLevel === 'LOW' && isDefendingLow) blocked = true;
             else if (hitbox.hitLevel === 'MID' && (isDefendingHigh || isDefendingLow)) blocked = true;
             else if (hitbox.hitLevel === 'AIR' && isDefendingHigh) blocked = true;
-            else if (hitbox.hitLevel === 'AIR' && isDefendingLow) blocked = false; // Tem que defender em pé o aéreo
-            
-            if (hitbox.hitLevel === 'UNBLOCKABLE') blocked = false;
 
             if (blocked) {
-                // BlockStun
                 defender.hitStunTimer = hitbox.blockstun;
-                // Chip Damage
-                // Não temos chipDamage no Hitbox ainda, mas em geral é 0 para normais. 
-                // Assumindo 0 por enquanto.
                 const dir = attacker.x < defender.x ? 1 : -1;
-                defender.setVelocityX(hitbox.knockback * 0.5 * dir); // Empurrão menor
+                defender.setVelocityX(hitbox.knockback * 0.5 * dir);
+                defender.stateMachine.transition(isDefendingLow ? 'block_low' : 'block_high');
                 return 'blocked';
             }
         }

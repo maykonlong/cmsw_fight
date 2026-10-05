@@ -167,6 +167,17 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         return isPhysicsGrounded || isNearFloor;
     }
 
+    public get isHoldingBack(): boolean {
+        if (!this.inputManager) return false;
+        const isFacingLeft = this.flipX;
+        return isFacingLeft ? this.inputManager.isRightDown : this.inputManager.isLeftDown;
+    }
+
+    public get isHoldingLowBack(): boolean {
+        if (!this.inputManager) return false;
+        return this.isHoldingBack && this.inputManager.isDownDown;
+    }
+
     public setPoseTexture(pose: string) {
         const targetKey = `${this.characterId}_${pose}`;
         const fallbackBaseKey = this.characterId.replace(/_p2$/, '');
@@ -598,14 +609,18 @@ class AttackState extends State {
             else if (input === 'jLP' || input === 'jLK') base = 'air_kick_up';
             else base = input.includes('K') ? 'air_kick' : 'air_punch';
         } else if (isCrouch) {
-            base = input.includes('K') ? 'sweep' : 'crouch_punch';
+            if (input === 'cLP') base = 'punch_l';       // Soco Leve Agachado (Mão Esquerda)
+            else if (input === 'cHP') base = 'punch_r';  // Soco Forte Agachado (Mão Direita)
+            else if (input === 'cLK') base = 'kick_l';   // Chute Leve Agachado (Perna Esquerda)
+            else if (input === 'cHK') base = 'sweep';    // Rasteira Forte Agachado
+            else base = input.includes('K') ? 'kick' : 'crouch_punch';
         } else {
-            if (input === 'LP') base = 'punch_l';
-            else if (input === 'HP') base = 'punch_r';
-            else if (input === 'MP') base = 'punch';
-            else if (input === 'LK') base = 'kick_l';
-            else if (input === 'HK') base = 'kick_r';
-            else if (input === 'MK') base = 'kick';
+            if (input === 'LP') base = 'punch_l';        // Soco Mão Esquerda (Jab)
+            else if (input === 'HP') base = 'punch_r';   // Soco Mão Direita (Direto Forte)
+            else if (input === 'MP') base = 'punch';     // Soco Médio
+            else if (input === 'LK') base = 'kick_l';    // Chute Perna Esquerda (Baixo)
+            else if (input === 'HK') base = 'kick_r';    // Chute Perna Direita (Alto Forte)
+            else if (input === 'MK') base = 'kick';      // Chute Médio
             else base = input.includes('K') ? 'kick' : 'punch';
         }
 
