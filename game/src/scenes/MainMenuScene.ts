@@ -158,6 +158,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     private move(dir: number) {
         this.selectedIndex = Phaser.Math.Wrap(this.selectedIndex + dir, 0, this.OPTIONS.length);
+        AudioManager.getInstance().playUI('ui_cursor');
         this.updateSelection();
     }
 
@@ -178,6 +179,7 @@ export class MainMenuScene extends Phaser.Scene {
     private select() {
         if (!this.canSelect) return;
         this.canSelect = false;
+        AudioManager.getInstance().playUI('ui_select');
         this.removeListeners();
         this.cameras.main.fadeOut(300, 0, 0, 0);
         this.time.delayedCall(320, () => {

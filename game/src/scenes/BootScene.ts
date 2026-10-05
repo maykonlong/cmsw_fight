@@ -37,10 +37,37 @@ export class BootScene extends Phaser.Scene {
         this.load.json('vini_dog', 'data/characters/vini_dog.json');
         this.load.json('cmsw_hq', 'data/stages/cmsw_hq.json');
 
-        // Efeitos CC0 de Kenney (licença em assets/audio/sfx/License.txt).
-        for (const key of ['hit_light', 'hit_medium', 'hit_heavy', 'block', 'electric_hit', 'throw', 'land']) {
-            this.load.audio(key, `assets/audio/sfx/${key}.ogg`);
-        }
+        // Carregamento universal de Audio (SFX, Vozes e Músicas com reservas)
+        const sfxKeys = [
+            'hit_light', 'hit_medium', 'hit_heavy', 'block', 'electric_hit', 'throw', 'land',
+            'swing', 'ui_cursor', 'ui_select', 'ui_cancel', 'electric_cast', 'dog_cast',
+            'vape_smoke', 'shower_water', 'dog_bark'
+        ];
+        sfxKeys.forEach(key => {
+            this.load.audio(key, [
+                `assets/audio/sfx/${key}.ogg`,
+                `assets/audio/sfx/${key}.mp3`,
+                `assets/audio/sfx/${key}.wav`
+            ]);
+        });
+
+        const voiceKeys = ['round_1', 'round_2', 'round_3', 'fight', 'ko', 'time_over', 'perfect', 'you_win', 'you_lose'];
+        voiceKeys.forEach(key => {
+            this.load.audio(key, [
+                `assets/audio/voice/${key}.ogg`,
+                `assets/audio/voice/${key}.mp3`,
+                `assets/audio/voice/${key}.wav`
+            ]);
+        });
+
+        const musicKeys = ['menu_bgm', 'char_select', 'stage_cmsw', 'stage_street', 'victory', 'game_over'];
+        musicKeys.forEach(key => {
+            this.load.audio(key, [
+                `assets/audio/music/${key}.ogg`,
+                `assets/audio/music/${key}.mp3`,
+                `assets/audio/music/${key}.wav`
+            ]);
+        });
     }
 
     create() {

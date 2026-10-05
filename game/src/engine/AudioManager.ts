@@ -92,16 +92,13 @@ export class AudioManager {
     public playSFX(key: string, volumeScale: number = 1.0) {
         if (!this.scene) return;
 
-        if (key === 'swing') {
-            this.playWhoosh(this.sfxVolume * volumeScale);
-            return;
-        }
-
         if (this.scene.cache.audio.exists(key)) {
             this.scene.sound.play(key, { volume: this.sfxVolume * volumeScale });
+        } else if (key === 'swing') {
+            this.playWhoosh(this.sfxVolume * volumeScale);
         } else {
             const electric = key === 'electric_hit' || key === 'electric_cast';
-            const frequency = electric ? 720 : key === 'dog_cast' ? 260 : key === 'block' ? 420 : key === 'ui_cursor' ? 620 : 180;
+            const frequency = electric ? 720 : key === 'dog_cast' ? 260 : key === 'block' ? 420 : key === 'ui_cursor' ? 620 : key === 'ui_select' ? 880 : 180;
             this.playTone(frequency, electric ? 0.22 : 0.13,
                 this.sfxVolume * volumeScale * 0.12, electric ? 'sawtooth' : 'square');
         }
@@ -110,7 +107,11 @@ export class AudioManager {
     public playVoice(key: string) {
         if (!this.scene) return;
 
-        if (this.scene.cache.audio.exists(key)) {
+        const normalizedKey = key.startsWith('round_') ? key : key === 'round1' ? 'round_1' : key === 'round2' ? 'round_2' : key === 'round3' ? 'round_3' : key;
+
+        if (this.scene.cache.audio.exists(normalizedKey)) {
+            this.scene.sound.play(normalizedKey, { volume: this.voiceVolume });
+        } else if (this.scene.cache.audio.exists(key)) {
             this.scene.sound.play(key, { volume: this.voiceVolume });
         } else {
             const root = key === 'ko' ? 196 : key === 'fight' ? 440 : 330;
@@ -121,7 +122,17 @@ export class AudioManager {
     }
 
     public playUI(key: string) {
-        this.playSFX(key, 0.8);
+        if (!this.scene) return;
+
+        const targetKey = key.startsWith('ui_') ? key : `ui_${key}`;
+        if (this.scene.cache.audio.exists(targetKey)) {
+            this.scene.sound.play(targetKey, { volume: this.sfxVolume * 0.8 });
+        } else if (this.scene.cache.audio.exists(key)) {
+            this.scene.sound.play(key, { volume: this.sfxVolume * 0.8 });
+        } else {
+            const freq = key.includes('select') ? 880 : key.includes('cancel') ? 330 : 580;
+            this.playTone(freq, 0.08, this.sfxVolume * 0.1, 'sine');
+        }
     }
 
     private getSynthContext(): AudioContext | undefined {
