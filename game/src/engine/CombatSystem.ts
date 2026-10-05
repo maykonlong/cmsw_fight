@@ -92,6 +92,31 @@ export class CombatSystem {
         
         defender.hp -= finalDamage;
         if (defender.hp < 0) defender.hp = 0;
+
+        // Rastrear repetição do mesmo golpe para prevenir armadilhas "infinitas" sem saída
+        if (attacker) {
+            const moveKey = hitbox.moveId || hitbox.hitType;
+            if (attacker.lastMoveId === moveKey && moveKey !== '') {
+                attacker.sameMoveHits = (attacker.sameMoveHits || 1) + 1;
+            } else {
+                attacker.lastMoveId = moveKey;
+                attacker.sameMoveHits = 1;
+            }
+
+            // Se o oponente tentar travar o jogador repetindo EXATAMENTE o mesmo golpe 3 vezes:
+            if (attacker.sameMoveHits >= 3) {
+                attacker.sameMoveHits = 0;
+                defender.setVelocityX(hitbox.knockback * 4.2 * dir);
+                defender.hitStunTimer = 2;
+                defender.isHit = false;
+                if (attacker.scene?.vfxManager) {
+                    attacker.scene.vfxManager.showComboText(0, defender.x, defender.y - 120, 'BURST ESCAPE!');
+                }
+                defender.stateMachine.transition('idle');
+                return 'hit';
+            }
+        }
+
         defender.setVelocityX(hitbox.knockback * dir);
         
         // Registrar hit no sistema de combos do atacante

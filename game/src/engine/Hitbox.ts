@@ -10,6 +10,7 @@ export class Hitbox extends Phaser.Geom.Rectangle {
     public hitstun: number = 0;
     public blockstun: number = 0;
     public soundHit: string = 'hit_medium';
+    public moveId: string = '';
     
     // Offset relative to character position
     public offsetX: number = 0;

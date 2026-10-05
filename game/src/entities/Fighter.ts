@@ -634,6 +634,7 @@ class AttackState extends State {
         
         f.currentHitbox.offsetX = this.moveData.hitboxOffset.x;
         f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
+        f.currentHitbox.moveId = this.moveData.input;
         f.currentHitbox.setTo(0, 0, this.moveData.hitboxOffset.w, this.moveData.hitboxOffset.h);
     }
 
@@ -743,6 +744,19 @@ class BlockState extends State {
         const inp = f.inputManager;
         const isFacingLeft = f.flipX;
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
+        const pressForward = isFacingLeft ? inp.isLeftDown : inp.isRightDown;
+
+        // Block Reversal Counter (Contra-ataque ao defender: Frente + Forte ou Especial)
+        const isCounter = (pressForward && (inp.isHPJustPressed || inp.isHKJustPressed)) || inp.isSpecialJustPressed;
+        if (isCounter) {
+            f.isBlocking = false;
+            f.setTint(0xffe34d);
+            if ((f.scene as any)?.vfxManager) {
+                (f.scene as any).vfxManager.showComboText(0, f.x, f.y - 120, 'REVERSAL COUNTER!');
+            }
+            this.stateMachine.transition('special', f.getDefaultSpecialCommand());
+            return;
+        }
         
         if (!holdBack) {
             this.stateMachine.transition(this.type === 'LOW' ? 'crouch' : 'idle');
@@ -894,8 +908,13 @@ class KnockdownState extends State {
         f.currentHitbox.active = false;
         f.setPoseTexture('ko');
     }
-    execute(_f: Fighter) {
+    execute(f: Fighter) {
         this.timer--;
+        const inp = f.inputManager;
+        if (inp && (inp.isLeftDown || inp.isRightDown || inp.isDownDown || inp.isLPJustPressed || inp.isLKJustPressed)) {
+            this.stateMachine.transition('wakeup');
+            return;
+        }
         if (this.timer <= 0) {
             this.stateMachine.transition('wakeup');
         }
