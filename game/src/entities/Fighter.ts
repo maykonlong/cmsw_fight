@@ -138,8 +138,13 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
     public setPoseTexture(pose: string) {
         const targetKey = `${this.characterId}_${pose}`;
+        const fallbackBaseKey = this.characterId.replace(/_p2$/, '');
+        const fallbackKey = `${fallbackBaseKey}_${pose}`;
+
         if (this.scene.textures.exists(targetKey)) {
             this.setTexture(targetKey);
+        } else if (this.scene.textures.exists(fallbackKey)) {
+            this.setTexture(fallbackKey);
         } else if (this.scene.textures.exists(`${this.characterId}_idle`)) {
             this.setTexture(`${this.characterId}_idle`);
         } else if (this.scene.textures.exists(this.characterId)) {

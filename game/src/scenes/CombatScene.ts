@@ -114,13 +114,16 @@ export class CombatScene extends Phaser.Scene {
         this.p2Shadow.fillStyle(0x000000, 0.4);
         this.p2Shadow.fillEllipse(0, 0, 70, 20);
 
-        this.player = CharacterLoader.createFighter(this, 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, this.p1Key, this.inputManager);
+        const p1KeyToUse = this.p1Key;
+        const p2KeyToUse = (this.p1Key === this.p2Key) ? `${this.p2Key}_p2` : this.p2Key;
+
+        this.player = CharacterLoader.createFighter(this, 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, p1KeyToUse, this.inputManager);
         this.player.setDepth(5);
         this.physics.add.collider(this.player, floor);
 
         this.player.on('fire_special', (fighter: Fighter) => this.fireSpecial(fighter));
 
-        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, this.p2Key);
+        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, p2KeyToUse);
         this.enemy.setDepth(5);
         this.enemy.setFlipX(true);
         this.physics.add.collider(this.enemy, floor);
