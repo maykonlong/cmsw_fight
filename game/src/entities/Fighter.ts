@@ -450,19 +450,39 @@ class AttackState extends State {
         this.moveData = moveData;
     }
 
+    private getPoseName(moveData: MoveData, active: boolean): string {
+        const isAir = moveData.hitLevel === 'AIR';
+        const isCrouch = moveData.input.startsWith('c');
+        const input = moveData.input;
+
+        let base = 'punch';
+        if (isAir) {
+            if (input === 'jHP' || input === 'jHK') base = 'air_kick_diag';
+            else if (input === 'jLP' || input === 'jLK') base = 'air_kick_up';
+            else base = input.includes('K') ? 'air_kick' : 'air_punch';
+        } else if (isCrouch) {
+            base = input.includes('K') ? 'sweep' : 'crouch_punch';
+        } else {
+            if (input === 'LP') base = 'punch_l';
+            else if (input === 'HP') base = 'punch_r';
+            else if (input === 'MP') base = 'punch';
+            else if (input === 'LK') base = 'kick_l';
+            else if (input === 'HK') base = 'kick_r';
+            else if (input === 'MK') base = 'kick';
+            else base = input.includes('K') ? 'kick' : 'punch';
+        }
+
+        return active ? `${base}_2` : base;
+    }
+
     enter(f: Fighter) {
         this.duration = 0;
         f.currentHitbox.active = false;
         
         const isAir = this.moveData.hitLevel === 'AIR';
         if (isAir) f.airAttackUsed = true;
-        const isCrouch = this.moveData.input.startsWith('c');
-        const poseName = isAir
-            ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
-            : isCrouch
-                ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
-                : (this.moveData.input.includes('K') ? 'kick' : 'punch');
-        f.setPoseTexture(poseName);
+        
+        f.setPoseTexture(this.getPoseName(this.moveData, false));
         AudioManager.getInstance().playSFX('swing', 0.32);
         
         // Copiar dados pro hitbox atual
@@ -478,7 +498,6 @@ class AttackState extends State {
         f.currentHitbox.offsetX = this.moveData.hitboxOffset.x;
         f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
         f.currentHitbox.setTo(0, 0, this.moveData.hitboxOffset.w, this.moveData.hitboxOffset.h);
-
     }
 
     execute(f: Fighter) {
@@ -493,27 +512,13 @@ class AttackState extends State {
 
         // Ativa hitbox durante os frames active
         if (this.duration === this.moveData.startup + 1) {
-            const isAir = this.moveData.hitLevel === 'AIR';
-            const isCrouch = this.moveData.input.startsWith('c');
-            const poseName = isAir
-                ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
-                : isCrouch
-                    ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
-                    : (this.moveData.input.includes('K') ? 'kick' : 'punch');
-            f.setPoseTexture(`${poseName}_2`);
+            f.setPoseTexture(this.getPoseName(this.moveData, true));
             f.currentHitbox.active = true;
         }
 
         // Desativa hitbox
         if (this.duration === this.moveData.startup + this.moveData.active + 1) {
-            const isAir = this.moveData.hitLevel === 'AIR';
-            const isCrouch = this.moveData.input.startsWith('c');
-            const poseName = isAir
-                ? `air_${this.moveData.input.includes('K') ? 'kick' : 'punch'}`
-                : isCrouch
-                    ? (this.moveData.input.includes('K') ? 'sweep' : 'crouch_punch')
-                    : (this.moveData.input.includes('K') ? 'kick' : 'punch');
-            f.setPoseTexture(poseName);
+            f.setPoseTexture(this.getPoseName(this.moveData, false));
             f.currentHitbox.active = false;
         }
 
@@ -675,25 +680,26 @@ class ThrowState extends State {
     
     enter(f: Fighter) {
         f.setVelocityX(0);
-        this.duration = 20; // 20 frames de animação de throw
-        f.setTint(0x00ff00);
+        this.duration = 24; // 24 frames de animação de throw
+        f.setPoseTexture('throw');
         
-        // A lógica de aplicar o throw no oponente será processada pelo CombatSystem
-        // Apenas criamos uma hitbox "UNBLOCKABLE" que se conecta imediatamente
         f.currentHitbox.active = true;
-        f.currentHitbox.damage = 120;
+        f.currentHitbox.damage = 130;
         f.currentHitbox.hitType = 'throw';
         f.currentHitbox.hitLevel = 'UNBLOCKABLE';
-        f.currentHitbox.knockback = 500;
-        f.currentHitbox.setTo(0, 0, f.throwRange, 60);
+        f.currentHitbox.knockback = 520;
+        f.currentHitbox.setTo(0, 0, f.throwRange + 20, 70);
         f.currentHitbox.offsetX = 0;
         f.currentHitbox.offsetY = -60;
     }
 
     execute(f: Fighter) {
         this.duration--;
+        if (this.duration === 18) {
+            f.setPoseTexture('throw_2');
+        }
         if (this.duration < 15) {
-            f.currentHitbox.active = false; // Hitbox ativa só no começo
+            f.currentHitbox.active = false;
         }
         if (this.duration <= 0) {
             f.clearTint();
@@ -705,12 +711,13 @@ class ThrowState extends State {
 class ThrownState extends State {
     enter(f: Fighter) {
         f.isHit = true;
-        f.setVelocityY(-300); // Jogado para o ar
-        f.setTint(0xffaa00);
+        f.setPoseTexture('thrown');
+        f.setVelocityY(-350); // Jogado para o alto de costas
+        f.setVelocityX(f.flipX ? 200 : -200);
     }
     
     execute(f: Fighter) {
-        if (f.body?.touching.down && f.body.velocity.y >= 0) {
+        if (f.isOnGround() && (f.body?.velocity.y ?? 0) >= 0) {
             f.clearTint();
             this.stateMachine.transition('knockdown');
         }
