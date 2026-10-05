@@ -409,7 +409,8 @@ export class CharacterSelectScene extends Phaser.Scene {
                     p1Name: CHARACTERS[this.p1Index].name,
                     p2Name: CHARACTERS[this.p2Index].name,
                     mode: this.mode,
-                    stage: stageKey
+                    stage: stageKey,
+                    arcadeStage: this.mode === '1p' ? 1 : undefined
                 });
             });
         });

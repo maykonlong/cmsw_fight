@@ -5,11 +5,24 @@ const { PNG } = require('pngjs');
 const spritesDir = path.join(__dirname, '../public/assets/sprites');
 const actionPoses = ['punch', 'kick', 'crouch_punch', 'sweep', 'air_punch', 'air_kick', 'special', 'walk'];
 
-function createActiveFrame(png, poseType) {
+function createActiveFrame(png, poseType, variant = 2) {
     const output = new PNG({ width: png.width, height: png.height });
-    // Offset leve para enfatizar a extensão do golpe
-    const shiftX = (poseType === 'punch' || poseType === 'crouch_punch' || poseType === 'special') ? 8 : (poseType === 'kick' || poseType === 'sweep') ? 12 : 0;
-    const shiftY = poseType === 'walk' ? -4 : 0;
+    let shiftX = 0;
+    let shiftY = 0;
+
+    if (poseType === 'punch' || poseType === 'crouch_punch' || poseType === 'special') {
+        shiftX = 8;
+    } else if (poseType === 'kick' || poseType === 'sweep') {
+        shiftX = 12;
+    } else if (poseType === 'walk') {
+        if (variant === 2) {
+            shiftX = 4;
+            shiftY = -4;
+        } else if (variant === 3) {
+            shiftX = -4;
+            shiftY = 2;
+        }
+    }
 
     for (let y = 0; y < png.height; y++) {
         for (let x = 0; x < png.width; x++) {
@@ -36,11 +49,24 @@ for (const charId of characters) {
         if (!fs.existsSync(srcFile)) continue;
 
         const png = PNG.sync.read(fs.readFileSync(srcFile));
-        const activePng = createActiveFrame(png, pose);
-        const dstFile = path.join(spritesDir, `${charId}_${pose}_2.png`);
-        fs.writeFileSync(dstFile, PNG.sync.write(activePng));
+        
+        const activePng2 = createActiveFrame(png, pose, 2);
+        const dstFile2 = path.join(spritesDir, `${charId}_${pose}_2.png`);
+        fs.writeFileSync(dstFile2, PNG.sync.write(activePng2));
         count++;
+
+        if (pose === 'walk') {
+            const activePng3 = createActiveFrame(png, pose, 3);
+            const dstFile3 = path.join(spritesDir, `${charId}_walk_3.png`);
+            fs.writeFileSync(dstFile3, PNG.sync.write(activePng3));
+            count++;
+
+            const backPng = createActiveFrame(png, pose, 3);
+            const dstFileBack = path.join(spritesDir, `${charId}_walk_back.png`);
+            fs.writeFileSync(dstFileBack, PNG.sync.write(backPng));
+            count++;
+        }
     }
 }
 
-console.log(`✅ Geradas ${count} sprites de segundo frame (_2) da Fase 2 com sucesso!`);
+console.log(`✅ Geradas ${count} sprites de frames multiframe de caminhada e combate!`);

@@ -235,12 +235,14 @@ export class MatchManager {
             if (this.p1Wins >= 2 || this.mode === '2p') {
                 const winner = this.p1Wins >= 2 ? this.p1 : this.p2;
                 const loser = winner === this.p1 ? this.p2 : this.p1;
+                const arcadeStage = (this.scene as any).arcadeStage;
                 this.scene.scene.start('VictoryScene', {
                     winner: winner.characterId,
                     loser: loser.characterId,
                     p1Wins: this.p1Wins,
                     p2Wins: this.p2Wins,
-                    mode: this.mode
+                    mode: this.mode,
+                    arcadeStage: arcadeStage
                 });
             } else {
                 this.scene.scene.start('GameOverScene');

@@ -9,10 +9,11 @@ interface VsData {
     p2Name: string;
     mode: string;
     stage?: string;
+    arcadeStage?: number;
 }
 
 export class VsScene extends Phaser.Scene {
-    private data_: VsData = { p1: 'kevin', p2: 'vini_dog', p1Name: 'KEVIN MANJA', p2Name: 'VINI DOG', mode: '1p' };
+    private data_: VsData = { p1: 'kevin', p2: 'vini_dog', p1Name: 'KEVIN MANJA', p2Name: 'VINI DOG', mode: '1p', arcadeStage: 1 };
 
     constructor() {
         super({ key: 'VsScene' });
@@ -20,6 +21,9 @@ export class VsScene extends Phaser.Scene {
 
     init(data: VsData) {
         this.data_ = data;
+        if (this.data_.mode === '1p' && !this.data_.arcadeStage) {
+            this.data_.arcadeStage = 1;
+        }
     }
 
     create() {
@@ -29,6 +33,17 @@ export class VsScene extends Phaser.Scene {
 
         // Fundo Arcade Retro
         ArcadeTheme.background(this, 'arcade');
+
+        if (this.data_.mode === '1p' && this.data_.arcadeStage) {
+            this.add.text(width / 2, 40, `CAMPANHA ARCADE  •  ETAPA ${this.data_.arcadeStage} DE 2`, {
+                fontFamily: 'Impact, "Arial Black", sans-serif',
+                fontSize: '20px',
+                color: '#ffd700',
+                stroke: '#000000',
+                strokeThickness: 4,
+                letterSpacing: 3
+            }).setOrigin(0.5);
+        }
 
         // Divisão Diagonal Estilizada (P1 Azul / P2 Vermelho)
         const splitGraphics = this.add.graphics();

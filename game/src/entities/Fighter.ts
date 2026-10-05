@@ -351,10 +351,26 @@ class WalkState extends State {
         }
 
         this.walkTimer++;
-        if (this.walkTimer % 16 < 8) {
-            f.setPoseTexture('walk_2');
+        const isMovingForward = (isFacingLeft && inp.isLeftDown) || (!isFacingLeft && inp.isRightDown);
+
+        if (isMovingForward) {
+            // Passada para a frente (ciclo suave de 4 fases)
+            const cycle = Math.floor((this.walkTimer % 24) / 6);
+            if (cycle === 0) f.setPoseTexture('walk');
+            else if (cycle === 1) f.setPoseTexture('walk_2');
+            else if (cycle === 2) f.setPoseTexture('walk_3');
+            else f.setPoseTexture('idle');
         } else {
-            f.setPoseTexture('walk');
+            // Passada para trás (recuo com guarda atenta)
+            const cycle = Math.floor((this.walkTimer % 24) / 6);
+            if (cycle === 0) f.setPoseTexture('walk_back');
+            else if (cycle === 1) f.setPoseTexture('walk_2');
+            else if (cycle === 2) f.setPoseTexture('walk');
+            else f.setPoseTexture('idle');
+        }
+
+        if (this.walkTimer % 18 === 0) {
+            AudioManager.getInstance().playSFX('swing', 0.12);
         }
 
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
@@ -843,7 +859,8 @@ class SpecialState extends State {
     private fired = false;
 
     enter(f: Fighter, _cmd: string = '236P') {
-        f.specialCooldown = 45;
+        f.specialCooldown = 75; // Previne envio contínuo/infinito de poderes
+        f.bufferedSpecialFrames = 0;
         f.setPoseTexture('special');
         f.setVelocityX(0);
         this.duration = 45;
@@ -921,7 +938,8 @@ class SuperSpecialState extends State {
         } else if (f.superGauge >= 1000) {
             f.superGauge = 0;
         }
-        f.specialCooldown = 60;
+        f.specialCooldown = 95;
+        f.bufferedSpecialFrames = 0;
         f.setPoseTexture('special');
         f.setVelocityX(0);
         this.duration = 60;

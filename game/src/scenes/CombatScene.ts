@@ -33,7 +33,7 @@ export class CombatScene extends Phaser.Scene {
     private pauseMenuOverlay!: Phaser.GameObjects.Container;
     private floorY: number = 600;
 
-    // Dados dos personagens
+    public arcadeStage?: number;
     private p1Key: string = 'kevin';
     private p2Key: string = 'vini_dog';
 
@@ -43,10 +43,11 @@ export class CombatScene extends Phaser.Scene {
 
     private stageKey: string = 'kevin_bathroom';
 
-    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string; mode?: string; stage?: string }) {
+    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string; mode?: string; stage?: string; arcadeStage?: number }) {
         this.p1Key = data?.p1 ?? 'kevin';
         this.p2Key = data?.p2 ?? 'vini_dog';
         this.mode = data?.mode ?? '1p';
+        this.arcadeStage = data?.arcadeStage ?? (this.mode === '1p' ? 1 : undefined);
 
         if (data?.stage) {
             this.stageKey = data.stage;
@@ -244,13 +245,13 @@ export class CombatScene extends Phaser.Scene {
         if (!target.isOnGround() || target.y < groundCenterY - 40) return;
         proj.hitActive = false;
         const pushDir = proj.x < target.x ? 1 : -1;
-        if (target.isBlocking) {
-            target.hp = Math.max(0, target.hp - 4);
-            target.setVelocityX(pushDir * 140); // Empurrão ao defender para evitar encurralamento
+        if (target.isBlocking || target.isHoldingBack) {
+            target.hp = Math.max(0, target.hp - 3);
+            target.setVelocityX(pushDir * 240); // Empurrão forte ao defender para afastar e dar janela de reação
             this.vfxManager.spawnBlockSpark(proj.x, proj.y);
             AudioManager.getInstance().playSFX('block');
         } else {
-            target.takeDamage(proj.damage, 160, proj.x, proj.damageType);
+            target.takeDamage(proj.damage, 180, proj.x, proj.damageType);
             this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
             AudioManager.getInstance().playSFX(proj.damageType === 'electric' ? 'electric_hit' : 'hit_heavy');
         }

@@ -7,16 +7,18 @@ export class VictoryScene extends Phaser.Scene {
     private p1Wins!: number;
     private p2Wins!: number;
     private mode: string = '1p';
+    private arcadeStage: number = 1;
 
     constructor() {
         super({ key: 'VictoryScene' });
     }
 
-    init(data: { winner: string, loser: string, p1Wins: number, p2Wins: number, mode?: string }) {
+    init(data: { winner: string, loser: string, p1Wins: number, p2Wins: number, mode?: string, arcadeStage?: number }) {
         this.winnerId = data.winner || 'kevin';
         this.p1Wins = data.p1Wins || 0;
         this.p2Wins = data.p2Wins || 0;
         this.mode = data.mode || '1p';
+        this.arcadeStage = data.arcadeStage || 1;
     }
 
     create() {
@@ -43,21 +45,31 @@ export class VictoryScene extends Phaser.Scene {
             }
         }
 
+        const isCampaign = this.mode === '1p' && this.p1Wins >= 2;
+        const isCampaignComplete = isCampaign && this.arcadeStage >= 2;
+
         // Título
-        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'VITÓRIA!', width / 2, 75, 70);
+        const titleText = isCampaignComplete
+            ? 'CAMPANHA ZERADA!'
+            : (isCampaign ? `ETAPA ${this.arcadeStage} COMPLETA!` : (this.mode === '2p' ? 'VENCEDOR!' : 'VITÓRIA!'));
+
+        ArcadeTheme.title(this, titleText, width / 2, 75, isCampaignComplete ? 52 : 64);
 
         // Stats Box
         const statsBg = this.add.graphics();
         statsBg.fillStyle(0x050713, 0.92);
-        statsBg.fillRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
+        statsBg.fillRoundedRect(width / 2 - 220, height - 250, 440, 120, 8);
         statsBg.lineStyle(3, ARCADE.yellow, 1);
-        statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
+        statsBg.strokeRoundedRect(width / 2 - 220, height - 250, 440, 120, 8);
 
         const displayName = baseKey.includes('kevin') ? 'KEVIN MANJA' : 'VINI DOG';
+        const subText = isCampaignComplete
+            ? 'CAMPEÃO ABSOLUTO DO CMSW FIGHT 2026! 🏆'
+            : (isCampaign ? 'RIVAL DERROTADO! PRÓXIMO DESAFIO AGUARDA!' : `${displayName} É O CAMPEÃO!`);
 
-        this.add.text(width / 2, height - 220, `${displayName} É O CAMPEÃO!`, {
+        this.add.text(width / 2, height - 222, subText, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '24px',
+            fontSize: '20px',
             color: '#ffe279',
             stroke: '#af2231',
             strokeThickness: 3,
@@ -69,18 +81,42 @@ export class VictoryScene extends Phaser.Scene {
             color: '#dddddd'
         }).setOrigin(0.5);
 
-        // Botões
-        const playAgainBtn = this.add.text(width / 2 - 140, height - 80, 'REVANCHE', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '24px',
-            color: '#ffffff',
-            backgroundColor: '#ff0000',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        // Botões principais
+        if (isCampaign && !isCampaignComplete) {
+            // Botão Avançar para a próxima Etapa da Campanha
+            const nextStageBtn = this.add.text(width / 2 - 140, height - 80, 'PRÓXIMO ADVERSÁRIO ➔', {
+                fontFamily: '"Arial Black", Gadget, sans-serif',
+                fontSize: '20px',
+                color: '#ffffff',
+                backgroundColor: '#00aa00',
+                padding: { x: 18, y: 10 }
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        playAgainBtn.on('pointerdown', () => {
-            this.scene.start('CharacterSelectScene', { mode: this.mode });
-        });
+            nextStageBtn.on('pointerdown', () => {
+                const nextStageNum = this.arcadeStage + 1;
+                this.scene.start('VsScene', {
+                    p1: 'kevin',
+                    p2: 'vini_dog_p2',
+                    p1Name: 'KEVIN MANJA',
+                    p2Name: 'VINI DOG (RIVAL)',
+                    mode: '1p',
+                    stage: 'cmsw_hq',
+                    arcadeStage: nextStageNum
+                });
+            });
+        } else {
+            const playAgainBtn = this.add.text(width / 2 - 140, height - 80, 'REVANCHE', {
+                fontFamily: '"Arial Black", Gadget, sans-serif',
+                fontSize: '24px',
+                color: '#ffffff',
+                backgroundColor: '#ff0000',
+                padding: { x: 20, y: 10 }
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            playAgainBtn.on('pointerdown', () => {
+                this.scene.start('CharacterSelectScene', { mode: this.mode });
+            });
+        }
 
         const menuBtn = this.add.text(width / 2 + 140, height - 80, 'MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
