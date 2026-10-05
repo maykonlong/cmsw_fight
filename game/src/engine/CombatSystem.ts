@@ -79,6 +79,8 @@ export class CombatSystem {
                 defender.hitStunTimer = hitbox.blockstun;
                 const dir = attacker.x < defender.x ? 1 : -1;
                 defender.setVelocityX(hitbox.knockback * 0.5 * dir);
+                if (typeof defender.addSuperEnergy === 'function') defender.addSuperEnergy(25);
+                if (typeof attacker.addSuperEnergy === 'function') attacker.addSuperEnergy(15);
                 defender.stateMachine.transition(isDefendingLow ? 'block_low' : 'block_high');
                 return 'blocked';
             }
@@ -90,6 +92,9 @@ export class CombatSystem {
         
         defender.hp -= finalDamage;
         if (defender.hp < 0) defender.hp = 0;
+
+        if (typeof defender.addSuperEnergy === 'function') defender.addSuperEnergy(60);
+        if (typeof attacker.addSuperEnergy === 'function') attacker.addSuperEnergy(40);
 
         // Rastrear repetição do mesmo golpe para prevenir armadilhas "infinitas" sem saída
         if (attacker) {

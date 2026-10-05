@@ -14,38 +14,44 @@ export class ControlsScene extends Phaser.Scene {
         ArcadeTheme.background(this, 'blue');
         ArcadeTheme.panel(this, 55, 90, width - 110, height - 190, ARCADE.blue);
 
-        ArcadeTheme.title(this, 'CONTROLES DO JOGO', width / 2, 62, 48);
+        ArcadeTheme.title(this, 'MAPEAMENTO DE CONTROLES', width / 2, 60, 48);
 
-        const heading = { fontFamily: 'Impact, "Arial Black", sans-serif', fontSize: '34px', color: '#ffe270', stroke: '#ab2435', strokeThickness: 4 };
-        const keys = { fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '25px', color: '#f5f2e8', lineSpacing: 10 };
-        this.add.text(140, 150, 'JOGADOR 1', heading);
-        this.add.text(140, 200, [
-            'Mover     SETAS',
-            'Soco      Z  X  C',
-            'Chute     V  B  N',
-            'Beijo     ESPAÇO',
-            'Agarrão   Z + V',
-            'Defesa    SEGURE TRÁS',
+        const heading = { fontFamily: 'Impact, "Arial Black", sans-serif', fontSize: '32px', color: '#ffe270', stroke: '#ab2435', strokeThickness: 4 };
+        const keys = { fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '22px', color: '#f5f2e8', lineSpacing: 10 };
+        
+        this.add.text(140, 140, 'JOGADOR 1 (TECLADO)', heading);
+        this.add.text(140, 190, [
+            'Mover:          SETAS (← → ↑ ↓)',
+            'Soco Leve/Med/F: Z / X / C',
+            'Chute Leve/M/F:  V / B / N',
+            'Esquiva Roll:    Z + V (Soco L + Chute L)',
+            'Golpe Especial:  ESPAÇO ou 236 + P',
+            'Super Especial:  ESPAÇO (Com 1+ Barra)',
+            'Defesa:          SEGURAR PARA TRÁS',
         ].join('\n'), keys);
-        this.add.text(700, 150, 'JOGADOR 2', heading);
-        this.add.text(700, 200, [
-            'Mover     W A S D',
-            'Soco      J  K  L',
-            'Chute     U  I  O',
-            'Cachorro  E',
-            'Agarrão   J + U',
-            'Defesa    SEGURE TRÁS',
+
+        this.add.text(700, 140, 'JOGADOR 2 (TECLADO)', heading);
+        this.add.text(700, 190, [
+            'Mover:          W A S D',
+            'Soco Leve/Med/F: J / K / L',
+            'Chute Leve/M/F:  U / I / O',
+            'Esquiva Roll:    J + U (Soco L + Chute L)',
+            'Golpe Especial:  E ou 214 + K',
+            'Super Especial:  E (Com 1+ Barra)',
+            'Defesa:          SEGURAR PARA TRÁS',
         ].join('\n'), keys);
-        this.add.text(width / 2, 520, 'CONTROLE: DIRECIONAL + X/Y/RB + A/B/RT · ESPECIAL LB', {
-            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '24px', color: '#82dafa'
+
+        this.add.text(width / 2, 515, '🎮 CONTROLE GAMEPAD: DIRECIONAL/ANALÓGICO  •  X/Y/RB (SOCOS)  •  A/B/RT (CHUTES)  •  LB (ESPECIAL)', {
+            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '18px', color: '#82dafa'
         }).setOrigin(0.5);
-        this.add.text(width / 2, 565, 'TOUCH: DIRECIONAL + BOTÕES NA TELA     •     PAUSA: ESC', {
-            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '24px', color: '#82dafa'
+        
+        this.add.text(width / 2, 555, '📱 TOUCH / VIRTUAL GAMEPAD SUPORTADO EM DISPOSITIVOS MÓVEIS', {
+            fontFamily: '"Arial Black", Arial, sans-serif', fontSize: '18px', color: '#ffd700'
         }).setOrigin(0.5);
 
-        const btnBack = this.add.text(width / 2, height - 70, '← VOLTAR AO MENU', {
+        const btnBack = this.add.text(width / 2, height - 65, '← VOLTAR AO MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '36px',
+            fontSize: '32px',
             color: '#ffe34d',
             stroke: '#d52821',
             strokeThickness: 5,
@@ -58,7 +64,7 @@ export class ControlsScene extends Phaser.Scene {
         };
 
         btnBack.on('pointerdown', goBack);
-        btnBack.on('pointerover', () => btnBack.setScale(1.1));
+        btnBack.on('pointerover', () => btnBack.setScale(1.08));
         btnBack.on('pointerout', () => btnBack.setScale(1.0));
 
         this.onKeyDown = (e: KeyboardEvent) => {

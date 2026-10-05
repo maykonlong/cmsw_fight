@@ -104,27 +104,55 @@ export class InputManager implements IInputProvider {
 
     get pad() {
         if (this.playerTwo) return null;
-        const raw = (this.scene.input as any)?.gamepad?.pad1;
-        if (!raw) return null;
-        // Normaliza para um objeto seguro, evitando crash se a API do gamepad mudar entre versões do Phaser.
-        const axis = (i: number) => (raw.axes && raw.axes[i] && typeof raw.axes[i].getValue === 'function') ? raw.axes[i].getValue() : 0;
-        return {
-            left: Boolean(raw.left),
-            right: Boolean(raw.right),
-            up: Boolean(raw.up),
-            down: Boolean(raw.down),
-            A: Boolean(raw.A),
-            B: Boolean(raw.B),
-            X: Boolean(raw.X),
-            Y: Boolean(raw.Y),
-            R1: Boolean(raw.R1),
-            R2: Boolean(raw.R2),
-            L1: Boolean(raw.L1),
-            axes: {
-                0: { getValue: () => axis(0) },
-                1: { getValue: () => axis(1) },
+        const phaserPad = (this.scene.input as any)?.gamepad?.pad1;
+        if (phaserPad) {
+            const axis = (i: number) => (phaserPad.axes && phaserPad.axes[i] && typeof phaserPad.axes[i].getValue === 'function') ? phaserPad.axes[i].getValue() : 0;
+            return {
+                left: Boolean(phaserPad.left),
+                right: Boolean(phaserPad.right),
+                up: Boolean(phaserPad.up),
+                down: Boolean(phaserPad.down),
+                A: Boolean(phaserPad.A),
+                B: Boolean(phaserPad.B),
+                X: Boolean(phaserPad.X),
+                Y: Boolean(phaserPad.Y),
+                R1: Boolean(phaserPad.R1),
+                R2: Boolean(phaserPad.R2),
+                L1: Boolean(phaserPad.L1),
+                axes: {
+                    0: { getValue: () => axis(0) },
+                    1: { getValue: () => axis(1) },
+                }
+            };
+        }
+
+        // Suporte a Gamepad API nativa do navegador (Arcade Sticks, Xbox, PS4/PS5)
+        if (typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function') {
+            const pads = navigator.getGamepads();
+            const gp = pads ? (pads[0] || pads[1]) : null;
+            if (gp) {
+                const b = (idx: number) => Boolean(gp.buttons[idx] && gp.buttons[idx].pressed);
+                const a = (idx: number) => gp.axes[idx] || 0;
+                return {
+                    left: b(14) || a(0) < -0.5,
+                    right: b(15) || a(0) > 0.5,
+                    up: b(12) || a(1) < -0.5,
+                    down: b(13) || a(1) > 0.5,
+                    A: b(0),
+                    B: b(1),
+                    X: b(2),
+                    Y: b(3),
+                    L1: b(4),
+                    R1: b(5),
+                    R2: b(7),
+                    axes: {
+                        0: { getValue: () => a(0) },
+                        1: { getValue: () => a(1) },
+                    }
+                };
             }
-        };
+        }
+        return null;
     }
 
     get isLeftDown(): boolean { 

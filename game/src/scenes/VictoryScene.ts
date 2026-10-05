@@ -26,17 +26,25 @@ export class VictoryScene extends Phaser.Scene {
         AudioManager.getInstance().playMusic('victory', false);
 
         ArcadeTheme.background(this, 'blue');
-        ArcadeTheme.panel(this, width / 2 - 285, 50, 570, height - 100, ARCADE.yellow);
+        ArcadeTheme.panel(this, width / 2 - 285, 45, 570, height - 90, ARCADE.yellow);
+
+        const baseKey = this.winnerId.replace(/_p2$/, '');
+        const winTexKey = this.textures.exists(`${this.winnerId}_win`)
+            ? `${this.winnerId}_win`
+            : (this.textures.exists(`${baseKey}_win`)
+                ? `${baseKey}_win`
+                : (this.textures.exists(`${this.winnerId}_idle`) ? `${this.winnerId}_idle` : baseKey));
 
         // Winner Sprite (Heroic display)
-        if (this.textures.exists(`${this.winnerId}_win`)) {
-            this.add.image(width / 2, height / 2 - 30, `${this.winnerId}_win`).setDisplaySize(340, 510);
-        } else {
-            this.add.rectangle(width / 2, height / 2 - 30, 340, 510, 0x00ff00);
+        if (this.textures.exists(winTexKey)) {
+            const winImg = this.add.image(width / 2, height / 2 - 20, winTexKey).setDisplaySize(340, 510);
+            if (this.winnerId.includes('_p2')) {
+                winImg.setTint(0xffaa77);
+            }
         }
 
         // Título
-        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'VITÓRIA!', width / 2, 80, 70);
+        ArcadeTheme.title(this, this.mode === '2p' ? 'VENCEDOR!' : 'VITÓRIA!', width / 2, 75, 70);
 
         // Stats Box
         const statsBg = this.add.graphics();
@@ -45,9 +53,11 @@ export class VictoryScene extends Phaser.Scene {
         statsBg.lineStyle(3, ARCADE.yellow, 1);
         statsBg.strokeRoundedRect(width / 2 - 200, height - 250, 400, 120, 8);
 
-        this.add.text(width / 2, height - 220, this.winnerId === 'kevin' ? 'KEVIN MANJA É O CAMPEÃO' : 'VINI DOG É O CAMPEÃO', {
+        const displayName = baseKey.includes('kevin') ? 'KEVIN MANJA' : 'VINI DOG';
+
+        this.add.text(width / 2, height - 220, `${displayName} É O CAMPEÃO!`, {
             fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '26px',
+            fontSize: '24px',
             color: '#ffe279',
             stroke: '#af2231',
             strokeThickness: 3,
@@ -60,7 +70,7 @@ export class VictoryScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Botões
-        const playAgainBtn = this.add.text(width / 2 - 150, height - 80, 'REVANCHE', {
+        const playAgainBtn = this.add.text(width / 2 - 140, height - 80, 'REVANCHE', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '24px',
             color: '#ffffff',
@@ -72,7 +82,7 @@ export class VictoryScene extends Phaser.Scene {
             this.scene.start('CharacterSelectScene', { mode: this.mode });
         });
 
-        const menuBtn = this.add.text(width / 2 + 150, height - 80, 'MENU', {
+        const menuBtn = this.add.text(width / 2 + 140, height - 80, 'MENU', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '24px',
             color: '#ffffff',

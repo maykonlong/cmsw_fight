@@ -12,7 +12,7 @@ import { AudioManager } from '../engine/AudioManager';
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public static readonly DISPLAY_WIDTH = 180;
     public static readonly DISPLAY_HEIGHT = 340;
-    public static readonly CENTER_ABOVE_FLOOR = 150;
+    public static readonly CENTER_ABOVE_FLOOR = 0;
     public stateMachine: StateMachine;
     public inputManager?: IInputProvider;
     public speed: number = 250;
@@ -38,6 +38,25 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public airAttackUsed: boolean = false;
     public specialCooldown: number = 0;
 
+    // KOF Super Gauge (Poder)
+    public superGauge: number = 0;
+    public superStocks: number = 0;
+    public static readonly MAX_SUPER_GAUGE: number = 1000;
+    public static readonly MAX_SUPER_STOCKS: number = 3;
+
+    public addSuperEnergy(amount: number) {
+        if (this.superStocks >= Fighter.MAX_SUPER_STOCKS) return;
+        this.superGauge += amount;
+        if (this.superGauge >= Fighter.MAX_SUPER_GAUGE) {
+            this.superGauge -= Fighter.MAX_SUPER_GAUGE;
+            this.superStocks = Math.min(Fighter.MAX_SUPER_STOCKS, this.superStocks + 1);
+            if ((this.scene as any)?.vfxManager) {
+                (this.scene as any).vfxManager.showComboText(0, this.x, this.y - 140, 'MAX POWER ★');
+                AudioManager.getInstance().playSFX('electric_cast', 0.4);
+            }
+        }
+    }
+
     // Combo Tracking
     public comboHits: number = 0;
     public comboDamage: number = 0;
@@ -46,6 +65,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public registerComboHit(damage: number, vfx?: any) {
         this.comboHits++;
         this.comboDamage += damage;
+        this.addSuperEnergy(45); // Ganha 45 de energia por cada acerto de combo
         if (this.comboResetTimer) this.comboResetTimer.remove();
 
         if (this.comboHits >= 2 && vfx) {
@@ -89,6 +109,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             walk:        new WalkState(),
             run:         new RunState(),
             backdash:    new BackdashState(),
+            roll:        new RollState(),
             jump:        new JumpState(),
             crouch:      new CrouchState(),
             
@@ -129,9 +150,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             throw:       new ThrowState(),
             thrown:      new ThrownState(),
             
-            // Especial
-            special:     new SpecialState(),
-            air_special: new AirSpecialState(),
+            // Especial & Super (Desperation Move KOF)
+            special:       new SpecialState(),
+            super_special: new SuperSpecialState(),
+            air_special:   new AirSpecialState(),
         }, [this]);
         this.applyVisualSize();
     }
@@ -164,10 +186,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
     public isOnGround(): boolean {
         const body = this.body as Phaser.Physics.Arcade.Body;
-        const groundY = (this.scene.cache.json.get('cmsw_hq')?.groundY ?? 590) - Fighter.CENTER_ABOVE_FLOOR;
+        const groundY = (this.scene as any)?.floorY ?? 590;
         const distToGround = Math.abs(this.y - groundY);
         const isPhysicsGrounded = Boolean(body?.blocked.down || body?.touching.down);
-        const isNearFloor = distToGround <= 4 && (body?.velocity.y ?? 0) >= 0;
+        const isNearFloor = distToGround <= 10 && (body?.velocity.y ?? 0) >= 0;
         return isPhysicsGrounded || isNearFloor;
     }
 
@@ -247,14 +269,29 @@ class IdleState extends State {
             this.stateMachine.transition('backdash'); return;
         }
 
-        // Reconhecimento de comandos especiais
+        // AB Roll Esquiva KOF (Soco Leve + Chute Leve juntos)
+        if (inp.isLPJustPressed && inp.isLKJustPressed) {
+            this.stateMachine.transition('roll'); return;
+        }
+
+        // Reconhecimento de comandos especiais & Super Especial (Desperation Move KOF)
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
+        const isSuperReady = (f.superStocks > 0 || f.superGauge >= 1000);
+
         if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
-            this.stateMachine.transition('special', cmd); return;
+            if (isSuperReady) {
+                this.stateMachine.transition('super_special', cmd); return;
+            } else {
+                this.stateMachine.transition('special', cmd); return;
+            }
         }
         if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
             f.bufferedSpecialFrames = 0;
-            this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
+            if (isSuperReady) {
+                this.stateMachine.transition('super_special', f.getDefaultSpecialCommand()); return;
+            } else {
+                this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
+            }
         }
 
         if (inp.isUpJustPressed && f.isOnGround()) {
@@ -822,6 +859,93 @@ class SpecialState extends State {
             this.fired = true;
             f.setPoseTexture('special_2');
             f.emit('fire_special', f);
+        }
+
+        if (this.duration <= 0) {
+            f.clearTint();
+            this.stateMachine.transition('idle');
+        }
+    }
+
+    exit(f: Fighter) {
+        f.currentHitbox.active = false;
+        f.clearTint();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ROLL (AB Esquiva KOF)
+// ─────────────────────────────────────────────────────────────────
+class RollState extends State {
+    private duration = 0;
+    enter(f: Fighter) {
+        this.duration = 22; // 22 frames de rolamento
+        f.setPoseTexture('crouch');
+        f.currentHurtbox.invincible = true;
+        const isFacingLeft = f.flipX;
+        const inp = f.inputManager;
+        const rollDir = inp?.isLeftDown ? -1 : inp?.isRightDown ? 1 : (isFacingLeft ? -1 : 1);
+        f.setVelocityX(380 * rollDir);
+        AudioManager.getInstance().playSFX('swing', 0.35);
+    }
+
+    execute(f: Fighter) {
+        this.duration--;
+        if (this.duration === 14) {
+            f.setPoseTexture('crouch_punch');
+        }
+        if (this.duration <= 4) {
+            f.currentHurtbox.invincible = false;
+        }
+        if (this.duration <= 0) {
+            f.currentHurtbox.invincible = false;
+            this.stateMachine.transition(f.inputManager?.isDownDown ? 'crouch' : 'idle');
+        }
+    }
+
+    exit(f: Fighter) {
+        f.currentHurtbox.invincible = false;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SUPER SPECIAL (Desperation Move KOF)
+// ─────────────────────────────────────────────────────────────────
+class SuperSpecialState extends State {
+    private duration = 0;
+    private fired = false;
+
+    enter(f: Fighter) {
+        if (f.superStocks > 0) {
+            f.superStocks--;
+        } else if (f.superGauge >= 1000) {
+            f.superGauge = 0;
+        }
+        f.specialCooldown = 60;
+        f.setPoseTexture('special');
+        f.setVelocityX(0);
+        this.duration = 60;
+        this.fired = false;
+        f.currentHitbox.active = false;
+        f.setTint(0xffd700);
+
+        const isKevin = f.characterId.includes('kevin');
+        if ((f.scene as any)?.vfxManager) {
+            const vfx = (f.scene as any).vfxManager;
+            vfx.screenFlash(220);
+            vfx.cameraShake(0.025);
+            vfx.showComboText(0, f.x, f.y - 140, isKevin ? 'SELINHO SUPREMO!' : 'PITBULL RUSH EXTREMO!');
+        }
+        AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast', 0.85);
+    }
+
+    execute(f: Fighter) {
+        this.duration--;
+
+        if (!this.fired && this.duration <= 56) {
+            this.fired = true;
+            f.setPoseTexture('special_2');
+            f.emit('fire_special', f, true); // true = super special
         }
 
         if (this.duration <= 0) {

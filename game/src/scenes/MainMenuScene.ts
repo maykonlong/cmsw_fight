@@ -11,11 +11,11 @@ export class MainMenuScene extends Phaser.Scene {
     private onKeyDown?: (e: KeyboardEvent) => void;
 
     private readonly OPTIONS = [
-        { label: '1 PLAYER  [ ARCADE ]', action: () => this.startGame('1p') },
-        { label: '2 PLAYERS [ DESAFIO ]', action: () => this.startGame('2p') },
-        { label: 'TREINO    [ PRÁTICA ]', action: () => this.scene.start('TrainingScene') },
-        { label: 'CONTROLES [ Mapeamento ]', action: () => this.showControls() },
-        { label: 'CONFIGURAÇÕES', action: () => this.scene.start('SettingsScene') },
+        { label: '🎮  1 PLAYER', sub: 'MODO ARCADE vs CPU', action: () => this.startGame('1p') },
+        { label: '⚔️  2 PLAYERS', sub: 'DESAFIO PVP LOCAL', action: () => this.startGame('2p') },
+        { label: '🥊  TREINO', sub: 'PRÁTICA COM SELEÇÃO DE CENÁRIO', action: () => this.scene.start('TrainingScene') },
+        { label: '🕹️  CONTROLES', sub: 'MAPEAMENTO TECLADO & GAMEPAD', action: () => this.showControls() },
+        { label: '⚙️  CONFIGURAÇÕES', sub: 'AJUSTES DE ÁUDIO & JOGO', action: () => this.scene.start('SettingsScene') },
     ];
 
     constructor() {
@@ -29,19 +29,19 @@ export class MainMenuScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('menu_bgm', true);
 
-        // Fundo KOF Arcade
-        ArcadeTheme.background(this, 'kof');
+        // Fundo Arcade Retro Neon
+        ArcadeTheme.background(this, 'arcade');
 
-        // Silhuetas dinâmicas dos lutadores no fundo
+        // Silhuetas dos lutadores de fundo com brilho
         if (this.textures.exists('kevin_idle')) {
-            const kevinBg = this.add.image(180, height - 20, 'kevin_idle')
+            const kevinBg = this.add.image(190, height - 15, 'kevin_idle')
                 .setOrigin(0.5, 1)
-                .setDisplaySize(260, 410)
+                .setDisplaySize(270, 420)
                 .setAlpha(0.28)
                 .setTint(0x00aaff);
             this.tweens.add({
                 targets: kevinBg,
-                y: height - 30,
+                y: height - 25,
                 duration: 2200,
                 yoyo: true,
                 repeat: -1,
@@ -50,15 +50,15 @@ export class MainMenuScene extends Phaser.Scene {
         }
 
         if (this.textures.exists('vini_dog_idle')) {
-            const viniBg = this.add.image(width - 180, height - 20, 'vini_dog_idle')
+            const viniBg = this.add.image(width - 190, height - 15, 'vini_dog_idle')
                 .setOrigin(0.5, 1)
-                .setDisplaySize(260, 410)
+                .setDisplaySize(270, 420)
                 .setAlpha(0.28)
                 .setTint(0xff3300)
                 .setFlipX(true);
             this.tweens.add({
                 targets: viniBg,
-                y: height - 30,
+                y: height - 25,
                 duration: 2500,
                 yoyo: true,
                 repeat: -1,
@@ -66,48 +66,48 @@ export class MainMenuScene extends Phaser.Scene {
             });
         }
 
-        // Moldura Central KOF
-        ArcadeTheme.panel(this, width / 2 - 320, 80, 640, 590, ARCADE.blue);
+        // Painel Central Moderno
+        ArcadeTheme.panel(this, width / 2 - 340, 65, 680, 615, ARCADE.blue);
 
-        // Sub-título KOF Superior
-        this.add.text(width / 2, 105, '★ THE KING OF FIGHTERS IDENTITY ★', {
+        // Header Badge
+        this.add.text(width / 2, 90, '★ CMSW FIGHT ARCADE SYSTEM ★', {
             fontFamily: 'Impact, "Arial Black", sans-serif',
-            fontSize: '16px',
-            color: '#ffcc00',
+            fontSize: '15px',
+            color: '#ffd700',
             letterSpacing: 4,
         }).setOrigin(0.5);
 
-        // Título Principal CMSW
-        const title = ArcadeTheme.title(this, 'CMSW', width / 2, 160, 96);
+        // Título Principal CMSW FIGHT
+        const title = ArcadeTheme.title(this, 'CMSW FIGHT', width / 2, 145, 84);
         this.tweens.add({
             targets: title,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 900,
+            scaleX: 1.04,
+            scaleY: 1.04,
+            duration: 1000,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
 
-        this.add.text(width / 2, 222, 'COMBAT MARTIAL SOUL WARRIORS', {
+        this.add.text(width / 2, 204, 'COMBAT MARTIAL SOUL WARRIORS', {
             fontFamily: 'Impact, "Arial Black", sans-serif',
-            fontSize: '24px',
+            fontSize: '22px',
             color: '#ffffff',
             stroke: '#d52821',
-            strokeThickness: 5,
-            letterSpacing: 4,
+            strokeThickness: 4,
+            letterSpacing: 3,
         }).setOrigin(0.5);
 
-        this.add.text(width / 2, 256, '— PRESS START // SELECIONE O MODO —', {
-            fontFamily: 'Impact, Arial Black',
-            fontSize: '16px',
-            color: '#ffa500',
-            letterSpacing: 4,
+        this.add.text(width / 2, 235, 'PRESSIONE ENTER OU CLIQUE PARA SELECIONAR', {
+            fontFamily: 'Impact, Arial, sans-serif',
+            fontSize: '14px',
+            color: '#00ccff',
+            letterSpacing: 2,
         }).setOrigin(0.5);
 
-        // Itens do menu estilizados em blocos recortados estilo KOF
-        const startY = 310;
-        const spacing = 68;
+        // Opções do menu com design limpo e amplo
+        const startY = 280;
+        const spacing = 72;
         this.menuItems = [];
         this.menuItemBoxes = [];
         this.pointerArrows = [];
@@ -117,21 +117,26 @@ export class MainMenuScene extends Phaser.Scene {
             const box = this.add.graphics();
             this.menuItemBoxes.push(box);
 
-            const arrow = this.add.text(width / 2 - 250, boxY, '►', {
+            const arrow = this.add.text(width / 2 - 275, boxY, '►', {
                 fontFamily: 'Impact, "Arial Black"',
-                fontSize: '28px',
+                fontSize: '26px',
                 color: '#ffd700',
             }).setOrigin(0.5).setAlpha(0);
             this.pointerArrows.push(arrow);
 
-            const item = this.add.text(width / 2, boxY, opt.label, {
+            const containerText = this.add.text(width / 2, boxY - 6, opt.label, {
                 fontFamily: 'Impact, "Arial Black", sans-serif',
-                fontSize: '32px',
-                color: '#cccccc',
+                fontSize: '26px',
+                color: '#ffffff',
                 stroke: '#000000',
                 strokeThickness: 4,
-                padding: { x: 20, y: 4 }
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            this.add.text(width / 2, boxY + 18, opt.sub, {
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '12px',
+                color: '#aaaaaa',
+            }).setOrigin(0.5);
 
             const handlePointer = () => {
                 this.selectedIndex = i;
@@ -139,18 +144,18 @@ export class MainMenuScene extends Phaser.Scene {
                 this.select();
             };
 
-            item.on('pointerdown', handlePointer);
-            item.on('pointerover', () => {
+            containerText.on('pointerdown', handlePointer);
+            containerText.on('pointerover', () => {
                 this.selectedIndex = i;
                 this.updateSelection();
             });
 
-            this.menuItems.push(item);
+            this.menuItems.push(containerText);
         });
 
         this.updateSelection();
 
-        // Listener de teclado nativo DOM
+        // Teclado
         this.onKeyDown = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
             if (key === 'arrowup' || key === 'w') this.move(-1);
@@ -180,8 +185,8 @@ export class MainMenuScene extends Phaser.Scene {
 
     private updateSelection() {
         const { width } = this.scale;
-        const startY = 310;
-        const spacing = 68;
+        const startY = 280;
+        const spacing = 72;
 
         this.menuItems.forEach((item, i) => {
             const box = this.menuItemBoxes[i];
@@ -190,25 +195,25 @@ export class MainMenuScene extends Phaser.Scene {
 
             box.clear();
             if (i === this.selectedIndex) {
-                // Caixa destacada KOF Dourada/Vermelha
-                box.fillStyle(0xd52821, 0.85);
-                box.fillRect(width / 2 - 240, boxY - 24, 480, 48);
+                // Card selecionado destacado com efeito neon dourado/vermelho
+                box.fillStyle(0xd52821, 0.9);
+                box.fillRect(width / 2 - 270, boxY - 26, 540, 56);
                 box.lineStyle(3, 0xffd700, 1);
-                box.strokeRect(width / 2 - 240, boxY - 24, 480, 48);
+                box.strokeRect(width / 2 - 270, boxY - 26, 540, 56);
 
                 item.setColor('#ffffff');
                 item.setStroke('#000000', 5);
-                item.setScale(1.08);
+                item.setScale(1.05);
 
                 arrow.setAlpha(1);
-                arrow.setX(width / 2 - 215);
+                arrow.setX(width / 2 - 245);
             } else {
-                box.fillStyle(0x0c122b, 0.65);
-                box.fillRect(width / 2 - 220, boxY - 20, 440, 40);
-                box.lineStyle(1.5, 0x1f366d, 0.8);
-                box.strokeRect(width / 2 - 220, boxY - 20, 440, 40);
+                box.fillStyle(0x0a1029, 0.7);
+                box.fillRect(width / 2 - 250, boxY - 22, 500, 48);
+                box.lineStyle(1.5, 0x1d346b, 0.75);
+                box.strokeRect(width / 2 - 250, boxY - 22, 500, 48);
 
-                item.setColor('#aaaaaa');
+                item.setColor('#bbbbbb');
                 item.setStroke('#000000', 3);
                 item.setScale(1.0);
 

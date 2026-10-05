@@ -39,9 +39,9 @@ export class MatchManager {
 
     public startRoundSequence() {
         this.matchActive = false; // Block inputs
-        const groundY = this.scene.cache.json.get('cmsw_hq')?.groundY ?? 590;
-        this.resetFighter(this.p1, 280, groundY - Fighter.CENTER_ABOVE_FLOOR);
-        this.resetFighter(this.p2, this.scene.scale.width - 280, groundY - Fighter.CENTER_ABOVE_FLOOR);
+        const groundY = (this.scene as any).floorY ?? 590;
+        this.resetFighter(this.p1, 280, groundY);
+        this.resetFighter(this.p2, this.scene.scale.width - 280, groundY);
         this.p1.hp = this.p1.maxHp;
         this.p2.hp = this.p2.maxHp;
         this.roundTime = 99;
@@ -111,6 +111,14 @@ export class MatchManager {
         fighter.currentHitbox.active = false;
         fighter.bufferedSpecialFrames = 0;
         fighter.currentHurtbox.invincible = false;
+
+        // Reset facing direction (P1 faces right, P2 faces left)
+        if (fighter === this.p1) {
+            fighter.setFlipX(false);
+        } else {
+            fighter.setFlipX(true);
+        }
+
         fighter.stateMachine.transition('idle');
     }
 

@@ -8,6 +8,7 @@ interface VsData {
     p1Name: string;
     p2Name: string;
     mode: string;
+    stage?: string;
 }
 
 export class VsScene extends Phaser.Scene {
@@ -26,10 +27,10 @@ export class VsScene extends Phaser.Scene {
 
         AudioManager.getInstance().setScene(this);
 
-        // Fundo KOF Arcade
-        ArcadeTheme.background(this, 'kof');
+        // Fundo Arcade Retro
+        ArcadeTheme.background(this, 'arcade');
 
-        // Divisão Diagonal KOF (P1 Azul / P2 Vermelho)
+        // Divisão Diagonal Estilizada (P1 Azul / P2 Vermelho)
         const splitGraphics = this.add.graphics();
         // Lado P1 (Triângulo Azul Cyan)
         splitGraphics.fillStyle(0x0055ff, 0.45);
@@ -41,7 +42,7 @@ export class VsScene extends Phaser.Scene {
         splitGraphics.fillTriangle(width / 2 + 100, 0, width, 0, width, height);
         splitGraphics.fillTriangle(width / 2 + 100, 0, width, height, width / 2 - 100, height);
 
-        // Linha divisória diagonal laser dourada KOF
+        // Linha divisória diagonal laser dourada
         splitGraphics.lineStyle(6, ARCADE.yellow, 1);
         splitGraphics.lineBetween(width / 2 + 100, 0, width / 2 - 100, height);
 
@@ -53,14 +54,14 @@ export class VsScene extends Phaser.Scene {
         const p1Tex = getTex(this.data_.p1);
         const p2Tex = getTex(this.data_.p2);
 
-        // --- P1 lado esquerdo ---
+        // --- P1 Lado Esquerdo ---
         if (this.textures.exists(p1Tex)) {
             const p1Sprite = this.add.image(220, height / 2 + 20, p1Tex)
                 .setDisplaySize(280, 420).setAlpha(0).setX(-300);
             this.tweens.add({ targets: p1Sprite, x: 240, alpha: 1, duration: 450, ease: 'Power3.easeOut' });
         }
 
-        // Banner P1 Name KOF
+        // Banner P1 Name
         const p1Banner = this.add.graphics();
         p1Banner.fillStyle(0x0033aa, 0.9);
         p1Banner.fillRect(0, height - 120, width / 2 - 40, 60);
@@ -85,14 +86,14 @@ export class VsScene extends Phaser.Scene {
             strokeThickness: 8,
         }).setOrigin(0.5);
 
-        // --- P2 lado direito ---
+        // --- P2 Lado Direito ---
         if (this.textures.exists(p2Tex)) {
             const p2Sprite = this.add.image(width - 220, height / 2 + 20, p2Tex)
                 .setDisplaySize(280, 420).setAlpha(0).setX(width + 300).setFlipX(true);
             this.tweens.add({ targets: p2Sprite, x: width - 240, alpha: 1, duration: 450, ease: 'Power3.easeOut' });
         }
 
-        // Banner P2 Name KOF
+        // Banner P2 Name
         const p2Banner = this.add.graphics();
         p2Banner.fillStyle(0xaa0000, 0.9);
         p2Banner.fillRect(width / 2 + 40, height - 120, width / 2 - 40, 60);
@@ -117,7 +118,7 @@ export class VsScene extends Phaser.Scene {
             strokeThickness: 8,
         }).setOrigin(0.5);
 
-        // --- VS Central Metalico KOF Slam ---
+        // --- VS Central ---
         const vsBacking = this.add.circle(width / 2, height / 2, 95, 0x000000, 0.85)
             .setStrokeStyle(4, ARCADE.yellow).setScale(0);
 
@@ -146,7 +147,7 @@ export class VsScene extends Phaser.Scene {
             }
         });
 
-        // Transição automática para a luta
+        // Transição automática para o combate
         this.time.delayedCall(2200, () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
             this.time.delayedCall(420, () => {

@@ -141,18 +141,19 @@ export class CombatScene extends Phaser.Scene {
         const p1KeyToUse = this.p1Key;
         const p2KeyToUse = (this.p1Key === this.p2Key) ? `${this.p2Key}_p2` : this.p2Key;
 
-        this.player = CharacterLoader.createFighter(this, 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, p1KeyToUse, this.inputManager);
+        this.player = CharacterLoader.createFighter(this, 280, this.floorY, p1KeyToUse, this.inputManager);
         this.player.setDepth(5);
+        this.player.setFlipX(false);
         this.physics.add.collider(this.player, floor);
 
-        this.player.on('fire_special', (fighter: Fighter) => this.fireSpecial(fighter));
+        this.player.on('fire_special', (fighter: Fighter, isSuper?: boolean) => this.fireSpecial(fighter, isSuper));
 
-        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY - Fighter.CENTER_ABOVE_FLOOR, p2KeyToUse);
+        this.enemy = CharacterLoader.createFighter(this, stageInfo.width - 280, this.floorY, p2KeyToUse);
         this.enemy.setDepth(5);
         this.enemy.setFlipX(true);
         this.physics.add.collider(this.enemy, floor);
         
-        this.enemy.on('fire_special', (fighter: Fighter) => this.fireSpecial(fighter));
+        this.enemy.on('fire_special', (fighter: Fighter, isSuper?: boolean) => this.fireSpecial(fighter, isSuper));
         
         // Attach AI
         if (this.mode === '2p') {
@@ -239,7 +240,7 @@ export class CombatScene extends Phaser.Scene {
         if (!this.matchManager?.isMatchActive() || !proj.hitActive || proj.getOwner() === target) return;
         // A caixa Arcade é alta para os socos, mas projéteis baixos passam sob
         // um lutador que já ganhou altura suficiente no salto.
-        const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
+        const groundCenterY = this.floorY;
         if (!target.isOnGround() || target.y < groundCenterY - 40) return;
         proj.hitActive = false;
         const pushDir = proj.x < target.x ? 1 : -1;
@@ -256,7 +257,7 @@ export class CombatScene extends Phaser.Scene {
         proj.destroy();
     }
 
-    private fireSpecial(fighter: Fighter) {
+    private fireSpecial(fighter: Fighter, isSuper: boolean = false) {
         if (!this.matchManager?.isMatchActive()) return;
 
         // Limite de 1 projétil ativo por lutador na tela ao mesmo tempo (regra clássica KOF/SF)
@@ -266,25 +267,41 @@ export class CombatScene extends Phaser.Scene {
         const direction = fighter.flipX ? -1 : 1;
         const isKevin = fighter.characterId.includes('kevin');
         const special = this.cache.json.get(fighter.characterId.replace(/_p2$/, ''))?.specials?.[0];
+        
+        const damage = isSuper ? 240 : (special?.damage ?? 80);
+        const speed = isSuper ? 720 : (special?.projectileSpeed ?? (isKevin ? 550 : 480));
+
         const projectile = new Projectile(
             this,
             fighter.x + (isKevin ? 85 : 95) * direction,
             fighter.y - 10,
             isKevin ? 'aura_beijo' : 'aura_cachorro',
             fighter,
-            (special?.projectileSpeed ?? (isKevin ? 550 : 480)) * direction,
-            special?.damage ?? 80,
+            speed * direction,
+            damage,
             isKevin ? 'electric' : 'normal'
         );
-        projectile.setDisplaySize(isKevin ? 160 : 180, 110);
+        
+        const widthSize = isSuper ? 240 : (isKevin ? 160 : 180);
+        const heightSize = isSuper ? 160 : 110;
+        projectile.setDisplaySize(widthSize, heightSize);
+        if (isSuper) projectile.setTint(0xffd700);
+
         const pBody = projectile.body as Phaser.Physics.Arcade.Body;
-        pBody.setSize(120, 70);
+        pBody.setSize(widthSize * 0.75, heightSize * 0.65);
         pBody.setOffset(15, 18);
         projectile.setFlipX(direction < 0);
         projectile.setDepth(10);
         this.projectiles.add(projectile);
-        AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast');
-        if (isKevin) this.vfxManager.screenFlash(60);
+        
+        if (isSuper) {
+            this.vfxManager.screenFlash(150);
+            this.vfxManager.cameraShake(0.02);
+            AudioManager.getInstance().playVoice('fight');
+        } else {
+            AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast');
+            if (isKevin) this.vfxManager.screenFlash(60);
+        }
     }
 
     private togglePause() {
@@ -324,9 +341,8 @@ export class CombatScene extends Phaser.Scene {
         this.enemy.update();
         InputManager.endFrame();
 
-        // Mantém os pés na linha do cenário mesmo quando a escala FIT altera
-        // a posição calculada pelo Arcade Physics em diferentes telas.
-        const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
+        // Mantém os pés na linha do cenário (floorY)
+        const groundCenterY = this.floorY;
         for (const fighter of [this.player, this.enemy]) {
             if (fighter.y > groundCenterY && (fighter.body?.velocity.y ?? 0) >= 0) {
                 fighter.y = groundCenterY;
@@ -340,14 +356,11 @@ export class CombatScene extends Phaser.Scene {
         this.p1Shadow.y = this.floorY;
         this.p2Shadow.x = this.enemy.x;
         this.p2Shadow.y = this.floorY;
-        
-        // Update camera
-        // Arena fixa: zoom dinâmico diminuía visualmente os lutadores e o HUD.
 
         // ── MANUAL PUSHBOX COLLISION ──────────────────────────────────
         const distanceX = Math.abs(this.player.x - this.enemy.x);
         const minDistance = 75;
-        if (distanceX < minDistance && this.player.y >= groundCenterY && this.enemy.y >= groundCenterY) {
+        if (distanceX < minDistance && this.player.y >= groundCenterY - 10 && this.enemy.y >= groundCenterY - 10) {
             const overlap = minDistance - distanceX;
             if (this.player.x < this.enemy.x) {
                 this.player.x -= overlap / 2;
@@ -360,16 +373,11 @@ export class CombatScene extends Phaser.Scene {
         this.player.x = Phaser.Math.Clamp(this.player.x, 95, this.scale.width - 95);
         this.enemy.x = Phaser.Math.Clamp(this.enemy.x, 95, this.scale.width - 95);
 
-        // Auto-Face
-        if (this.player.y >= groundCenterY && this.enemy.y >= groundCenterY) {
-            if (this.player.x < this.enemy.x) {
-                this.player.setFlipX(false);
-                this.enemy.setFlipX(true);
-            } else {
-                this.player.setFlipX(true);
-                this.enemy.setFlipX(false);
-            }
-        }
+        // Auto-Face (apenas em movimento livre para não interromper animações de ataque)
+        const p1CanTurn = ['idle', 'walk', 'crouch', 'block', 'run', 'land'].includes(this.player.stateMachine.state);
+        const p2CanTurn = ['idle', 'walk', 'crouch', 'block', 'run', 'land'].includes(this.enemy.stateMachine.state);
+        if (p1CanTurn) this.player.setFlipX(this.player.x > this.enemy.x);
+        if (p2CanTurn) this.enemy.setFlipX(this.enemy.x > this.player.x);
 
         // Check Box collisions
         if (CombatSystem.checkHitboxCollision(this.player.currentHitbox, this.enemy.currentHurtbox)) {

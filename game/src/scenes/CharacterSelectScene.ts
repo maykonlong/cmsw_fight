@@ -7,7 +7,7 @@ const CHARACTERS = [
         key: 'kevin',
         textureKey: 'kevin_idle',
         name: 'KEVIN MANJA',
-        specialty: 'Especial: Beijo Elétrico',
+        specialty: 'Especial: Beijo Elétrico 💋⚡',
         color: 0x0099ff,
         colorHex: '#0099ff',
         locked: false,
@@ -16,7 +16,7 @@ const CHARACTERS = [
         key: 'vini_dog',
         textureKey: 'vini_dog_idle',
         name: 'VINI DOG',
-        specialty: 'Especial: Aura do Cachorro',
+        specialty: 'Especial: Aura do Cachorro 🐶💨',
         color: 0xff3300,
         colorHex: '#ff3300',
         locked: false,
@@ -25,7 +25,7 @@ const CHARACTERS = [
         key: 'unknown',
         textureKey: 'unknown',
         name: '???',
-        specialty: '???',
+        specialty: 'Em Breve',
         color: 0x444444,
         colorHex: '#444444',
         locked: true,
@@ -34,7 +34,7 @@ const CHARACTERS = [
         key: 'unknown',
         textureKey: 'unknown',
         name: '???',
-        specialty: '???',
+        specialty: 'Em Breve',
         color: 0x444444,
         colorHex: '#444444',
         locked: true,
@@ -74,18 +74,18 @@ export class CharacterSelectScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('char_select', true);
 
-        // Fundo KOF Arcade
-        ArcadeTheme.background(this, 'kof');
+        // Fundo Arcade Retro
+        ArcadeTheme.background(this, 'arcade');
 
         // Painel Superior de seleção
-        ArcadeTheme.panel(this, 30, 95, width - 60, 265, ARCADE.blue);
+        ArcadeTheme.panel(this, 30, 90, width - 60, 270, ARCADE.blue);
         // Painel Inferior de previews
-        ArcadeTheme.panel(this, 30, 385, width - 60, 305, ARCADE.red);
+        ArcadeTheme.panel(this, 30, 380, width - 60, 315, ARCADE.red);
 
         // Botão VOLTAR
         const btnBack = this.add.text(50, 34, '[ ◄ VOLTAR ]', {
             fontFamily: 'Impact, "Arial Black", sans-serif',
-            fontSize: '22px',
+            fontSize: '20px',
             color: '#ffd700',
             stroke: '#ff0000',
             strokeThickness: 4,
@@ -100,8 +100,8 @@ export class CharacterSelectScene extends Phaser.Scene {
 
         btnBack.on('pointerdown', goBack);
 
-        // Título da tela KOF
-        this.add.text(width / 2, 34, 'SELECT YOUR FIGHTER — SELECT MEMBER', {
+        // Título da tela
+        this.add.text(width / 2, 34, 'SELEÇÃO DE LUTADORES', {
             fontFamily: 'Impact, "Arial Black", sans-serif',
             fontSize: '34px',
             fontStyle: 'italic',
@@ -111,16 +111,16 @@ export class CharacterSelectScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Instruções
-        this.add.text(width / 2, 74, this.mode === '2p'
+        this.add.text(width / 2, 70, this.mode === '2p'
             ? 'P1: ← → ENTER  |  P2: A D J  |  CONFIRME OS DOIS LUTADORES'
-            : 'P1: ← → ENTER / CLIQUE DIRETO NO PORTRAIT', {
+            : 'CLIQUE NO LUTADOR OU USE ← → E ENTER PARA CONFIRMAR', {
             fontFamily: 'Impact, Arial, sans-serif',
-            fontSize: '16px',
+            fontSize: '15px',
             color: '#ffd700',
             letterSpacing: 2,
         }).setOrigin(0.5);
 
-        // Grid KOF de personagens
+        // Grid de personagens
         const gridX = width / 2;
         const gridY = 225;
         const cardW = 180;
@@ -185,7 +185,7 @@ export class CharacterSelectScene extends Phaser.Scene {
             }
         });
 
-        // Emblem VS Central KOF Slashed
+        // Emblem VS Central
         this.add.text(width / 2, 400, 'VS', {
             fontFamily: 'Impact, "Arial Black"',
             fontSize: '56px',
