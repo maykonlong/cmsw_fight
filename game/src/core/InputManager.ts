@@ -201,8 +201,42 @@ export class InputManager implements IInputProvider {
         return this.isLPJustPressed && this.isLKJustPressed;
     }
 
+    private prevLeftState: boolean = false;
+    private prevRightState: boolean = false;
+    private lastLeftPressTime: number = 0;
+    private lastRightPressTime: number = 0;
+    public isLeftDoubleTapped: boolean = false;
+    public isRightDoubleTapped: boolean = false;
+
     public update(): void {
         this.currentFrame++;
+        const leftNow = this.isLeftDown;
+        const rightNow = this.isRightDown;
+        const now = Date.now();
+
+        const leftJustPressed = leftNow && !this.prevLeftState;
+        const rightJustPressed = rightNow && !this.prevRightState;
+
+        this.isLeftDoubleTapped = false;
+        this.isRightDoubleTapped = false;
+
+        if (leftJustPressed) {
+            if (now - this.lastLeftPressTime < 300) {
+                this.isLeftDoubleTapped = true;
+            }
+            this.lastLeftPressTime = now;
+        }
+
+        if (rightJustPressed) {
+            if (now - this.lastRightPressTime < 300) {
+                this.isRightDoubleTapped = true;
+            }
+            this.lastRightPressTime = now;
+        }
+
+        this.prevLeftState = leftNow;
+        this.prevRightState = rightNow;
+
         this.framePress = null;
         this.framePress = {
             up: this.isUpJustPressed,

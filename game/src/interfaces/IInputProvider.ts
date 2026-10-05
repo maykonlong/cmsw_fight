@@ -24,8 +24,10 @@ export interface IInputProvider {
   readonly isHKJustPressed: boolean;
   readonly isSpecialJustPressed: boolean;
 
-  // ═══ Combinados ═══
+  // ═══ Combinados e Dashes ═══
   readonly isThrowJustPressed: boolean; // LP+LK simultâneo
+  readonly isLeftDoubleTapped?: boolean;
+  readonly isRightDoubleTapped?: boolean;
 
   // ═══ Buffer de comandos especiais ═══
   readonly buffer: any;

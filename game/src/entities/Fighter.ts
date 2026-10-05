@@ -82,8 +82,11 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
         // Registrando estados usando MoveData base para normais
         this.stateMachine = new StateMachine('idle', {
+            // Movimentação
             idle:        new IdleState(),
             walk:        new WalkState(),
+            run:         new RunState(),
+            backdash:    new BackdashState(),
             jump:        new JumpState(),
             crouch:      new CrouchState(),
             
@@ -216,6 +219,18 @@ class IdleState extends State {
         if (!f.inputManager) return;
         const inp = f.inputManager;
 
+        // Corrida (Double tap para frente) e Backdash (Double tap para trás)
+        const isFacingLeft = f.flipX;
+        const forwardDouble = isFacingLeft ? inp.isLeftDoubleTapped : inp.isRightDoubleTapped;
+        const backDouble = isFacingLeft ? inp.isRightDoubleTapped : inp.isLeftDoubleTapped;
+
+        if (forwardDouble) {
+            this.stateMachine.transition('run'); return;
+        }
+        if (backDouble) {
+            this.stateMachine.transition('backdash'); return;
+        }
+
         // Reconhecimento de comandos especiais
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
         if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
@@ -235,7 +250,6 @@ class IdleState extends State {
             if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
-        const isFacingLeft = f.flipX;
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
         if (holdBack) {
             this.stateMachine.transition('block_high'); return;
@@ -272,6 +286,17 @@ class WalkState extends State {
         if (!f.inputManager) return;
         const inp = f.inputManager;
 
+        const isFacingLeft = f.flipX;
+        const forwardDouble = isFacingLeft ? inp.isLeftDoubleTapped : inp.isRightDoubleTapped;
+        const backDouble = isFacingLeft ? inp.isRightDoubleTapped : inp.isLeftDoubleTapped;
+
+        if (forwardDouble) {
+            this.stateMachine.transition('run'); return;
+        }
+        if (backDouble) {
+            this.stateMachine.transition('backdash'); return;
+        }
+
         this.walkTimer++;
         if (this.walkTimer % 16 < 8) {
             f.setPoseTexture('walk_2');
@@ -297,7 +322,6 @@ class WalkState extends State {
             if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
-        const isFacingLeft = f.flipX;
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
         if (holdBack) {
             this.stateMachine.transition('block_high'); return;
@@ -322,6 +346,72 @@ class WalkState extends State {
         if (inp.isLKJustPressed && !inp.isLPJustPressed) { this.stateMachine.transition('stand_LK'); return; }
         if (inp.isMKJustPressed) { this.stateMachine.transition('stand_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('stand_HK'); return; }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RUN (Corrida) & BACKDASH (Esquiva para trás)
+// ─────────────────────────────────────────────────────────────────
+class RunState extends State {
+    private runTimer = 0;
+    enter(f: Fighter) {
+        this.runTimer = 0;
+        f.setPoseTexture('walk');
+        AudioManager.getInstance().playSFX('swing', 0.2);
+    }
+
+    execute(f: Fighter) {
+        if (!f.inputManager) return;
+        const inp = f.inputManager;
+        this.runTimer++;
+
+        if (this.runTimer % 10 < 5) {
+            f.setPoseTexture('walk_2');
+        } else {
+            f.setPoseTexture('walk');
+        }
+
+        const isFacingLeft = f.flipX;
+        const moveDir = isFacingLeft ? -1 : 1;
+        const runSpeed = f.speed * 1.85; // 460px/s velocissima corrida
+
+        const holdForward = isFacingLeft ? inp.isLeftDown : inp.isRightDown;
+        if (!holdForward) {
+            this.stateMachine.transition('idle');
+            return;
+        }
+
+        f.setVelocityX(runSpeed * moveDir);
+
+        if (inp.isUpJustPressed && f.isOnGround()) {
+            this.stateMachine.transition('jump'); return;
+        }
+        if (inp.isLPJustPressed && !inp.isLKJustPressed) { this.stateMachine.transition('stand_LP'); return; }
+        if (inp.isMPJustPressed) { this.stateMachine.transition('stand_MP'); return; }
+        if (inp.isHPJustPressed) { this.stateMachine.transition('stand_HP'); return; }
+        if (inp.isLKJustPressed && !inp.isLPJustPressed) { this.stateMachine.transition('stand_LK'); return; }
+        if (inp.isMKJustPressed) { this.stateMachine.transition('stand_MK'); return; }
+        if (inp.isHKJustPressed) { this.stateMachine.transition('stand_HK'); return; }
+    }
+}
+
+class BackdashState extends State {
+    private duration = 0;
+    enter(f: Fighter) {
+        this.duration = 14;
+        f.setPoseTexture('jump_1');
+        const isFacingLeft = f.flipX;
+        const backDir = isFacingLeft ? 1 : -1;
+        f.setVelocityX(380 * backDir);
+        f.setVelocityY(-160);
+        AudioManager.getInstance().playSFX('swing', 0.25);
+    }
+
+    execute(f: Fighter) {
+        this.duration--;
+        if (this.duration <= 0 || f.isOnGround()) {
+            this.stateMachine.transition('idle');
+        }
     }
 }
 

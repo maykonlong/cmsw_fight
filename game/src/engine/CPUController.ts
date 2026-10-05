@@ -48,6 +48,8 @@ export class CPUController implements IInputProvider {
     get isMKJustPressed(): boolean { return this._mkJust; }
     get isHKJustPressed(): boolean { return this._hkJust; }
     get isSpecialJustPressed(): boolean { return this._specialJust; }
+    public isLeftDoubleTapped: boolean = false;
+    public isRightDoubleTapped: boolean = false;
     get isThrowJustPressed(): boolean { return this._throwJust; }
 
     public update(): void {
