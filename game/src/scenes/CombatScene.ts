@@ -50,7 +50,7 @@ export class CombatScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
         if (!this.textures.exists('kevin')) this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
@@ -210,6 +210,10 @@ export class CombatScene extends Phaser.Scene {
 
     private resolveProjectileHit(proj: Projectile, target: Fighter) {
         if (!this.matchManager?.isMatchActive() || !proj.hitActive || proj.getOwner() === target) return;
+        // A caixa Arcade é alta para os socos, mas projéteis baixos passam sob
+        // um lutador que já ganhou altura suficiente no salto.
+        const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
+        if (target.y < groundCenterY - 75 && proj.y > target.y + 85) return;
         proj.hitActive = false;
         if (target.isBlocking) {
             target.hp = Math.max(0, target.hp - 4);
@@ -231,7 +235,8 @@ export class CombatScene extends Phaser.Scene {
         const projectile = new Projectile(
             this,
             fighter.x + (isKevin ? 76 : 86) * direction,
-            fighter.y - (isKevin ? 42 : 30),
+            // Trajetória baixa: o salto passa claramente por cima da área de colisão.
+            fighter.y + (isKevin ? 25 : 30),
             isKevin ? 'aura_beijo' : 'aura_cachorro',
             fighter,
             (special?.projectileSpeed ?? (isKevin ? 450 : 420)) * direction,

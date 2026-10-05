@@ -9,6 +9,8 @@ export class InputManager implements IInputProvider {
     
     // Rastrear botoes de gamepad do frame anterior para o "JustPressed"
     private prevPadState = { A: false, B: false, X: false, Y: false, RB: false, RT: false, LB: false, up: false };
+    // Mantém os eventos deste frame disponíveis até os lutadores atualizarem.
+    private framePress: Record<string, boolean> | null = null;
 
     public buffer: InputBuffer;
     public currentFrame: number = 0;
@@ -150,49 +152,49 @@ export class InputManager implements IInputProvider {
         const padUp = Boolean(this.pad && (this.pad.up || this.pad.axes[1].getValue() < -0.5));
         const padJustUp = padUp && !this.prevPadState.up;
         return (this.playerTwo ? this.isJustPressed('w', 'keyw') : this.splitControls ? this.isJustPressed('arrowup') : this.isJustPressed('arrowup', 'w', 'keyw')) ||
-               this.virtualUpJustPressed || padJustUp; 
+               this.virtualUpJustPressed || padJustUp || Boolean(this.framePress?.up);
     }
     get isLPJustPressed(): boolean { 
         const padX = Boolean(this.pad && this.pad.X);
         const padJustX = padX && !this.prevPadState.X;
         return (this.playerTwo ? this.isJustPressed('j', 'keyj') : this.splitControls ? this.isJustPressed('z', 'keyz') : this.isJustPressed('z', 'keyz', 'j', 'keyj')) ||
-               this.virtualLPJustPressed || padJustX; 
+               this.virtualLPJustPressed || padJustX || Boolean(this.framePress?.lp);
     }
     get isMPJustPressed(): boolean { 
         const padY = Boolean(this.pad && this.pad.Y);
         const padJustY = padY && !this.prevPadState.Y;
         return (this.playerTwo ? this.isJustPressed('k', 'keyk') : this.splitControls ? this.isJustPressed('x', 'keyx') : this.isJustPressed('x', 'keyx', 'k', 'keyk')) ||
-               this.virtualMPJustPressed || padJustY; 
+               this.virtualMPJustPressed || padJustY || Boolean(this.framePress?.mp);
     }
     get isHPJustPressed(): boolean { 
         const padRB = Boolean(this.pad && this.pad.R1);
         const padJustRB = padRB && !this.prevPadState.RB;
         return (this.playerTwo ? this.isJustPressed('l', 'keyl') : this.splitControls ? this.isJustPressed('c', 'keyc') : this.isJustPressed('c', 'keyc', 'l', 'keyl')) ||
-               this.virtualHPJustPressed || padJustRB; 
+               this.virtualHPJustPressed || padJustRB || Boolean(this.framePress?.hp);
     }
     get isLKJustPressed(): boolean { 
         const padA = Boolean(this.pad && this.pad.A);
         const padJustA = padA && !this.prevPadState.A;
         return (this.playerTwo ? this.isJustPressed('u', 'keyu') : this.splitControls ? this.isJustPressed('v', 'keyv') : this.isJustPressed('v', 'keyv', 'u', 'keyu')) ||
-               this.virtualLKJustPressed || padJustA; 
+               this.virtualLKJustPressed || padJustA || Boolean(this.framePress?.lk);
     }
     get isMKJustPressed(): boolean { 
         const padB = Boolean(this.pad && this.pad.B);
         const padJustB = padB && !this.prevPadState.B;
         return (this.playerTwo ? this.isJustPressed('i', 'keyi') : this.splitControls ? this.isJustPressed('b', 'keyb') : this.isJustPressed('b', 'keyb', 'i', 'keyi')) ||
-               this.virtualMKJustPressed || padJustB; 
+               this.virtualMKJustPressed || padJustB || Boolean(this.framePress?.mk);
     }
     get isHKJustPressed(): boolean { 
         const padRT = Boolean(this.pad && this.pad.R2);
         const padJustRT = padRT && !this.prevPadState.RT;
         return (this.playerTwo ? this.isJustPressed('o', 'keyo') : this.splitControls ? this.isJustPressed('n', 'keyn') : this.isJustPressed('n', 'keyn', 'o', 'keyo')) ||
-               this.virtualHKJustPressed || padJustRT; 
+               this.virtualHKJustPressed || padJustRT || Boolean(this.framePress?.hk);
     }
     get isSpecialJustPressed(): boolean { 
         const padLB = Boolean(this.pad && this.pad.L1);
         const padJustLB = padLB && !this.prevPadState.LB;
         return (this.playerTwo ? this.isJustPressed('e', 'keye') : this.splitControls ? this.isJustPressed(' ', 'space') : this.isJustPressed(' ', 'space', 'e', 'keye')) ||
-               this.virtualSpecialJustPressed || padJustLB; 
+               this.virtualSpecialJustPressed || padJustLB || Boolean(this.framePress?.special);
     }
 
     get isThrowJustPressed(): boolean {
@@ -201,6 +203,13 @@ export class InputManager implements IInputProvider {
 
     public update(): void {
         this.currentFrame++;
+        this.framePress = null;
+        this.framePress = {
+            up: this.isUpJustPressed,
+            lp: this.isLPJustPressed, mp: this.isMPJustPressed, hp: this.isHPJustPressed,
+            lk: this.isLKJustPressed, mk: this.isMKJustPressed, hk: this.isHKJustPressed,
+            special: this.isSpecialJustPressed,
+        };
         
         // Registrar input no buffer
         const currentInputs: string[] = [];

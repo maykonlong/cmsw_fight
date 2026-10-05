@@ -6,6 +6,7 @@ export class Hitbox extends Phaser.Geom.Rectangle {
     public hitType: string = 'normal'; // 'normal', 'special', 'throw'
     public hitLevel: 'HIGH' | 'MID' | 'LOW' | 'AIR' | 'UNBLOCKABLE' = 'MID';
     public knockback: number = 0;
+    public knockdown: boolean = false;
     public hitstun: number = 0;
     public blockstun: number = 0;
     

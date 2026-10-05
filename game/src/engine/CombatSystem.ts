@@ -95,7 +95,7 @@ export class CombatSystem {
         defender.setVelocityX(hitbox.knockback * dir);
         
         defender.hitStunTimer = hitbox.hitstun;
-        defender.stateMachine.transition('hit', hitbox.hitType);
+        defender.stateMachine.transition(hitbox.knockdown ? 'knockdown' : 'hit', hitbox.hitType);
         return 'hit';
     }
 }

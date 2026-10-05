@@ -85,7 +85,8 @@ export class CPUController implements IInputProvider {
         }
 
         // 2. Agarrão (Throw)
-        if (distanceX < 50 && distanceY < 50 && Math.random() < 0.4) {
+        // A arena separa lutadores no chão em pelo menos 75 px.
+        if (distanceX < 95 && distanceY < 50 && Math.random() < 0.4) {
             this._throwJust = true;
             this.actionCooldown = 55;
             return;

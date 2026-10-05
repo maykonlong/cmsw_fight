@@ -34,6 +34,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public throwRange: number = 60;
     public characterId: string;
     public bufferedSpecialFrames: number = 0;
+    public airAttackUsed: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: IInputProvider) {
         super(scene, x, y, texture);
@@ -128,6 +129,12 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         return this.characterId.includes('vini') ? '214K' : '236P';
     }
 
+    public isOnGround(): boolean {
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const groundY = (this.scene.cache.json.get('cmsw_hq')?.groundY ?? 590) - Fighter.CENTER_ABOVE_FLOOR;
+        return Boolean(body?.blocked.down || body?.touching.down || (this.y >= groundY - 1 && body?.velocity.y >= 0));
+    }
+
     public setPoseTexture(pose: string) {
         const targetKey = `${this.characterId}_${pose}`;
         if (this.scene.textures.exists(targetKey)) {
@@ -176,8 +183,7 @@ class IdleState extends State {
         }
         if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
-        const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
-        if (inp.isUpJustPressed && isGrounded) {
+        if (inp.isUpJustPressed && f.isOnGround()) {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
@@ -224,12 +230,16 @@ class WalkState extends State {
         }
         if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
 
-        const isGrounded = Boolean(f.body && ((f.body as Phaser.Physics.Arcade.Body).blocked.down || f.body.touching.down || f.y >= 440));
-        if (inp.isUpJustPressed && isGrounded) {
+        if (inp.isUpJustPressed && f.isOnGround()) {
             this.stateMachine.transition('jump'); return;
         }
         if (inp.isDownDown) {
             this.stateMachine.transition('crouch'); return;
+        }
+        const isFacingLeft = f.flipX;
+        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
+        if (holdBack) {
+            this.stateMachine.transition('block_high'); return;
         }
         if (inp.isLeftDown) {
             f.setVelocityX(-f.speed);
@@ -239,12 +249,6 @@ class WalkState extends State {
             f.setFlipX(false);
         } else {
             this.stateMachine.transition('idle'); return;
-        }
-
-        const isFacingLeft = f.flipX;
-        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
-        if (holdBack) {
-            this.stateMachine.transition('block_high'); return;
         }
 
         if (inp.isThrowJustPressed) {
@@ -265,9 +269,11 @@ class WalkState extends State {
 // ─────────────────────────────────────────────────────────────────
 class JumpState extends State {
     private airFrames = 0;
-    enter(f: Fighter) {
-        this.airFrames = 0;
+    enter(f: Fighter, resume: boolean = false) {
+        this.airFrames = resume ? 9 : 0;
         f.setPoseTexture('jump');
+        if (resume) return;
+        f.airAttackUsed = false;
         f.setVelocityY(-f.jumpForce);
         if (!f.inputManager) return;
         if (f.inputManager.isLeftDown)  f.setVelocityX(-f.speed * 0.85);
@@ -276,7 +282,11 @@ class JumpState extends State {
 
     execute(f: Fighter) {
         this.airFrames++;
-        if (!f.inputManager) return;
+        if (this.airFrames > 8 && f.isOnGround()) {
+            this.stateMachine.transition('land');
+            return;
+        }
+        if (!f.inputManager || f.airAttackUsed) return;
         const inp = f.inputManager;
 
         // Aerial attacks
@@ -287,9 +297,6 @@ class JumpState extends State {
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
 
-        if (this.airFrames > 8 && f.body && ((f.body as any).blocked?.down || f.body.touching.down)) {
-            this.stateMachine.transition('land');
-        }
     }
 }
 
@@ -300,7 +307,9 @@ class LandState extends State {
     private duration = 0;
     enter(f: Fighter) {
         this.duration = 3; // 3 frames de aterrissagem
+        f.setPoseTexture('idle');
         f.setVelocityX(0);
+        f.setVelocityY(0);
     }
     execute(_f: Fighter) {
         this.duration--;
@@ -371,13 +380,16 @@ class AttackState extends State {
         this.duration = 0;
         f.currentHitbox.active = false;
         
-        const poseName = this.moveData.name.includes('K') ? 'kick' : 'punch';
+        const isAir = this.moveData.hitLevel === 'AIR';
+        if (isAir) f.airAttackUsed = true;
+        const poseName = `${isAir ? 'air_' : ''}${this.moveData.input.includes('K') ? 'kick' : 'punch'}`;
         f.setPoseTexture(poseName);
         
         // Copiar dados pro hitbox atual
         f.currentHitbox.damage = this.moveData.damage;
         f.currentHitbox.hitType = this.moveData.type;
         f.currentHitbox.hitLevel = this.moveData.hitLevel;
+        f.currentHitbox.knockdown = this.moveData.knockdown;
         f.currentHitbox.knockback = this.moveData.knockback;
         f.currentHitbox.hitstun = this.moveData.hitstun;
         f.currentHitbox.blockstun = this.moveData.blockstun;
@@ -391,6 +403,13 @@ class AttackState extends State {
     execute(f: Fighter) {
         this.duration++;
 
+        // A colisão com o chão encerra o golpe; nunca cria um segundo salto.
+        if (this.moveData.hitLevel === 'AIR' && this.duration > 1 && f.isOnGround()) {
+            f.currentHitbox.active = false;
+            this.stateMachine.transition('land');
+            return;
+        }
+
         // Ativa hitbox durante os frames active
         if (this.duration === this.moveData.startup + 1) {
             f.currentHitbox.active = true;
@@ -402,7 +421,7 @@ class AttackState extends State {
         }
 
         // Janela de Cancel
-        if (this.moveData.cancelable && this.duration > this.moveData.startup + this.moveData.active) {
+        if (this.moveData.hitLevel !== 'AIR' && this.moveData.cancelable && this.duration > this.moveData.startup + this.moveData.active) {
             if (f.inputManager) {
                 const cmd = CommandRecognizer.checkCommands(f.inputManager.buffer, f.inputManager.currentFrame, f.flipX);
                 if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
@@ -414,23 +433,22 @@ class AttackState extends State {
             }
         }
 
-        if (f.bufferedSpecialFrames > 0 && this.duration > this.moveData.startup + this.moveData.active) {
+        if (this.moveData.hitLevel !== 'AIR' && f.bufferedSpecialFrames > 0 && this.duration > this.moveData.startup + this.moveData.active) {
             f.bufferedSpecialFrames = 0;
             f.currentHitbox.active = false;
             this.stateMachine.transition('special', f.getDefaultSpecialCommand());
             return;
         }
 
+        // Golpes aéreos mantêm a pose até aterrissar; a hitbox já foi desligada.
+        if (this.moveData.hitLevel === 'AIR') return;
+
         // Transition out
         if (this.duration >= this.moveData.startup + this.moveData.active + this.moveData.recovery) {
             f.currentHitbox.active = false;
             f.clearTint();
             
-            if (this.moveData.hitLevel === 'AIR') {
-                this.stateMachine.transition('jump');
-            } else {
-                this.stateMachine.transition(f.inputManager?.isDownDown ? 'crouch' : 'idle');
-            }
+            this.stateMachine.transition(f.inputManager?.isDownDown ? 'crouch' : 'idle');
         }
     }
 }
@@ -622,7 +640,8 @@ class HitState extends State {
         if (f.hitStunTimer <= 0) {
             f.isHit = false;
             f.clearTint();
-            this.stateMachine.transition('idle');
+            if (f.isOnGround()) this.stateMachine.transition('idle');
+            else this.stateMachine.transition('jump', true);
         }
     }
 }
