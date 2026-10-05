@@ -96,23 +96,26 @@ export class VFXManager {
         });
     }
 
-    public showComboText(count: number, x: number, y: number) {
-        const txt = this.scene.add.text(x, y, `${count} HIT!`, {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '32px',
-            color: '#ff0000',
-            stroke: '#ffffff',
-            strokeThickness: 4,
-            fontStyle: 'italic'
-        }).setOrigin(0.5).setDepth(20);
+    public showComboText(count: number, x: number, y: number, comboName?: string) {
+        const textStr = comboName ? `${count} HITS!\n${comboName}` : `${count} HITS COMBO!`;
+        const txt = this.scene.add.text(x, y - 40, textStr, {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '36px',
+            color: '#ffd429',
+            stroke: '#d52821',
+            strokeThickness: 6,
+            fontStyle: 'italic',
+            align: 'center',
+            shadow: { offsetX: 3, offsetY: 3, color: '#000000', blur: 0, fill: true }
+        }).setOrigin(0.5).setDepth(150);
 
         this.scene.tweens.add({
             targets: txt,
-            y: y - 50,
+            y: y - 100,
+            scale: { from: 1.6, to: 1.0 },
             alpha: { from: 1, to: 0 },
-            scale: { from: 1.5, to: 1 },
-            duration: 800,
-            ease: 'Cubic.easeOut',
+            duration: 1000,
+            ease: 'Back.easeOut',
             onComplete: () => txt.destroy()
         });
     }

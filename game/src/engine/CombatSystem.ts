@@ -94,6 +94,11 @@ export class CombatSystem {
         if (defender.hp < 0) defender.hp = 0;
         defender.setVelocityX(hitbox.knockback * dir);
         
+        // Registrar hit no sistema de combos do atacante
+        if (attacker && typeof attacker.registerComboHit === 'function') {
+            attacker.registerComboHit(finalDamage, attacker.scene?.vfxManager);
+        }
+
         defender.hitStunTimer = hitbox.hitstun;
         defender.stateMachine.transition(hitbox.knockdown ? 'knockdown' : 'hit', hitbox.hitType);
         return 'hit';

@@ -37,6 +37,30 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public bufferedSpecialFrames: number = 0;
     public airAttackUsed: boolean = false;
 
+    // Combo Tracking
+    public comboHits: number = 0;
+    public comboDamage: number = 0;
+    public comboResetTimer?: Phaser.Time.TimerEvent;
+
+    public registerComboHit(damage: number, vfx?: any) {
+        this.comboHits++;
+        this.comboDamage += damage;
+        if (this.comboResetTimer) this.comboResetTimer.remove();
+
+        if (this.comboHits >= 2 && vfx) {
+            const isKevin = this.characterId.includes('kevin');
+            const comboTitle = isKevin
+                ? (this.comboHits >= 3 ? 'SELINHO ELÉTRICO!' : 'KEVIN COMBO!')
+                : (this.comboHits >= 3 ? 'PITBULL RUSH!' : 'VINI DOG COMBO!');
+            vfx.showComboText(this.comboHits, this.x, this.y - 120, comboTitle);
+        }
+
+        this.comboResetTimer = this.scene.time.delayedCall(1200, () => {
+            this.comboHits = 0;
+            this.comboDamage = 0;
+        });
+    }
+
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, inputManager?: IInputProvider) {
         super(scene, x, y, texture);
         scene.add.existing(this);
@@ -493,10 +517,25 @@ class AttackState extends State {
             f.currentHitbox.active = false;
         }
 
-        // Janela de Cancel
-        if (this.moveData.hitLevel !== 'AIR' && this.moveData.cancelable && this.duration > this.moveData.startup + this.moveData.active) {
+        // Janela de Target Combo Chain & Special Cancel
+        if (this.moveData.hitLevel !== 'AIR' && this.duration > this.moveData.startup + 1) {
             if (f.inputManager) {
-                const cmd = CommandRecognizer.checkCommands(f.inputManager.buffer, f.inputManager.currentFrame, f.flipX);
+                const inp = f.inputManager;
+                const isCrouch = inp.isDownDown;
+
+                // Chain/Target Combos
+                const isLight = this.moveData.input.includes('L');
+                const isMedium = this.moveData.input.includes('M');
+                if (isLight) {
+                    if (inp.isMPJustPressed) { f.currentHitbox.active = false; f.stateMachine.transition(isCrouch ? 'crouch_MP' : 'stand_MP'); return; }
+                    if (inp.isMKJustPressed) { f.currentHitbox.active = false; f.stateMachine.transition(isCrouch ? 'crouch_MK' : 'stand_MK'); return; }
+                } else if (isMedium) {
+                    if (inp.isHPJustPressed) { f.currentHitbox.active = false; f.stateMachine.transition(isCrouch ? 'crouch_HP' : 'stand_HP'); return; }
+                    if (inp.isHKJustPressed) { f.currentHitbox.active = false; f.stateMachine.transition(isCrouch ? 'crouch_HK' : 'stand_HK'); return; }
+                }
+
+                // Special Cancel
+                const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
                 if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
                     f.currentHitbox.active = false;
                     f.clearTint();
