@@ -633,7 +633,7 @@ class SpecialState extends State {
     execute(f: Fighter) {
         this.duration--;
 
-        if (!this.fired && this.duration === 32) {
+        if (!this.fired && this.duration === 42) {
             this.fired = true;
             f.setPoseTexture('special_2');
             if (this.cmd === '623P') {

@@ -237,20 +237,20 @@ export class CombatScene extends Phaser.Scene {
         const special = this.cache.json.get(fighter.characterId.replace(/_p2$/, ''))?.specials?.[0];
         const projectile = new Projectile(
             this,
-            fighter.x + (isKevin ? 76 : 86) * direction,
-            fighter.y + (isKevin ? 25 : 30),
+            fighter.x + (isKevin ? 85 : 95) * direction,
+            fighter.y - 10,
             isKevin ? 'aura_beijo' : 'aura_cachorro',
             fighter,
-            (special?.projectileSpeed ?? (isKevin ? 450 : 420)) * direction,
+            (special?.projectileSpeed ?? (isKevin ? 550 : 480)) * direction,
             special?.damage ?? 80,
             isKevin ? 'electric' : 'normal'
         );
-        projectile.setDisplaySize(isKevin ? 140 : 170, 95);
+        projectile.setDisplaySize(isKevin ? 160 : 180, 110);
         const pBody = projectile.body as Phaser.Physics.Arcade.Body;
-        pBody.setSize(110, 60);
+        pBody.setSize(120, 70);
         pBody.setOffset(15, 18);
         projectile.setFlipX(direction < 0);
-        projectile.setDepth(8);
+        projectile.setDepth(10);
         this.projectiles.add(projectile);
         AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast');
         if (isKevin) this.vfxManager.screenFlash(60);
