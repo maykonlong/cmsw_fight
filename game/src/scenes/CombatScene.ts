@@ -233,12 +233,11 @@ export class CombatScene extends Phaser.Scene {
     private fireSpecial(fighter: Fighter) {
         if (!this.matchManager?.isMatchActive()) return;
         const direction = fighter.flipX ? -1 : 1;
-        const isKevin = fighter.characterId === 'kevin';
-        const special = this.cache.json.get(fighter.characterId)?.specials?.[0];
+        const isKevin = fighter.characterId.includes('kevin');
+        const special = this.cache.json.get(fighter.characterId.replace(/_p2$/, ''))?.specials?.[0];
         const projectile = new Projectile(
             this,
             fighter.x + (isKevin ? 76 : 86) * direction,
-            // Trajetória baixa: o salto passa claramente por cima da área de colisão.
             fighter.y + (isKevin ? 25 : 30),
             isKevin ? 'aura_beijo' : 'aura_cachorro',
             fighter,
@@ -246,10 +245,10 @@ export class CombatScene extends Phaser.Scene {
             special?.damage ?? 80,
             isKevin ? 'electric' : 'normal'
         );
-        projectile.setDisplaySize(isKevin ? 132 : 172, isKevin ? 94 : 94);
-        (projectile.body as Phaser.Physics.Arcade.Body)
-            .setSize(projectile.width * 0.78, projectile.height * 0.6)
-            .setOffset(projectile.width * 0.11, projectile.height * 0.2);
+        projectile.setDisplaySize(isKevin ? 140 : 170, 95);
+        const pBody = projectile.body as Phaser.Physics.Arcade.Body;
+        pBody.setSize(110, 60);
+        pBody.setOffset(15, 18);
         projectile.setFlipX(direction < 0);
         projectile.setDepth(8);
         this.projectiles.add(projectile);

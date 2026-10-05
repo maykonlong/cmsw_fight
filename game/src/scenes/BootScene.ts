@@ -9,7 +9,7 @@ export class BootScene extends Phaser.Scene {
     preload() {
         const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'crouch_punch', 'sweep', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
 
-        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2, incluindo frames _2)
+        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2, incluindo frames _2 e _3 de pulo)
         this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
             this.load.image(`kevin_${p}`, `assets/sprites/kevin_${p}.png`);
@@ -17,14 +17,22 @@ export class BootScene extends Phaser.Scene {
             this.load.image(`kevin_${p}_2`, `assets/sprites/kevin_${p}_2.png`);
             this.load.image(`kevin_p2_${p}_2`, `assets/sprites/kevin_p2_${p}_2.png`);
         });
+        [1, 2, 3].forEach(n => {
+            this.load.image(`kevin_jump_${n}`, `assets/sprites/kevin_jump_${n}.png`);
+            this.load.image(`kevin_p2_jump_${n}`, `assets/sprites/kevin_p2_jump_${n}.png`);
+        });
 
-        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2, incluindo frames _2)
+        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2, incluindo frames _2 e _3 de pulo)
         this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
         poses.forEach(p => {
             this.load.image(`vini_dog_${p}`, `assets/sprites/vini_dog_${p}.png`);
             this.load.image(`vini_dog_p2_${p}`, `assets/sprites/vini_dog_p2_${p}.png`);
             this.load.image(`vini_dog_${p}_2`, `assets/sprites/vini_dog_${p}_2.png`);
             this.load.image(`vini_dog_p2_${p}_2`, `assets/sprites/vini_dog_p2_${p}_2.png`);
+        });
+        [1, 2, 3].forEach(n => {
+            this.load.image(`vini_dog_jump_${n}`, `assets/sprites/vini_dog_jump_${n}.png`);
+            this.load.image(`vini_dog_p2_jump_${n}`, `assets/sprites/vini_dog_p2_jump_${n}.png`);
         });
 
         // Efeitos especiais e itens

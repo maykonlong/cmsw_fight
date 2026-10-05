@@ -28,11 +28,11 @@ export class VictoryScene extends Phaser.Scene {
         ArcadeTheme.background(this, 'blue');
         ArcadeTheme.panel(this, width / 2 - 285, 50, 570, height - 100, ARCADE.yellow);
 
-        // Winner Sprite (Placeholder/Actual)
+        // Winner Sprite (Heroic display)
         if (this.textures.exists(`${this.winnerId}_win`)) {
-            this.add.image(width / 2, height / 2, `${this.winnerId}_win`).setDisplaySize(280, 420);
+            this.add.image(width / 2, height / 2 - 30, `${this.winnerId}_win`).setDisplaySize(340, 510);
         } else {
-            this.add.rectangle(width / 2, height / 2, 280, 420, 0x00ff00);
+            this.add.rectangle(width / 2, height / 2 - 30, 340, 510, 0x00ff00);
         }
 
         // Título

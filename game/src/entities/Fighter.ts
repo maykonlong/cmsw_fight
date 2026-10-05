@@ -133,7 +133,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public isOnGround(): boolean {
         const body = this.body as Phaser.Physics.Arcade.Body;
         const groundY = (this.scene.cache.json.get('cmsw_hq')?.groundY ?? 590) - Fighter.CENTER_ABOVE_FLOOR;
-        return Boolean(body?.blocked.down || body?.touching.down || (this.y >= groundY - 1 && body?.velocity.y >= 0));
+        const distToGround = Math.abs(this.y - groundY);
+        const isPhysicsGrounded = Boolean(body?.blocked.down || body?.touching.down);
+        const isNearFloor = distToGround <= 4 && (body?.velocity.y ?? 0) >= 0;
+        return isPhysicsGrounded || isNearFloor;
     }
 
     public setPoseTexture(pose: string) {
@@ -304,8 +307,9 @@ class WalkState extends State {
 class JumpState extends State {
     private airFrames = 0;
     enter(f: Fighter, resume: boolean = false) {
+        if (!resume && !f.isOnGround()) return; // IMPEDE DUPLO PULO ABSOLUTAMENTE!
         this.airFrames = resume ? 9 : 0;
-        f.setPoseTexture('jump');
+        f.setPoseTexture('jump_1');
         if (resume) return;
         f.airAttackUsed = false;
         f.setVelocityY(-f.jumpForce);
@@ -316,6 +320,18 @@ class JumpState extends State {
 
     execute(f: Fighter) {
         this.airFrames++;
+        const body = f.body as Phaser.Physics.Arcade.Body;
+        const vy = body?.velocity.y ?? 0;
+
+        // Alternância de frames de pulo (jump_1 arranque, jump_2 ápice, jump_3 queda)
+        if (vy < -200) {
+            f.setPoseTexture('jump_1');
+        } else if (Math.abs(vy) <= 200) {
+            f.setPoseTexture('jump_2');
+        } else {
+            f.setPoseTexture('jump_3');
+        }
+
         if (this.airFrames > 8 && f.isOnGround()) {
             this.stateMachine.transition('land');
             return;
@@ -330,7 +346,6 @@ class JumpState extends State {
         if (inp.isLKJustPressed) { this.stateMachine.transition('air_LK'); return; }
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
-
     }
 }
 
@@ -775,6 +790,7 @@ class WinState extends State {
         f.clearTint();
         f.setPoseTexture('win');
         f.setVelocityY(0);
+        f.setDisplaySize(240, 440);
     }
 
     execute(f: Fighter) {
