@@ -45,11 +45,15 @@ export class BootScene extends Phaser.Scene {
         this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
         this.load.image('stage_mg', 'assets/sprites/stage_mg.png');
         this.load.image('stage_fg', 'assets/sprites/stage_fg.png');
+        this.load.image('stage_kevin_bathroom', 'assets/sprites/stage_kevin_bathroom.png');
+        this.load.image('stage_vini_tabacaria', 'assets/sprites/stage_vini_tabacaria.png');
 
         // Carrega JSONs de dados (chaves idênticas aos IDs dos personagens)
         this.load.json('kevin', 'data/characters/kevin.json');
         this.load.json('vini_dog', 'data/characters/vini_dog.json');
         this.load.json('cmsw_hq', 'data/stages/cmsw_hq.json');
+        this.load.json('kevin_bathroom', 'data/stages/kevin_bathroom.json');
+        this.load.json('vini_tabacaria', 'data/stages/vini_tabacaria.json');
 
         // Carregamento universal de Audio (SFX, Vozes e Músicas com reservas)
         const sfxKeys = [

@@ -1,0 +1,18 @@
+{
+  "id": "vini_tabacaria",
+  "name": "Tabacaria & Hookah Lounge do Vini",
+  "music": "assets/audio/music/stage_cmsw.ogg",
+  "groundY": 590,
+  "leftBoundary": 80,
+  "rightBoundary": 1200,
+  "width": 1280,
+  "layers": [
+    {
+      "id": "tabacaria_bg",
+      "image": "stage_vini_tabacaria",
+      "parallaxX": 0.05,
+      "parallaxY": 0,
+      "depth": 0
+    }
+  ]
+}

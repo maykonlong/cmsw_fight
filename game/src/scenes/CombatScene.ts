@@ -41,10 +41,13 @@ export class CombatScene extends Phaser.Scene {
         super({ key });
     }
 
-    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string; mode?: string }) {
+    private stageKey: string = 'kevin_bathroom';
+
+    init(data: { p1?: string; p2?: string; p1Name?: string; p2Name?: string; mode?: string; stage?: string }) {
         this.p1Key = data?.p1 ?? 'kevin';
         this.p2Key = data?.p2 ?? 'vini_dog';
         this.mode = data?.mode ?? '1p';
+        this.stageKey = data?.stage ?? (this.p1Key.includes('vini') ? 'vini_tabacaria' : 'kevin_bathroom');
         this.secondPlayerInput = undefined;
         this.cpuController = undefined;
     }
@@ -76,6 +79,8 @@ export class CombatScene extends Phaser.Scene {
         if (!this.textures.exists('banheiro_portatil')) this.load.image('banheiro_portatil', 'assets/sprites/banheiro_portatil.png');
 
         if (!this.textures.exists('stage_bg')) this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
+        if (!this.textures.exists('stage_kevin_bathroom')) this.load.image('stage_kevin_bathroom', 'assets/sprites/stage_kevin_bathroom.png');
+        if (!this.textures.exists('stage_vini_tabacaria')) this.load.image('stage_vini_tabacaria', 'assets/sprites/stage_vini_tabacaria.png');
     }
 
     create() {
@@ -97,7 +102,7 @@ export class CombatScene extends Phaser.Scene {
         }
 
         // ── CENÁRIO ──────────────────────────────────────────────
-        const stageInfo = StageLoader.createStage(this, 'cmsw_hq');
+        const stageInfo = StageLoader.createStage(this, this.stageKey);
         this.floorY = stageInfo.groundY;
 
         // Chão (retângulo invisível para física)
