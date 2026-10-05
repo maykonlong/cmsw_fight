@@ -7,32 +7,33 @@ export class BootScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = ['idle', 'walk', 'jump', 'air_punch', 'air_kick', 'crouch', 'crouch_punch', 'sweep', 'block', 'punch', 'kick', 'special', 'hit', 'ko', 'win'];
+        const poses = [
+            'idle', 'walk', 'walk_2', 'jump', 'jump_1', 'jump_2', 'jump_3',
+            'air_punch', 'air_punch_2', 'air_kick', 'air_kick_2',
+            'air_kick_up', 'air_kick_up_2', 'air_kick_diag', 'air_kick_diag_2',
+            'crouch', 'crouch_punch', 'crouch_punch_2', 'sweep', 'sweep_2',
+            'block', 'punch', 'punch_2', 'punch_l', 'punch_l_2', 'punch_r', 'punch_r_2',
+            'kick', 'kick_2', 'kick_l', 'kick_l_2', 'kick_r', 'kick_r_2',
+            'special', 'special_2', 'throw', 'throw_2', 'thrown',
+            'hit', 'ko', 'win'
+        ];
 
-        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2, incluindo frames _2 e _3 de pulo)
+        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2)
         this.load.image('kevin', 'assets/sprites/kevin.png');
         poses.forEach(p => {
-            this.load.image(`kevin_${p}`, `assets/sprites/kevin_${p}.png`);
-            this.load.image(`kevin_p2_${p}`, `assets/sprites/kevin_p2_${p}.png`);
-            this.load.image(`kevin_${p}_2`, `assets/sprites/kevin_${p}_2.png`);
-            this.load.image(`kevin_p2_${p}_2`, `assets/sprites/kevin_p2_${p}_2.png`);
-        });
-        [1, 2, 3].forEach(n => {
-            this.load.image(`kevin_jump_${n}`, `assets/sprites/kevin_jump_${n}.png`);
-            this.load.image(`kevin_p2_jump_${n}`, `assets/sprites/kevin_p2_jump_${n}.png`);
+            const k1 = `kevin_${p}`;
+            const k2 = `kevin_p2_${p}`;
+            if (!this.textures.exists(k1)) this.load.image(k1, `assets/sprites/${k1}.png`);
+            if (!this.textures.exists(k2)) this.load.image(k2, `assets/sprites/${k2}.png`);
         });
 
-        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2, incluindo frames _2 e _3 de pulo)
+        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2)
         this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
         poses.forEach(p => {
-            this.load.image(`vini_dog_${p}`, `assets/sprites/vini_dog_${p}.png`);
-            this.load.image(`vini_dog_p2_${p}`, `assets/sprites/vini_dog_p2_${p}.png`);
-            this.load.image(`vini_dog_${p}_2`, `assets/sprites/vini_dog_${p}_2.png`);
-            this.load.image(`vini_dog_p2_${p}_2`, `assets/sprites/vini_dog_p2_${p}_2.png`);
-        });
-        [1, 2, 3].forEach(n => {
-            this.load.image(`vini_dog_jump_${n}`, `assets/sprites/vini_dog_jump_${n}.png`);
-            this.load.image(`vini_dog_p2_jump_${n}`, `assets/sprites/vini_dog_p2_jump_${n}.png`);
+            const v1 = `vini_dog_${p}`;
+            const v2 = `vini_dog_p2_${p}`;
+            if (!this.textures.exists(v1)) this.load.image(v1, `assets/sprites/${v1}.png`);
+            if (!this.textures.exists(v2)) this.load.image(v2, `assets/sprites/${v2}.png`);
         });
 
         // Efeitos especiais e itens

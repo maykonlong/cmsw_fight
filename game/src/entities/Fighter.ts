@@ -36,6 +36,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public characterId: string;
     public bufferedSpecialFrames: number = 0;
     public airAttackUsed: boolean = false;
+    public specialCooldown: number = 0;
 
     // Combo Tracking
     public comboHits: number = 0;
@@ -67,6 +68,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.setCollideWorldBounds(true);
+        this.setOrigin(0.5, 0.95);
         this.inputManager = inputManager;
         this.characterId = texture.replace(/_(idle|walk|block|punch|kick|special|crouch|jump|hit|ko|win)$/, '');
 
@@ -135,6 +137,8 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
+        if (this.specialCooldown > 0) this.specialCooldown--;
+
         // Um toque durante outro golpe continua válido por uma janela curta.
         if (this.inputManager?.isSpecialJustPressed) this.bufferedSpecialFrames = 18;
         else if (this.bufferedSpecialFrames > 0) this.bufferedSpecialFrames--;
@@ -192,11 +196,11 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         } else if (this.scene.textures.exists(this.characterId)) {
             this.setTexture(this.characterId);
         }
+        this.setOrigin(0.5, 0.95);
         this.applyVisualSize();
     }
 
     private applyVisualSize() {
-        // Mantém a proporção de aspecto exata da textura (aspectRatio) para evitar distorção visual
         const targetHeight = Fighter.DISPLAY_HEIGHT; // 340
         const aspectRatio = (this.width > 0 && this.height > 0) ? (this.width / this.height) : (180 / 340);
         const targetWidth = Math.round(targetHeight * aspectRatio);
@@ -245,10 +249,13 @@ class IdleState extends State {
 
         // Reconhecimento de comandos especiais
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
-        if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
+        if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
+            f.bufferedSpecialFrames = 0;
+            this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
+        }
 
         if (inp.isUpJustPressed && f.isOnGround()) {
             this.stateMachine.transition('jump'); return;
@@ -262,10 +269,7 @@ class IdleState extends State {
             if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
-        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
-        if (holdBack) {
-            this.stateMachine.transition('block_high'); return;
-        }
+        
         if (inp.isLeftDown || inp.isRightDown) {
             this.stateMachine.transition('walk'); return;
         }
@@ -317,10 +321,13 @@ class WalkState extends State {
         }
 
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
-        if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
+        if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
+            f.bufferedSpecialFrames = 0;
+            this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
+        }
 
         if (inp.isUpJustPressed && f.isOnGround()) {
             this.stateMachine.transition('jump'); return;
@@ -334,16 +341,14 @@ class WalkState extends State {
             if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
-        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
-        if (holdBack) {
-            this.stateMachine.transition('block_high'); return;
-        }
+
         if (inp.isLeftDown) {
-            f.setVelocityX(-f.speed);
-            f.setFlipX(true);
+            // Se estiver andando para trás, usa velocidade um pouco mais lenta (0.8x)
+            const speedMult = isFacingLeft ? 1 : 0.8;
+            f.setVelocityX(-f.speed * speedMult);
         } else if (inp.isRightDown) {
-            f.setVelocityX(f.speed);
-            f.setFlipX(false);
+            const speedMult = isFacingLeft ? 0.8 : 1;
+            f.setVelocityX(f.speed * speedMult);
         } else {
             this.stateMachine.transition('idle'); return;
         }
@@ -466,7 +471,7 @@ class JumpState extends State {
         const inp = f.inputManager;
 
         // Especial no ar (Pular + Magia Especial)
-        if (inp.isSpecialJustPressed || f.bufferedSpecialFrames > 0) {
+        if ((inp.isSpecialJustPressed || f.bufferedSpecialFrames > 0) && f.specialCooldown <= 0) {
             f.bufferedSpecialFrames = 0;
             this.stateMachine.transition('air_special');
             return;
@@ -488,6 +493,7 @@ class AirSpecialState extends State {
 
     enter(f: Fighter) {
         f.airAttackUsed = true;
+        f.specialCooldown = 45;
         f.setPoseTexture('special');
         this.duration = 35;
         this.fired = false;
@@ -562,19 +568,16 @@ class CrouchState extends State {
         const inp = f.inputManager;
 
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
-        if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
+        if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
             this.stateMachine.transition('special', cmd); return;
         }
-        if (f.bufferedSpecialFrames > 0) { f.bufferedSpecialFrames = 0; this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return; }
+        if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
+            f.bufferedSpecialFrames = 0;
+            this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
+        }
 
         if (!inp.isDownDown) {
             this.stateMachine.transition('idle'); return;
-        }
-
-        const isFacingLeft = f.flipX;
-        const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
-        if (holdBack) {
-            this.stateMachine.transition('block_low'); return;
         }
 
         if (inp.isLPJustPressed) { this.stateMachine.transition('crouch_LP'); return; }
@@ -609,11 +612,11 @@ class AttackState extends State {
             else if (input === 'jLP' || input === 'jLK') base = 'air_kick_up';
             else base = input.includes('K') ? 'air_kick' : 'air_punch';
         } else if (isCrouch) {
-            if (input === 'cLP') base = 'punch_l';       // Soco Leve Agachado (Mão Esquerda)
-            else if (input === 'cHP') base = 'punch_r';  // Soco Forte Agachado (Mão Direita)
-            else if (input === 'cLK') base = 'kick_l';   // Chute Leve Agachado (Perna Esquerda)
-            else if (input === 'cHK') base = 'sweep';    // Rasteira Forte Agachado
-            else base = input.includes('K') ? 'kick' : 'crouch_punch';
+            if (input === 'cLP' || input === 'cMP' || input === 'cHP') {
+                base = 'crouch_punch';
+            } else {
+                base = 'sweep'; // Todos os chutes agachados usam a rasteira/sweep
+            }
         } else {
             if (input === 'LP') base = 'punch_l';        // Soco Mão Esquerda (Jab)
             else if (input === 'HP') base = 'punch_r';   // Soco Mão Direita (Direto Forte)
@@ -632,8 +635,14 @@ class AttackState extends State {
         f.currentHitbox.active = false;
         
         const isAir = this.moveData.hitLevel === 'AIR';
+        const isCrouch = this.moveData.input.startsWith('c');
+
         if (isAir) f.airAttackUsed = true;
-        
+        if (isCrouch) {
+            f.currentHurtbox.height = 135;
+            f.currentHurtbox.offsetY = 18;
+        }
+
         f.setPoseTexture(this.getPoseName(this.moveData, false));
         AudioManager.getInstance().playSFX('swing', 0.32);
         
@@ -655,6 +664,12 @@ class AttackState extends State {
 
     execute(f: Fighter) {
         this.duration++;
+
+        // Mantém a hurtbox agachada baixa durante ataques agachados
+        if (this.moveData.input.startsWith('c')) {
+            f.currentHurtbox.height = 135;
+            f.currentHurtbox.offsetY = 18;
+        }
 
         // A colisão com o chão encerra o golpe; nunca cria um segundo salto.
         if (this.moveData.hitLevel === 'AIR' && this.duration > 1 && f.isOnGround()) {
@@ -694,7 +709,7 @@ class AttackState extends State {
 
                 // Special Cancel
                 const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
-                if (cmd === '236P' || cmd === '623P' || cmd === '214K') {
+                if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
                     f.currentHitbox.active = false;
                     f.clearTint();
                     this.stateMachine.transition('special', cmd);
@@ -703,7 +718,7 @@ class AttackState extends State {
             }
         }
 
-        if (this.moveData.hitLevel !== 'AIR' && f.bufferedSpecialFrames > 0 && this.duration > this.moveData.startup + this.moveData.active) {
+        if (this.moveData.hitLevel !== 'AIR' && f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0 && this.duration > this.moveData.startup + this.moveData.active) {
             f.bufferedSpecialFrames = 0;
             f.currentHitbox.active = false;
             this.stateMachine.transition('special', f.getDefaultSpecialCommand());
@@ -791,6 +806,7 @@ class SpecialState extends State {
     private fired = false;
 
     enter(f: Fighter, _cmd: string = '236P') {
+        f.specialCooldown = 45;
         f.setPoseTexture('special');
         f.setVelocityX(0);
         this.duration = 45;

@@ -8,8 +8,8 @@ const CHARACTERS = [
         textureKey: 'kevin_idle',
         name: 'KEVIN MANJA',
         specialty: 'Especial: Beijo Elétrico',
-        color: 0x3399ff,
-        colorHex: '#3399ff',
+        color: 0x0099ff,
+        colorHex: '#0099ff',
         locked: false,
     },
     {
@@ -17,8 +17,8 @@ const CHARACTERS = [
         textureKey: 'vini_dog_idle',
         name: 'VINI DOG',
         specialty: 'Especial: Aura do Cachorro',
-        color: 0xff4400,
-        colorHex: '#ff4400',
+        color: 0xff3300,
+        colorHex: '#ff3300',
         locked: false,
     },
     {
@@ -52,6 +52,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     private p2NameText!: Phaser.GameObjects.Text;
     private p1SpecialText!: Phaser.GameObjects.Text;
     private p2SpecialText!: Phaser.GameObjects.Text;
+    private gridCards: Phaser.GameObjects.Graphics[] = [];
     private mode: string = '1p';
     private onKeyDown?: (e: KeyboardEvent) => void;
 
@@ -73,64 +74,70 @@ export class CharacterSelectScene extends Phaser.Scene {
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('char_select', true);
 
-        ArcadeTheme.background(this, 'blue');
-        ArcadeTheme.panel(this, 34, 108, width - 68, 252, ARCADE.blue);
-        ArcadeTheme.panel(this, 34, 390, width - 68, 300, ARCADE.red);
+        // Fundo KOF Arcade
+        ArcadeTheme.background(this, 'kof');
+
+        // Painel Superior de seleção
+        ArcadeTheme.panel(this, 30, 95, width - 60, 265, ARCADE.blue);
+        // Painel Inferior de previews
+        ArcadeTheme.panel(this, 30, 385, width - 60, 305, ARCADE.red);
 
         // Botão VOLTAR
-        const btnBack = this.add.text(60, 36, '[ VOLTAR ]', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '24px',
-            color: '#ffdd00',
+        const btnBack = this.add.text(50, 34, '[ ◄ VOLTAR ]', {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '22px',
+            color: '#ffd700',
             stroke: '#ff0000',
             strokeThickness: 4,
             padding: { x: 10, y: 5 }
         }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
 
         const goBack = () => {
+            AudioManager.getInstance().playUI('ui_cancel');
             this.removeListeners();
             this.scene.start('MainMenuScene');
         };
 
         btnBack.on('pointerdown', goBack);
 
-        // Título da tela
-        this.add.text(width / 2, 36, 'ESCOLHA SEU LUTADOR', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '38px',
-            color: '#ffdd00',
-            stroke: '#ff2200',
+        // Título da tela KOF
+        this.add.text(width / 2, 34, 'SELECT YOUR FIGHTER — SELECT MEMBER', {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '34px',
+            fontStyle: 'italic',
+            color: '#ffffff',
+            stroke: '#d52821',
             strokeThickness: 6,
         }).setOrigin(0.5);
 
         // Instruções
-        this.add.text(width / 2, 82, this.mode === '2p'
-            ? 'P1: ← → ENTER  |  P2: A D J  |  CONFIRME OS DOIS'
-            : 'P1: ← → ENTER / CLIQUE NO PERSONAGEM', {
-            fontFamily: 'Arial',
-            fontSize: '18px',
-            color: '#aaaaaa',
+        this.add.text(width / 2, 74, this.mode === '2p'
+            ? 'P1: ← → ENTER  |  P2: A D J  |  CONFIRME OS DOIS LUTADORES'
+            : 'P1: ← → ENTER / CLIQUE DIRETO NO PORTRAIT', {
+            fontFamily: 'Impact, Arial, sans-serif',
+            fontSize: '16px',
+            color: '#ffd700',
+            letterSpacing: 2,
         }).setOrigin(0.5);
 
-        // Grid de personagens
+        // Grid KOF de personagens
         const gridX = width / 2;
-        const gridY = 220;
+        const gridY = 225;
         const cardW = 180;
         const cardH = 160;
         const cols = 4;
-        const totalWidth = cols * (cardW + 20) - 20;
+        const totalWidth = cols * (cardW + 24) - 24;
         const startX = gridX - totalWidth / 2;
+
+        this.gridCards = [];
 
         CHARACTERS.forEach((char, i) => {
             const col = i % cols;
-            const cx = startX + col * (cardW + 20) + cardW / 2;
+            const cx = startX + col * (cardW + 24) + cardW / 2;
             const cy = gridY;
 
-            const card = this.add.graphics();
-            card.lineStyle(4, char.locked ? 0x333333 : char.color, 1);
-            card.fillStyle(char.locked ? 0x111111 : 0x1a1a2e, 1);
-            card.strokeRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);
-            card.fillRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 10);
+            const cardGraphics = this.add.graphics();
+            this.gridCards.push(cardGraphics);
 
             const getTex = (cKey: string) => {
                 if (this.textures.exists(cKey + '_idle')) return cKey + '_idle';
@@ -141,32 +148,36 @@ export class CharacterSelectScene extends Phaser.Scene {
             const texName = getTex(char.key);
             if (!char.locked && texName) {
                 const img = this.add.image(cx, cy - 10, texName)
-                    .setDisplaySize(cardW - 30, cardH - 40);
+                    .setDisplaySize(cardW - 24, cardH - 36);
                 img.setInteractive({ useHandCursor: true });
                 const handleSelect = () => {
                     this.p1Index = i;
+                    AudioManager.getInstance().playUI('ui_cursor');
                     this.updateGridHighlights();
                     this.confirmP1();
                 };
                 img.on('pointerdown', handleSelect);
             } else {
-                this.add.text(cx, cy, char.locked ? '?' : char.name[0], {
-                    fontFamily: '"Arial Black"',
-                    fontSize: '72px',
-                    color: char.locked ? '#333333' : char.colorHex,
+                this.add.text(cx, cy - 10, '?', {
+                    fontFamily: 'Impact, "Arial Black"',
+                    fontSize: '68px',
+                    color: '#444444',
                 }).setOrigin(0.5);
             }
 
-            const label = this.add.text(cx, cy + cardH / 2 + 16, char.name, {
-                fontFamily: '"Arial Black"',
+            const label = this.add.text(cx, cy + cardH / 2 - 18, char.name, {
+                fontFamily: 'Impact, "Arial Black"',
                 fontSize: '16px',
                 color: char.locked ? '#444444' : '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 3,
             }).setOrigin(0.5);
 
             if (!char.locked) {
                 label.setInteractive({ useHandCursor: true });
                 const handleSelect = () => {
                     this.p1Index = i;
+                    AudioManager.getInstance().playUI('ui_cursor');
                     this.updateGridHighlights();
                     this.confirmP1();
                 };
@@ -174,13 +185,14 @@ export class CharacterSelectScene extends Phaser.Scene {
             }
         });
 
-        // Separador central
-        this.add.text(width / 2, 410, 'VS', {
-            fontFamily: '"Arial Black"',
-            fontSize: '48px',
-            color: '#ff2200',
-            stroke: '#ffffff',
-            strokeThickness: 4,
+        // Emblem VS Central KOF Slashed
+        this.add.text(width / 2, 400, 'VS', {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '56px',
+            fontStyle: 'italic',
+            color: '#ffffff',
+            stroke: '#ff0000',
+            strokeThickness: 8,
         }).setOrigin(0.5);
 
         const getP1Tex = () => {
@@ -195,45 +207,53 @@ export class CharacterSelectScene extends Phaser.Scene {
             return k;
         };
 
+        // Molduras laterais de Preview
         this.p1Preview = this.add.image(200, 530, getP1Tex())
-            .setDisplaySize(160, 240);
+            .setDisplaySize(180, 260);
 
         this.p2Preview = this.add.image(width - 200, 530, getP2Tex())
-            .setDisplaySize(160, 240).setFlipX(true);
+            .setDisplaySize(180, 260).setFlipX(true);
 
-        this.p1NameText = this.add.text(200, 660, CHARACTERS[this.p1Index].name, {
-            fontFamily: '"Arial Black"',
-            fontSize: '26px',
-            color: '#3399ff',
-        }).setOrigin(0.5);
-        this.p1SpecialText = this.add.text(200, 692, CHARACTERS[this.p1Index].specialty, {
-            fontFamily: 'Arial',
-            fontSize: '14px',
-            color: '#aaaaaa',
-        }).setOrigin(0.5);
-
-        this.p2NameText = this.add.text(width - 200, 660, CHARACTERS[this.p2Index].name, {
-            fontFamily: '"Arial Black"',
-            fontSize: '26px',
-            color: '#ff4400',
-        }).setOrigin(0.5);
-        this.p2SpecialText = this.add.text(width - 200, 692, CHARACTERS[this.p2Index].specialty, {
-            fontFamily: 'Arial',
-            fontSize: '14px',
-            color: '#aaaaaa',
-        }).setOrigin(0.5);
-
-        this.add.text(200, 400, 'JOGADOR 1', {
-            fontFamily: '"Arial Black"',
-            fontSize: '20px',
-            color: '#3399ff',
+        this.p1NameText = this.add.text(200, 655, CHARACTERS[this.p1Index].name, {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '28px',
+            color: '#0099ff',
             stroke: '#000000',
             strokeThickness: 4,
         }).setOrigin(0.5);
-        this.add.text(width - 200, 400, 'JOGADOR 2', {
-            fontFamily: '"Arial Black"',
-            fontSize: '20px',
-            color: '#ff4400',
+
+        this.p1SpecialText = this.add.text(200, 685, CHARACTERS[this.p1Index].specialty, {
+            fontFamily: 'Impact, Arial',
+            fontSize: '15px',
+            color: '#ffd700',
+        }).setOrigin(0.5);
+
+        this.p2NameText = this.add.text(width - 200, 655, CHARACTERS[this.p2Index].name, {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '28px',
+            color: '#ff3300',
+            stroke: '#000000',
+            strokeThickness: 4,
+        }).setOrigin(0.5);
+
+        this.p2SpecialText = this.add.text(width - 200, 685, CHARACTERS[this.p2Index].specialty, {
+            fontFamily: 'Impact, Arial',
+            fontSize: '15px',
+            color: '#ffd700',
+        }).setOrigin(0.5);
+
+        this.add.text(200, 400, 'PLAYER 1', {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '22px',
+            color: '#0099ff',
+            stroke: '#000000',
+            strokeThickness: 4,
+        }).setOrigin(0.5);
+
+        this.add.text(width - 200, 400, 'PLAYER 2', {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '22px',
+            color: '#ff3300',
             stroke: '#000000',
             strokeThickness: 4,
         }).setOrigin(0.5);
@@ -266,6 +286,53 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     private updateGridHighlights() {
+        const { width } = this.scale;
+        const gridX = width / 2;
+        const gridY = 225;
+        const cardW = 180;
+        const cardH = 160;
+        const cols = 4;
+        const totalWidth = cols * (cardW + 24) - 24;
+        const startX = gridX - totalWidth / 2;
+
+        CHARACTERS.forEach((char, i) => {
+            const col = i % cols;
+            const cx = startX + col * (cardW + 24) + cardW / 2;
+            const cy = gridY;
+            const card = this.gridCards[i];
+
+            if (!card) return;
+            card.clear();
+
+            const isP1 = i === this.p1Index;
+            const isP2 = i === this.p2Index;
+
+            let borderCol = char.locked ? 0x333333 : char.color;
+            let borderWidth = 3;
+
+            if (isP1 && isP2) {
+                borderCol = 0xffff00; // P1 e P2 no mesmo personagem
+                borderWidth = 5;
+            } else if (isP1) {
+                borderCol = 0x0099ff;
+                borderWidth = 5;
+            } else if (isP2) {
+                borderCol = 0xff3300;
+                borderWidth = 5;
+            }
+
+            card.fillStyle(char.locked ? 0x080808 : 0x121733, 0.9);
+            card.fillRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH);
+
+            card.lineStyle(borderWidth, borderCol, 1);
+            card.strokeRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH);
+
+            if (isP1 || isP2) {
+                card.lineStyle(1.5, 0xffffd4, 0.8);
+                card.strokeRect(cx - cardW / 2 + 4, cy - cardH / 2 + 4, cardW - 8, cardH - 8);
+            }
+        });
+
         const p1Char = CHARACTERS[this.p1Index];
         const p2Char = CHARACTERS[this.p2Index];
 
@@ -289,6 +356,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         if (this.p1Confirmed) return;
         const validChars = CHARACTERS.filter(c => !c.locked);
         this.p1Index = Phaser.Math.Wrap(this.p1Index + dir, 0, validChars.length);
+        AudioManager.getInstance().playUI('ui_cursor');
         this.updateGridHighlights();
     }
 
@@ -296,13 +364,15 @@ export class CharacterSelectScene extends Phaser.Scene {
         if (this.p2Confirmed) return;
         const validChars = CHARACTERS.filter(c => !c.locked);
         this.p2Index = Phaser.Math.Wrap(this.p2Index + dir, 0, validChars.length);
+        AudioManager.getInstance().playUI('ui_cursor');
         this.updateGridHighlights();
     }
 
     private confirmP1() {
         if (this.p1Confirmed) return;
         this.p1Confirmed = true;
-        this.p1NameText.setColor('#ffdd00');
+        AudioManager.getInstance().playUI('ui_select');
+        this.p1NameText.setColor('#ffd700');
         if (this.mode === '1p') {
             this.p2Confirmed = true;
         }
@@ -312,7 +382,8 @@ export class CharacterSelectScene extends Phaser.Scene {
     private confirmP2() {
         if (this.p2Confirmed) return;
         this.p2Confirmed = true;
-        this.p2NameText.setColor('#ffdd00');
+        AudioManager.getInstance().playUI('ui_select');
+        this.p2NameText.setColor('#ffd700');
         this.checkBothConfirmed();
     }
 
@@ -347,22 +418,22 @@ export class CharacterSelectScene extends Phaser.Scene {
     private showStageSelectOverlay() {
         const { width, height } = this.scale;
         const container = this.add.container(0, 0).setDepth(3000);
-        const bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.85).setOrigin(0, 0);
+        const bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.88).setOrigin(0, 0);
         container.add(bg);
 
         const panel = this.add.graphics();
-        panel.fillStyle(0x0a0f2d, 0.95);
-        panel.fillRect(width / 2 - 320, height / 2 - 200, 640, 400);
+        panel.fillStyle(0x070c24, 0.96);
+        panel.fillRect(width / 2 - 330, height / 2 - 210, 660, 420);
         panel.lineStyle(4, 0xffd700, 1);
-        panel.strokeRect(width / 2 - 320, height / 2 - 200, 640, 400);
+        panel.strokeRect(width / 2 - 330, height / 2 - 210, 660, 420);
         container.add(panel);
 
-        const title = this.add.text(width / 2, height / 2 - 150, 'SELECIONE O CENÁRIO DE TREINO', {
-            fontFamily: '"Arial Black", Gadget, sans-serif',
-            fontSize: '28px',
+        const title = this.add.text(width / 2, height / 2 - 160, 'SELECIONE O CENÁRIO DE TREINO', {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '32px',
             color: '#ffe34d',
-            stroke: '#000000',
-            strokeThickness: 5
+            stroke: '#d52821',
+            strokeThickness: 6
         }).setOrigin(0.5);
         container.add(title);
 
@@ -373,18 +444,22 @@ export class CharacterSelectScene extends Phaser.Scene {
         ];
 
         stages.forEach((stg, i) => {
-            const btn = this.add.text(width / 2, height / 2 - 40 + i * 65, stg.label, {
+            const btn = this.add.text(width / 2, height / 2 - 45 + i * 70, stg.label, {
                 fontFamily: 'Impact, Arial Black',
-                fontSize: '24px',
+                fontSize: '26px',
                 color: '#ffffff',
                 stroke: '#000000',
-                strokeThickness: 4,
-                padding: { x: 15, y: 8 }
+                strokeThickness: 5,
+                padding: { x: 20, y: 10 }
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-            btn.on('pointerover', () => btn.setColor('#ffe34d'));
+            btn.on('pointerover', () => {
+                btn.setColor('#ffe34d');
+                AudioManager.getInstance().playUI('ui_cursor');
+            });
             btn.on('pointerout', () => btn.setColor('#ffffff'));
             btn.on('pointerdown', () => {
+                AudioManager.getInstance().playUI('ui_select');
                 container.destroy();
                 this.startVsWithStage(stg.key);
             });

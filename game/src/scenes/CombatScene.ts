@@ -242,8 +242,10 @@ export class CombatScene extends Phaser.Scene {
         const groundCenterY = this.floorY - Fighter.CENTER_ABOVE_FLOOR;
         if (!target.isOnGround() || target.y < groundCenterY - 40) return;
         proj.hitActive = false;
+        const pushDir = proj.x < target.x ? 1 : -1;
         if (target.isBlocking) {
             target.hp = Math.max(0, target.hp - 4);
+            target.setVelocityX(pushDir * 140); // Empurrão ao defender para evitar encurralamento
             this.vfxManager.spawnBlockSpark(proj.x, proj.y);
             AudioManager.getInstance().playSFX('block');
         } else {
@@ -256,6 +258,11 @@ export class CombatScene extends Phaser.Scene {
 
     private fireSpecial(fighter: Fighter) {
         if (!this.matchManager?.isMatchActive()) return;
+
+        // Limite de 1 projétil ativo por lutador na tela ao mesmo tempo (regra clássica KOF/SF)
+        const activeProj = this.projectiles.getChildren().find(p => (p as Projectile).getOwner() === fighter);
+        if (activeProj) return;
+
         const direction = fighter.flipX ? -1 : 1;
         const isKevin = fighter.characterId.includes('kevin');
         const special = this.cache.json.get(fighter.characterId.replace(/_p2$/, ''))?.specials?.[0];

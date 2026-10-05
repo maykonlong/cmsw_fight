@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
+import { AudioManager } from '../engine/AudioManager';
 
 interface VsData {
     p1: string;
@@ -23,7 +24,26 @@ export class VsScene extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
-        ArcadeTheme.background(this, 'red');
+        AudioManager.getInstance().setScene(this);
+
+        // Fundo KOF Arcade
+        ArcadeTheme.background(this, 'kof');
+
+        // Divisão Diagonal KOF (P1 Azul / P2 Vermelho)
+        const splitGraphics = this.add.graphics();
+        // Lado P1 (Triângulo Azul Cyan)
+        splitGraphics.fillStyle(0x0055ff, 0.45);
+        splitGraphics.fillTriangle(0, 0, width / 2 + 100, 0, width / 2 - 100, height);
+        splitGraphics.fillTriangle(0, 0, width / 2 - 100, height, 0, height);
+
+        // Lado P2 (Triângulo Vermelho Crimson)
+        splitGraphics.fillStyle(0xdd1100, 0.45);
+        splitGraphics.fillTriangle(width / 2 + 100, 0, width, 0, width, height);
+        splitGraphics.fillTriangle(width / 2 + 100, 0, width, height, width / 2 - 100, height);
+
+        // Linha divisória diagonal laser dourada KOF
+        splitGraphics.lineStyle(6, ARCADE.yellow, 1);
+        splitGraphics.lineBetween(width / 2 + 100, 0, width / 2 - 100, height);
 
         const getTex = (key: string) => {
             if (this.textures.exists(key + '_idle')) return key + '_idle';
@@ -35,82 +55,98 @@ export class VsScene extends Phaser.Scene {
 
         // --- P1 lado esquerdo ---
         if (this.textures.exists(p1Tex)) {
-            const p1Sprite = this.add.image(180, height / 2 + 30, p1Tex)
-                .setDisplaySize(240, 360).setAlpha(0).setX(-200);
-            this.tweens.add({ targets: p1Sprite, x: 220, alpha: 1, duration: 500, ease: 'Power3' });
+            const p1Sprite = this.add.image(220, height / 2 + 20, p1Tex)
+                .setDisplaySize(280, 420).setAlpha(0).setX(-300);
+            this.tweens.add({ targets: p1Sprite, x: 240, alpha: 1, duration: 450, ease: 'Power3.easeOut' });
         }
 
-        const p1Bg = this.add.graphics();
-        p1Bg.fillStyle(ARCADE.blue, 0.24);
-        p1Bg.fillRect(0, 0, width / 2 - 60, height);
+        // Banner P1 Name KOF
+        const p1Banner = this.add.graphics();
+        p1Banner.fillStyle(0x0033aa, 0.9);
+        p1Banner.fillRect(0, height - 120, width / 2 - 40, 60);
+        p1Banner.lineStyle(3, 0x0099ff, 1);
+        p1Banner.strokeRect(0, height - 120, width / 2 - 40, 60);
 
-        this.add.text(180, height - 80, this.data_.p1Name, {
-            fontFamily: '"Arial Black"',
-            fontSize: '36px',
-            color: '#3399ff',
-            stroke: '#000000',
-            strokeThickness: 5,
+        this.add.text(220, height - 90, this.data_.p1Name, {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '34px',
+            fontStyle: 'italic',
+            color: '#ffffff',
+            stroke: '#0033aa',
+            strokeThickness: 6,
         }).setOrigin(0.5);
 
-        this.add.text(180, 50, 'P1', {
-            fontFamily: '"Arial Black"',
-            fontSize: '52px',
-            color: '#3399ff',
+        this.add.text(80, 50, 'P1', {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '64px',
+            fontStyle: 'italic',
+            color: '#00aaff',
             stroke: '#000000',
-            strokeThickness: 6,
+            strokeThickness: 8,
         }).setOrigin(0.5);
 
         // --- P2 lado direito ---
         if (this.textures.exists(p2Tex)) {
-            const p2Sprite = this.add.image(width - 180, height / 2 + 30, p2Tex)
-                .setDisplaySize(240, 360).setAlpha(0).setX(width + 200).setFlipX(true);
-            this.tweens.add({ targets: p2Sprite, x: width - 220, alpha: 1, duration: 500, ease: 'Power3' });
+            const p2Sprite = this.add.image(width - 220, height / 2 + 20, p2Tex)
+                .setDisplaySize(280, 420).setAlpha(0).setX(width + 300).setFlipX(true);
+            this.tweens.add({ targets: p2Sprite, x: width - 240, alpha: 1, duration: 450, ease: 'Power3.easeOut' });
         }
 
-        const p2Bg = this.add.graphics();
-        p2Bg.fillStyle(ARCADE.red, 0.24);
-        p2Bg.fillRect(width / 2 + 60, 0, width / 2 - 60, height);
+        // Banner P2 Name KOF
+        const p2Banner = this.add.graphics();
+        p2Banner.fillStyle(0xaa0000, 0.9);
+        p2Banner.fillRect(width / 2 + 40, height - 120, width / 2 - 40, 60);
+        p2Banner.lineStyle(3, 0xff3300, 1);
+        p2Banner.strokeRect(width / 2 + 40, height - 120, width / 2 - 40, 60);
 
-        this.add.text(width - 180, height - 80, this.data_.p2Name, {
-            fontFamily: '"Arial Black"',
-            fontSize: '36px',
-            color: '#ff4400',
-            stroke: '#000000',
-            strokeThickness: 5,
-        }).setOrigin(0.5);
-
-        this.add.text(width - 180, 50, 'P2', {
-            fontFamily: '"Arial Black"',
-            fontSize: '52px',
-            color: '#ff4400',
-            stroke: '#000000',
+        this.add.text(width - 220, height - 90, this.data_.p2Name, {
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '34px',
+            fontStyle: 'italic',
+            color: '#ffffff',
+            stroke: '#aa0000',
             strokeThickness: 6,
         }).setOrigin(0.5);
 
-        // --- VS no centro ---
+        this.add.text(width - 80, 50, 'P2', {
+            fontFamily: 'Impact, "Arial Black"',
+            fontSize: '64px',
+            fontStyle: 'italic',
+            color: '#ff3300',
+            stroke: '#000000',
+            strokeThickness: 8,
+        }).setOrigin(0.5);
+
+        // --- VS Central Metalico KOF Slam ---
+        const vsBacking = this.add.circle(width / 2, height / 2, 95, 0x000000, 0.85)
+            .setStrokeStyle(4, ARCADE.yellow).setScale(0);
+
         const vsText = this.add.text(width / 2, height / 2, 'VS', {
-            fontFamily: '"Arial Black"',
-            fontSize: '130px',
-            color: '#ffffff',
-            stroke: '#ff2200',
-            strokeThickness: 12,
-        }).setOrigin(0.5).setScale(0);
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '150px',
+            fontStyle: 'italic',
+            color: '#fff5b8',
+            stroke: '#d52821',
+            strokeThickness: 14,
+            shadow: { offsetX: 8, offsetY: 9, color: '#000000', blur: 0, fill: true }
+        }).setOrigin(0.5).setScale(3).setAlpha(0);
 
         this.tweens.add({
-            targets: vsText,
+            targets: [vsBacking, vsText],
             scaleX: 1,
             scaleY: 1,
-            duration: 400,
-            delay: 300,
+            alpha: 1,
+            duration: 350,
+            delay: 250,
             ease: 'Back.easeOut',
+            onComplete: () => {
+                AudioManager.getInstance().playSFX('swing');
+                this.cameras.main.shake(180, 0.015);
+                this.cameras.main.flash(250, 255, 255, 255);
+            }
         });
 
-        // Camera flash
-        this.time.delayedCall(400, () => {
-            this.cameras.main.flash(200, 255, 255, 255);
-        });
-
-        // Vai para o combate ou treino
+        // Transição automática para a luta
         this.time.delayedCall(2200, () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
             this.time.delayedCall(420, () => {

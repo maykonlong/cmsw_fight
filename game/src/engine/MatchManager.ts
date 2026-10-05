@@ -189,11 +189,11 @@ export class MatchManager {
         const { width, height } = this.scene.scale;
         
         const band = this.scene.add.rectangle(width / 2, height / 2, width, 206, 0x10071e, 0.85)
-            .setDepth(199).setAlpha(0);
+            .setDepth(199).setScrollFactor(0).setAlpha(0);
         const upperRule = this.scene.add.rectangle(width / 2, height / 2 - 102, width, 5, 0xffce56)
-            .setDepth(200).setAlpha(0);
+            .setDepth(200).setScrollFactor(0).setAlpha(0);
         const lowerRule = this.scene.add.rectangle(width / 2, height / 2 + 102, width, 5, 0xffce56)
-            .setDepth(200).setAlpha(0);
+            .setDepth(200).setScrollFactor(0).setAlpha(0);
         const koText = this.scene.add.text(width / 2, height / 2, message, {
             fontFamily: 'Impact, "Arial Black", sans-serif',
             fontSize: message === 'K.O.' ? '148px' : '94px',
@@ -202,7 +202,7 @@ export class MatchManager {
             stroke: '#bc1c31',
             strokeThickness: 12,
             shadow: { offsetX: 7, offsetY: 8, color: '#03020e', blur: 2, fill: true }
-        }).setOrigin(0.5).setDepth(201).setAlpha(0).setScale(0.65);
+        }).setOrigin(0.5).setDepth(201).setScrollFactor(0).setAlpha(0).setScale(0.65);
 
         this.scene.tweens.add({
             targets: [band, upperRule, lowerRule, koText],
