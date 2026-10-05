@@ -47,7 +47,17 @@ export class CombatScene extends Phaser.Scene {
         this.p1Key = data?.p1 ?? 'kevin';
         this.p2Key = data?.p2 ?? 'vini_dog';
         this.mode = data?.mode ?? '1p';
-        this.stageKey = data?.stage ?? (this.p1Key.includes('vini') ? 'vini_tabacaria' : 'kevin_bathroom');
+
+        if (data?.stage) {
+            this.stageKey = data.stage;
+        } else if (this.mode === '1p') {
+            // Na máquina (Arcade vs CPU): a luta ocorre no cenário do OPONENTE (P2)
+            this.stageKey = this.p2Key.includes('vini') ? 'vini_tabacaria' : 'kevin_bathroom';
+        } else {
+            // Em modo desafio (2P / PVP): seleção aleatória de cenário
+            const availableStages = ['kevin_bathroom', 'vini_tabacaria', 'cmsw_hq'];
+            this.stageKey = Phaser.Math.RND.pick(availableStages);
+        }
         this.secondPlayerInput = undefined;
         this.cpuController = undefined;
     }
