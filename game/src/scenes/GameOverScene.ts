@@ -32,8 +32,27 @@ export class GameOverScene extends Phaser.Scene {
             targets: title,
             alpha: 1,
             y: 150,
-            duration: 1000,
+            duration: 1200,
             ease: 'Bounce.easeOut'
+        });
+
+        const glow = this.add.text(width / 2, 150, 'K.O.', {
+            fontFamily: '"Arial Black", Gadget, sans-serif',
+            fontSize: '80px',
+            color: '#ff0000',
+            stroke: '#ff0000',
+            strokeThickness: 16
+        }).setOrigin(0.5).setAlpha(0).setBlendMode('ADD');
+
+        this.tweens.add({
+            targets: glow,
+            alpha: 0.5,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
         });
 
         this.add.text(width / 2, 280, 'CONTINUE?', {
@@ -57,10 +76,12 @@ export class GameOverScene extends Phaser.Scene {
                     this.countText.setText(this.countdown.toString());
                     this.tweens.add({
                         targets: this.countText,
-                        scaleX: 1.5,
-                        scaleY: 1.5,
-                        duration: 100,
-                        yoyo: true
+                        scaleX: 1.6,
+                        scaleY: 1.6,
+                        alpha: 0.8,
+                        duration: 150,
+                        yoyo: true,
+                        ease: 'Quad.easeOut'
                     });
                 } else {
                     this.timerEvent.remove();

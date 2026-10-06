@@ -1,0 +1,38 @@
+[
+    {
+        "key": "kevin",
+        "textureKey": "kevin_idle",
+        "name": "KEVIN MANJA",
+        "specialty": "Especial: Beijo Elétrico 💋⚡",
+        "color": 39423,
+        "colorHex": "#0099ff",
+        "locked": false
+    },
+    {
+        "key": "vini_dog",
+        "textureKey": "vini_dog_idle",
+        "name": "VINI DOG",
+        "specialty": "Especial: Aura do Cachorro 🐶💨",
+        "color": 16724736,
+        "colorHex": "#ff3300",
+        "locked": false
+    },
+    {
+        "key": "unknown",
+        "textureKey": "unknown",
+        "name": "???",
+        "specialty": "Em Breve",
+        "color": 4473924,
+        "colorHex": "#444444",
+        "locked": true
+    },
+    {
+        "key": "unknown",
+        "textureKey": "unknown",
+        "name": "???",
+        "specialty": "Em Breve",
+        "color": 4473924,
+        "colorHex": "#444444",
+        "locked": true
+    }
+]

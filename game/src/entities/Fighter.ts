@@ -743,7 +743,7 @@ class AttackState extends State {
         this.moveData = moveData;
     }
 
-    private getPoseName(moveData: MoveData, active: boolean): string {
+    private getPoseName(moveData: MoveData, frameIndex: number): string {
         const isAir = moveData.hitLevel === 'AIR';
         const isCrouch = moveData.input.startsWith('c');
         const input = moveData.input;
@@ -769,7 +769,8 @@ class AttackState extends State {
             else base = input.includes('K') ? 'kick' : 'punch';
         }
 
-        return active ? `${base}_2` : base;
+        if (frameIndex === 1) return base;
+        return `${base}_${frameIndex}`;
     }
 
     enter(f: Fighter) {
@@ -786,7 +787,7 @@ class AttackState extends State {
             f.currentHurtbox.offsetY = 18;
         }
 
-        f.setPoseTexture(this.getPoseName(this.moveData, false));
+        f.setPoseTexture(this.getPoseName(this.moveData, 1));
         AudioManager.getInstance().playSFX('swing', 0.32);
         
         // Copiar dados pro hitbox atual
@@ -821,17 +822,33 @@ class AttackState extends State {
             return;
         }
 
-        // Ativa hitbox durante os frames active
+        // Define total duration
+        const total = this.moveData.startup + this.moveData.active + this.moveData.recovery;
+        
+        // Ativa hitbox no primeiro frame active
         if (this.duration === this.moveData.startup + 1) {
-            f.setPoseTexture(this.getPoseName(this.moveData, true));
             f.currentHitbox.active = true;
         }
 
-        // Desativa hitbox
+        // Desativa hitbox no fim dos frames active
         if (this.duration === this.moveData.startup + this.moveData.active + 1) {
-            f.setPoseTexture(this.getPoseName(this.moveData, false));
             f.currentHitbox.active = false;
         }
+        
+        // Fluid Animation logic (4 frames spread over duration)
+        const frameLength = Math.max(1, Math.floor(total / 4));
+        let frameIndex = 1;
+        if (this.duration <= frameLength) frameIndex = 1;
+        else if (this.duration <= frameLength * 2) frameIndex = 2;
+        else if (this.duration <= frameLength * 3) frameIndex = 3;
+        else frameIndex = 4;
+        
+        // Special case for startup/recovery mapping if frame distribution is weird
+        if (this.duration > this.moveData.startup + this.moveData.active) frameIndex = 4;
+        else if (this.duration > this.moveData.startup) frameIndex = 3;
+        
+        const tex = this.getPoseName(this.moveData, frameIndex);
+        f.setPoseTexture(tex);
 
         // Janela de Target Combo Chain & Special Cancel (KOF Style: Only on contact)
         if (this.moveData.hitLevel !== 'AIR' && this.duration > this.moveData.startup + 1) {

@@ -8,13 +8,23 @@ export class BootScene extends Phaser.Scene {
 
     preload() {
         const poses = [
-            'idle', 'walk', 'walk_2', 'jump', 'jump_1', 'jump_2', 'jump_3',
-            'air_punch', 'air_punch_2', 'air_kick', 'air_kick_2',
-            'air_kick_up', 'air_kick_up_2', 'air_kick_diag', 'air_kick_diag_2',
-            'crouch', 'crouch_punch', 'crouch_punch_2', 'sweep', 'sweep_2',
-            'block', 'punch', 'punch_2', 'punch_l', 'punch_l_2', 'punch_r', 'punch_r_2',
-            'kick', 'kick_2', 'kick_l', 'kick_l_2', 'kick_r', 'kick_r_2',
-            'special', 'special_2', 'throw', 'throw_2', 'thrown',
+            'idle', 'walk', 'walk_2', 'walk_3', 'walk_back', 'run_1', 'run_2', 'run_3', 'run_back_1', 'run_back_2', 'run_back_3',
+            'jump', 'jump_1', 'jump_2', 'jump_3',
+            'air_punch', 'air_punch_2', 'air_punch_3', 'air_punch_4',
+            'air_kick', 'air_kick_2', 'air_kick_3', 'air_kick_4',
+            'air_kick_up', 'air_kick_up_2', 'air_kick_up_3', 'air_kick_up_4', 
+            'air_kick_diag', 'air_kick_diag_2', 'air_kick_diag_3', 'air_kick_diag_4',
+            'crouch', 'crouch_punch', 'crouch_punch_2', 'crouch_punch_3', 'crouch_punch_4',
+            'sweep', 'sweep_2', 'sweep_3', 'sweep_4',
+            'block', 
+            'punch', 'punch_2', 'punch_3', 'punch_4', 
+            'punch_l', 'punch_l_2', 'punch_l_3', 'punch_l_4', 
+            'punch_r', 'punch_r_2', 'punch_r_3', 'punch_r_4',
+            'kick', 'kick_2', 'kick_3', 'kick_4', 
+            'kick_l', 'kick_l_2', 'kick_l_3', 'kick_l_4', 
+            'kick_r', 'kick_r_2', 'kick_r_3', 'kick_r_4',
+            'special', 'special_2', 'special_3', 'special_4',
+            'throw', 'throw_2', 'thrown',
             'hit', 'ko', 'win'
         ];
 
@@ -50,6 +60,7 @@ export class BootScene extends Phaser.Scene {
         this.load.image('stage_vini_tabacaria', 'assets/sprites/stage_vini_tabacaria.png');
 
         // Carrega JSONs de dados (chaves idênticas aos IDs dos personagens)
+        this.load.json('character_roster', 'data/character_roster.json');
         this.load.json('kevin', 'data/characters/kevin.json');
         this.load.json('vini_dog', 'data/characters/vini_dog.json');
         this.load.json('cmsw_hq', 'data/stages/cmsw_hq.json');

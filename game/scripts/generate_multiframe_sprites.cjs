@@ -11,39 +11,20 @@ function createActiveFrame(png, poseType, variant = 2) {
     let shiftY = 0;
 
     if (poseType === 'punch' || poseType === 'crouch_punch' || poseType === 'special') {
-        shiftX = 8;
+        shiftX = variant * 4; // Moves forward progressively
     } else if (poseType === 'kick' || poseType === 'sweep') {
-        shiftX = 12;
+        shiftX = variant * 6; // Kicks have more reach
     } else if (poseType === 'walk') {
-        if (variant === 2) {
-            shiftX = 6;
-            shiftY = -4;
-        } else if (variant === 3) {
-            shiftX = -6;
-            shiftY = 2;
-        }
+        if (variant === 2) { shiftX = 6; shiftY = -4; }
+        else if (variant === 3) { shiftX = -6; shiftY = 2; }
     } else if (poseType === 'run') {
-        if (variant === 1) {
-            shiftX = 10;
-            shiftY = -6;
-        } else if (variant === 2) {
-            shiftX = 14;
-            shiftY = -2;
-        } else if (variant === 3) {
-            shiftX = 6;
-            shiftY = 2;
-        }
+        if (variant === 1) { shiftX = 10; shiftY = -6; }
+        else if (variant === 2) { shiftX = 14; shiftY = -2; }
+        else if (variant === 3) { shiftX = 6; shiftY = 2; }
     } else if (poseType === 'run_back') {
-        if (variant === 1) {
-            shiftX = -10;
-            shiftY = -5;
-        } else if (variant === 2) {
-            shiftX = -14;
-            shiftY = -2;
-        } else if (variant === 3) {
-            shiftX = -6;
-            shiftY = 2;
-        }
+        if (variant === 1) { shiftX = -10; shiftY = -5; }
+        else if (variant === 2) { shiftX = -14; shiftY = -2; }
+        else if (variant === 3) { shiftX = -6; shiftY = 2; }
     }
 
     for (let y = 0; y < png.height; y++) {
@@ -72,10 +53,15 @@ for (const charId of characters) {
 
         const png = PNG.sync.read(fs.readFileSync(srcFile));
         
-        const activePng2 = createActiveFrame(png, pose, 2);
-        const dstFile2 = path.join(spritesDir, `${charId}_${pose}_2.png`);
-        fs.writeFileSync(dstFile2, PNG.sync.write(activePng2));
-        count++;
+        // Generate fluid 4-frame animation for attacks
+        if (['punch', 'kick', 'crouch_punch', 'sweep', 'special', 'air_punch', 'air_kick'].includes(pose)) {
+            for (let v = 2; v <= 4; v++) {
+                const activePng = createActiveFrame(png, pose, v);
+                const dstFile = path.join(spritesDir, `${charId}_${pose}_${v}.png`);
+                fs.writeFileSync(dstFile, PNG.sync.write(activePng));
+                count++;
+            }
+        }
 
         if (pose === 'walk') {
             const activePng3 = createActiveFrame(png, pose, 3);

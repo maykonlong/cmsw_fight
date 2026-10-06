@@ -2,44 +2,7 @@ import Phaser from 'phaser';
 import { AudioManager } from '../engine/AudioManager';
 import { ArcadeTheme, ARCADE } from '../ui/ArcadeTheme';
 
-const CHARACTERS = [
-    {
-        key: 'kevin',
-        textureKey: 'kevin_idle',
-        name: 'KEVIN MANJA',
-        specialty: 'Especial: Beijo Elétrico 💋⚡',
-        color: 0x0099ff,
-        colorHex: '#0099ff',
-        locked: false,
-    },
-    {
-        key: 'vini_dog',
-        textureKey: 'vini_dog_idle',
-        name: 'VINI DOG',
-        specialty: 'Especial: Aura do Cachorro 🐶💨',
-        color: 0xff3300,
-        colorHex: '#ff3300',
-        locked: false,
-    },
-    {
-        key: 'unknown',
-        textureKey: 'unknown',
-        name: '???',
-        specialty: 'Em Breve',
-        color: 0x444444,
-        colorHex: '#444444',
-        locked: true,
-    },
-    {
-        key: 'unknown',
-        textureKey: 'unknown',
-        name: '???',
-        specialty: 'Em Breve',
-        color: 0x444444,
-        colorHex: '#444444',
-        locked: true,
-    },
-];
+let CHARACTERS: any[] = [];
 
 export class CharacterSelectScene extends Phaser.Scene {
     private p1Index: number = 0;
@@ -70,6 +33,12 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     create() {
         const { width } = this.scale;
+
+        // Dynamic Loading of the Character Roster
+        CHARACTERS = this.cache.json.get('character_roster') || [];
+        if (CHARACTERS.length === 0) {
+            console.error("Failed to load character roster! Check character_roster.json");
+        }
 
         AudioManager.getInstance().setScene(this);
         AudioManager.getInstance().playMusic('char_select', true);
@@ -211,8 +180,26 @@ export class CharacterSelectScene extends Phaser.Scene {
         this.p1Preview = this.add.image(200, 530, getP1Tex())
             .setDisplaySize(180, 260);
 
+        this.tweens.add({
+            targets: this.p1Preview,
+            y: 535,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
         this.p2Preview = this.add.image(width - 200, 530, getP2Tex())
             .setDisplaySize(180, 260).setFlipX(true);
+
+        this.tweens.add({
+            targets: this.p2Preview,
+            y: 535,
+            duration: 1600,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
 
         this.p1NameText = this.add.text(200, 655, CHARACTERS[this.p1Index].name, {
             fontFamily: 'Impact, "Arial Black"',
@@ -346,9 +333,13 @@ export class CharacterSelectScene extends Phaser.Scene {
 
         if (this.p1Preview && this.textures.exists(p1Tex)) {
             this.p1Preview.setTexture(p1Tex);
+            this.p1Preview.setAlpha(0);
+            this.tweens.add({ targets: this.p1Preview, alpha: 1, duration: 200 });
         }
         if (this.p2Preview && this.textures.exists(p2Tex)) {
             this.p2Preview.setTexture(p2Tex);
+            this.p2Preview.setAlpha(0);
+            this.tweens.add({ targets: this.p2Preview, alpha: 1, duration: 200 });
         }
     }
 

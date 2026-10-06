@@ -37,12 +37,34 @@ export class VictoryScene extends Phaser.Scene {
                 ? `${baseKey}_win`
                 : (this.textures.exists(`${this.winnerId}_idle`) ? `${this.winnerId}_idle` : baseKey));
 
+        // Particles for victory background
+        const particles = this.add.particles(0, 0, 'spark', {
+            x: width / 2,
+            y: height / 2,
+            speed: { min: -100, max: 100 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 1, end: 0 },
+            blendMode: 'ADD',
+            lifespan: 2000,
+            quantity: 2,
+            tint: [0xffd700, 0xffaa00, 0xffffff]
+        });
+
         // Winner Sprite (Heroic display)
+        let winImg;
         if (this.textures.exists(winTexKey)) {
-            const winImg = this.add.image(width / 2, height / 2 - 20, winTexKey).setDisplaySize(340, 510);
+            winImg = this.add.image(width / 2, height / 2 - 20, winTexKey).setDisplaySize(340, 510);
             if (this.winnerId.includes('_p2')) {
                 winImg.setTint(0xffaa77);
             }
+            this.tweens.add({
+                targets: winImg,
+                y: height / 2 - 35,
+                duration: 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
 
         const isCampaign = this.mode === '1p' && this.p1Wins >= 2;
