@@ -335,6 +335,16 @@ export class CombatScene extends Phaser.Scene {
             return;
         }
 
+        // Hitstop freeze (KOF style)
+        if (this.vfxManager.isHitStopping()) {
+            this.vfxManager.updateHitStop();
+            // Mantém os inputs atualizando para buffer (entrar com o especial logo após o hit)
+            this.inputManager.update();
+            this.secondPlayerInput?.update();
+            InputManager.endFrame();
+            return;
+        }
+
         // O input precisa ser atualizado antes dos lutadores consumirem o frame.
         this.inputManager.update();
         this.secondPlayerInput?.update();
@@ -391,14 +401,25 @@ export class CombatScene extends Phaser.Scene {
                 }
             } else {
                 const result = CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
+                const dmg = this.player.currentHitbox.damage;
+                const isHeavy = dmg >= 80;
+                const isMedium = dmg >= 40 && dmg < 80;
+                const hitStopFrames = isHeavy ? 14 : (isMedium ? 10 : 6);
+                const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
+                const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
+
                 if (result === 'blocked') {
                     this.vfxManager.spawnBlockSpark(this.player.currentHitbox.x, this.player.currentHitbox.y);
                     AudioManager.getInstance().playSFX('block');
+                    this.vfxManager.hitStop(Math.max(2, hitStopFrames - 2)); // Blockstun hitstop
                 } else if (result === 'hit') {
-                    this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, 'heavy');
-                    this.vfxManager.hitStop(4);
-                    this.vfxManager.cameraShake(0.01);
+                    this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, sparkType);
+                    this.vfxManager.hitStop(hitStopFrames);
+                    this.vfxManager.cameraShake(shakeIntensity);
                     AudioManager.getInstance().playSFX(this.player.currentHitbox.soundHit);
+                }
+                if (result !== 'none') {
+                    this.player.attackContact = true;
                 }
             }
             this.player.currentHitbox.active = false;
@@ -413,14 +434,25 @@ export class CombatScene extends Phaser.Scene {
                 }
             } else {
                 const result = CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
+                const dmg = this.enemy.currentHitbox.damage;
+                const isHeavy = dmg >= 80;
+                const isMedium = dmg >= 40 && dmg < 80;
+                const hitStopFrames = isHeavy ? 14 : (isMedium ? 10 : 6);
+                const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
+                const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
+
                 if (result === 'blocked') {
                     this.vfxManager.spawnBlockSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y);
                     AudioManager.getInstance().playSFX('block');
+                    this.vfxManager.hitStop(Math.max(2, hitStopFrames - 2));
                 } else if (result === 'hit') {
-                    this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, 'heavy');
-                    this.vfxManager.hitStop(4);
-                    this.vfxManager.cameraShake(0.01);
+                    this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, sparkType);
+                    this.vfxManager.hitStop(hitStopFrames);
+                    this.vfxManager.cameraShake(shakeIntensity);
                     AudioManager.getInstance().playSFX(this.enemy.currentHitbox.soundHit);
+                }
+                if (result !== 'none') {
+                    this.enemy.attackContact = true;
                 }
             }
             this.enemy.currentHitbox.active = false;

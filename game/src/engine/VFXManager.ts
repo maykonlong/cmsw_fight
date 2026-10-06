@@ -68,13 +68,45 @@ export class VFXManager {
         }
     }
 
-    public hitStop(frames: number) {
-        this.scene.physics.world.isPaused = true;
-        
-        // Resume after N frames (approx 16ms per frame)
-        this.scene.time.delayedCall(frames * 16, () => {
-            this.scene.physics.world.isPaused = false;
+    public spawnAfterImage(sprite: Phaser.GameObjects.Sprite, tint: number = 0x00ffff) {
+        const afterImage = this.scene.add.sprite(sprite.x, sprite.y, sprite.texture.key, sprite.frame.name);
+        afterImage.setFlipX(sprite.flipX);
+        afterImage.setDisplaySize(sprite.displayWidth, sprite.displayHeight);
+        afterImage.setOrigin(sprite.originX, sprite.originY);
+        afterImage.setTint(tint);
+        afterImage.setAlpha(0.5);
+        afterImage.setDepth(sprite.depth - 1);
+        afterImage.setBlendMode(Phaser.BlendModes.ADD);
+
+        this.scene.tweens.add({
+            targets: afterImage,
+            alpha: 0,
+            scaleX: afterImage.scaleX * 1.05,
+            scaleY: afterImage.scaleY * 1.05,
+            duration: 250,
+            ease: 'Sine.easeOut',
+            onComplete: () => afterImage.destroy()
         });
+    }
+
+    private hitStopTimer: number = 0;
+
+    public hitStop(frames: number) {
+        this.hitStopTimer = frames;
+        this.scene.physics.world.isPaused = true;
+    }
+
+    public isHitStopping(): boolean {
+        return this.hitStopTimer > 0;
+    }
+
+    public updateHitStop() {
+        if (this.hitStopTimer > 0) {
+            this.hitStopTimer--;
+            if (this.hitStopTimer <= 0) {
+                this.scene.physics.world.isPaused = false;
+            }
+        }
     }
 
     public cameraShake(intensity: number) {

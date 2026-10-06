@@ -16,7 +16,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public stateMachine: StateMachine;
     public inputManager?: IInputProvider;
     public speed: number = 250;
-    public jumpForce: number = 750;
+    public jumpForce: number = 880;
 
     // Combat
     public hp: number = 1000;
@@ -61,6 +61,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public comboHits: number = 0;
     public comboDamage: number = 0;
     public comboResetTimer?: Phaser.Time.TimerEvent;
+    public attackContact: boolean = false;
 
     public registerComboHit(damage: number, vfx?: any) {
         this.comboHits++;
@@ -86,6 +87,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, texture);
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        (this.body as Phaser.Physics.Arcade.Body).setGravityY(800); // KOF Heavy Gravity (Adds to global 1200)
 
         this.setCollideWorldBounds(true);
         this.setOrigin(0.5, 0.95);
@@ -253,7 +255,10 @@ class IdleState extends State {
         f.setPoseTexture('idle');
     }
     execute(f: Fighter) {
-        f.setVelocityX(0);
+        // Easing (Friction) to stop smoothly instead of instantly
+        const currentVx = (f.body as Phaser.Physics.Arcade.Body).velocity.x;
+        f.setVelocityX(Phaser.Math.Linear(currentVx, 0, 0.35));
+        
         if (!f.inputManager) return;
         const inp = f.inputManager;
 
@@ -398,10 +403,14 @@ class WalkState extends State {
         if (inp.isLeftDown) {
             // Se estiver andando para trás, usa velocidade um pouco mais lenta (0.8x)
             const speedMult = isFacingLeft ? 1 : 0.8;
-            f.setVelocityX(-f.speed * speedMult);
+            const targetVx = -f.speed * speedMult;
+            const currentVx = (f.body as Phaser.Physics.Arcade.Body).velocity.x;
+            f.setVelocityX(Phaser.Math.Linear(currentVx, targetVx, 0.4));
         } else if (inp.isRightDown) {
             const speedMult = isFacingLeft ? 0.8 : 1;
-            f.setVelocityX(f.speed * speedMult);
+            const targetVx = f.speed * speedMult;
+            const currentVx = (f.body as Phaser.Physics.Arcade.Body).velocity.x;
+            f.setVelocityX(Phaser.Math.Linear(currentVx, targetVx, 0.4));
         } else {
             this.stateMachine.transition('idle'); return;
         }
@@ -509,7 +518,14 @@ class BackdashState extends State {
             AudioManager.getInstance().playSFX('swing', 0.15);
         }
 
-        f.setVelocityX(backRunSpeed * backDir);
+        // Rastro fantasma no Backdash
+        if (this.runTimer % 3 === 0) {
+            (f.scene as any).vfxManager?.spawnAfterImage(f, 0xffaa00);
+        }
+
+        // Física: O backdash começa rápido e vai freiando (Ease-out)
+        const currentSpeed = backRunSpeed * Math.max(0.1, (1 - (this.runTimer / 22)));
+        f.setVelocityX(currentSpeed * backDir);
 
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
         if (!holdBack && this.runTimer > 12) {
@@ -532,22 +548,48 @@ class BackdashState extends State {
 // ─────────────────────────────────────────────────────────────────
 class JumpState extends State {
     private airFrames = 0;
+    private isShortHop = false;
+    private canShortHop = true;
+    private isSuperJump = false;
+
     enter(f: Fighter, resume: boolean = false) {
         if (!resume && !f.isOnGround()) return; // IMPEDE DUPLO PULO ABSOLUTAMENTE!
         this.airFrames = resume ? 9 : 0;
+        this.canShortHop = !resume;
+        this.isShortHop = false;
         f.setPoseTexture('jump_1');
         if (resume) return;
         f.airAttackUsed = false;
         f.setVelocityY(-f.jumpForce);
         if (!f.inputManager) return;
-        if (f.inputManager.isLeftDown)  f.setVelocityX(-f.speed * 0.85);
-        else if (f.inputManager.isRightDown) f.setVelocityX(f.speed * 0.85);
+        
+        // Momentum: Se estava correndo antes de pular, o pulo vai mais longe (Super Jump / Hyper Hop)
+        const isRunning = Math.abs((f.body as Phaser.Physics.Arcade.Body).velocity.x) > f.speed * 1.2;
+        this.isSuperJump = isRunning;
+        const jumpSpeed = isRunning ? f.speed * 1.4 : f.speed * 0.85;
+
+        if (f.inputManager.isLeftDown)  f.setVelocityX(-jumpSpeed);
+        else if (f.inputManager.isRightDown) f.setVelocityX(jumpSpeed);
     }
 
     execute(f: Fighter) {
         this.airFrames++;
         const body = f.body as Phaser.Physics.Arcade.Body;
         const vy = body?.velocity.y ?? 0;
+
+        // Rastro fantasma se for Super Jump
+        if (this.isSuperJump && this.airFrames % 3 === 0) {
+            (f.scene as any).vfxManager?.spawnAfterImage(f, 0x00aaff);
+        }
+
+        // Short Hop Check (Se soltar pra cima antes do frame 7, corta a subida)
+        if (this.canShortHop && this.airFrames < 7 && f.inputManager && !f.inputManager.isUpDown) {
+            this.canShortHop = false;
+            this.isShortHop = true;
+            if (vy < 0) {
+                f.setVelocityY(vy * 0.45); // Corta a força do pulo, caindo mais rápido
+            }
+        }
 
         // Alternância de frames de pulo (jump_1 arranque, jump_2 ápice, jump_3 queda)
         if (vy < -200) {
@@ -727,6 +769,7 @@ class AttackState extends State {
 
     enter(f: Fighter) {
         this.duration = 0;
+        f.attackContact = false;
         f.currentHitbox.active = false;
         
         const isAir = this.moveData.hitLevel === 'AIR';
@@ -785,9 +828,9 @@ class AttackState extends State {
             f.currentHitbox.active = false;
         }
 
-        // Janela de Target Combo Chain & Special Cancel
+        // Janela de Target Combo Chain & Special Cancel (KOF Style: Only on contact)
         if (this.moveData.hitLevel !== 'AIR' && this.duration > this.moveData.startup + 1) {
-            if (f.inputManager) {
+            if (f.inputManager && f.attackContact) {
                 const inp = f.inputManager;
                 const isCrouch = inp.isDownDown;
 
@@ -810,14 +853,16 @@ class AttackState extends State {
                     this.stateMachine.transition('special', cmd);
                     return;
                 }
-            }
-        }
 
-        if (this.moveData.hitLevel !== 'AIR' && f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0 && this.duration > this.moveData.startup + this.moveData.active) {
-            f.bufferedSpecialFrames = 0;
-            f.currentHitbox.active = false;
-            this.stateMachine.transition('special', f.getDefaultSpecialCommand());
-            return;
+                // Buffered Special
+                if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
+                    f.bufferedSpecialFrames = 0;
+                    f.currentHitbox.active = false;
+                    f.clearTint();
+                    this.stateMachine.transition('special', f.getDefaultSpecialCommand());
+                    return;
+                }
+            }
         }
 
         // Golpes aéreos mantêm a pose até aterrissar; a hitbox já foi desligada.
