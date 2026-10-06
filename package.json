@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@rolldown/binding-wasm32-wasi": "^1.2.12"
+  }
+}

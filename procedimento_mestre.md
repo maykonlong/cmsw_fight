@@ -1,4 +1,4 @@
-# C&M FIGTH — PROCEDIMENTO MESTRE v2.0
+# COMBAT MASTERS — PROCEDIMENTO MESTRE v3.0
 ## Guia Definitivo para Reconstrução Completa
 
 > **PARA A IA QUE VAI EXECUTAR:**
@@ -23,10 +23,10 @@
 
 ## A.1 O Que É Este Jogo
 
-- **Nome:** C&M Figth
+- **Nome:** Combat Masters
 - **Gênero:** Jogo de Luta 2D (estilo Street Fighter II)
 - **Plataformas:** Navegador (PC Chrome/Firefox/Safari, Mobile Chrome/Safari iOS)
-- **Hospedagem:** GitHub Pages (https://maykonlong.github.io/cmsw_fight/)
+- **Hospedagem:** GitHub Pages (https://maykonlong.github.io/combat_masters/)
 - **Controles:** Teclado, Gamepad (Xbox/PS), Touch (celular)
 - **Resolução:** 1280×720, escala automática para qualquer tela
 - **Tecnologia:** Phaser 3 + TypeScript + Vite
@@ -53,7 +53,7 @@
 
 ## A.3 Cenário (v1.0)
 
-- **Nome:** C&M Software HQ
+- **Nome:** Combat Masters HQ
 - **Descrição:** Rua brasileira ao pôr do sol, favela ao fundo, muro com grafite, carro velho estacionado, galera assistindo
 - **3 Camadas Parallax:**
   - Background (céu/prédios distantes) — scrollFactor 0.1
@@ -81,7 +81,7 @@
 ## A.5 Fluxo de Telas
 
 ```
-BootScene (Logo "C&M Software" por 2 segundos)
+BootScene (Logo "Combat Masters" por 2 segundos)
     ↓
 MainMenuScene
     ├── 1 PLAYER → CharacterSelectScene → CombatScene → Victory/GameOver → MainMenu
@@ -170,7 +170,7 @@ npm install phaser@3.80
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/cmsw_fight/',
+  base: '/combat_masters/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -223,7 +223,7 @@ game/
 │   │   │   ├── kevin.json
 │   │   │   └── vini_dog.json
 │   │   └── stages/
-│   │       └── cmsw_hq.json
+│   │       └── combat_masters_hq.json
 │   └── assets/
 │       ├── sprites/
 │       │   ├── kevin_idle.png       ← UMA POSE POR ARQUIVO
@@ -292,8 +292,8 @@ game/
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description" content="C&M Figth — Jogo de luta 2D estilo Street Fighter. Resolva sua treta aqui!" />
-  <title>C&M Figth — Resolva sua treta aqui</title>
+  <meta name="description" content="Combat Masters — Jogo de luta 2D estilo Street Fighter. Resolva sua treta aqui!" />
+  <title>COMBAT MASTERS — Combat Martial Soul Warriors</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -416,7 +416,7 @@ new Phaser.Game(config);
 - [ ] **2.2.1** Criar `game/src/scenes/BootScene.ts`:
   - Preload: carregar TODAS as imagens e JSONs (ver lista completa na Seção A)
   - Criar texturas de fallback (retângulos coloridos) caso imagens não existam
-  - Create: mostrar "C&M SOFTWARE" + "RESOLVA SUA TRETA AQUI" por 2s → fade → MainMenuScene
+  - Create: mostrar "COMBAT MASTERS" + "RESOLVA SUA TRETA AQUI" por 2s → fade → MainMenuScene
 
 **Fallback obrigatório** — Gerar texturas programáticas se os PNGs não existirem:
 ```typescript
@@ -429,7 +429,7 @@ this.load.image('stage_bg', 'assets/sprites/stage_bg.png');
 // Carrega JSONs de dados (ATENÇÃO: estão em public/data/)
 this.load.json('kevin_data', 'data/characters/kevin.json');
 this.load.json('vini_dog_data', 'data/characters/vini_dog.json');
-this.load.json('cmsw_hq_data', 'data/stages/cmsw_hq.json');
+this.load.json('combat_masters_hq_data', 'data/stages/combat_masters_hq.json');
 
 // BootScene.create() — Fallbacks
 if (!this.textures.exists('kevin_idle')) {
@@ -442,7 +442,7 @@ if (!this.textures.exists('kevin_idle')) {
 
 ## 2.3 VALIDAÇÃO DA FASE 2
 
-- [ ] **2.3.1** Tela preta aparece → Logo "C&M SOFTWARE" aparece → Fade → Menu
+- [ ] **2.3.1** Tela preta aparece → Logo "COMBAT MASTERS" aparece → Fade → Menu
 - [ ] **2.3.2** Console do navegador mostra "Phaser v3.x.x" sem erros vermelhos
 - [ ] **2.3.3** No celular, a tela se ajusta sem scroll
 
@@ -1177,4 +1177,59 @@ this.projectiles.getChildren().forEach((child) => {
 
 ---
 
-*Última atualização: 01/10/2026 — v2.0 — Reescrito com base na análise real do código-fonte e diagnóstico de todos os bugs.*
+# ═══════════════════════════════════════════════════════════════
+# FASE 11 — REFINAMENTOS PÓS-DEPLOY (v3.0)
+# ═══════════════════════════════════════════════════════════════
+
+## 11.1 Correção de Nomenclatura e Deploy
+- [x] **11.1.1** Renomeado repositório e URLs para `combat_masters` (package.json e vite.config.ts)
+- [x] **11.1.2** Alterado nome de exibição no index.html e telas de carregamento para "Combat Masters"
+- [x] **11.1.3** Corrigido erro de 404 em assets JSON causados por caracteres sensíveis (espaços, maiúsculas, &) nos arquivos e URLs
+
+## 11.2 Ajustes de Física e Escala
+- [x] **11.2.1** Escala base (baseScale) dinâmica ajustada no Fighter para preservar o tamanho (340px) sem encolher com auras grandes
+- [x] **11.2.2** Multiplicadores de hitboxes criados (X: 2.0x, Y: 3.0x) para adequar à nova proporção visual do personagem
+- [x] **11.2.3** Hurtbox estendido (120x310) com offset ajustado para -310 (do pé à cabeça do personagem de 340px)
+- [x] **11.2.4** Força de Pulo (`jumpForce`) aumentada de 1050 para 1450 para compensar a gravidade alta estilo KOF (1200 + 800 do personagem) e permitir saltos longos.
+
+---
+
+*Última atualização: 06/10/2026 — v3.0 — Atualizado para Combat Masters, ajuste fino de colisão/hitboxes e refatoração do build.*
+
+---
+# ⚠️ ESTADO ATUAL DO PROJETO — Fim de Fase 2 / Completo (v1.0 Core)
+
+*Documento gerado em 2026-10-06; sincronizado com `status_projeto.md` e `README.md`.*
+
+## O que já está feito (concluído)
+- [x] **Fase 2 — Skins/Sprites:** 4 personagens com poses de 4 frames; 48 frames de ataque `_3/_4` gerados; `check_fighter_sprites.cjs` sem `0 poses faltando`.
+- [x] **Validação:** `npm run test:sprites` e `tsc --noEmit` com **0 erros**.
+- [x] **WDAC / Build Windows:** instalado `@rolldown/binding-wasm32-wasi`; `vite build` recai no caminho WASM quando o `.node` nativo é bloqueado pela política corporativa. CI Ubuntu não precisa.
+- [x] **Docs:** `README.md`, `status_projeto.md`, `.gitignore` atualizados.
+- [x] **Pipeline de sprites ok:** `package.json` (dev/ build/ preview/ test:sprites), `vite.config.ts`, `tsconfig.json`.
+
+## O que ainda falta (próximos itens)
+- [ ] **Playtest local** p1/p2, entrada, rolagem, guard, super gauge, KO.
+- [ ] **CI GitHub Actions** verde.
+- [ ] **Commit final.**
+
+## Comandos de dev (teste rápido)
+```bash
+# Windows
+iniciar.bat          # dev server (vite)
+npm run test:sprites # audit de sprites
+npx tsc --noEmit     # ok (0 erros)
+
+# Unix / WSL
+./iniciar.sh
+npm run test:sprites
+npx tsc --noEmit
+
+# build (produção)
+cd game
+npm run build        # módulo WASM se WDAC bloquear o .node nativo
+```
+
+---
+*Revisão: após este commit, rodar `iniciar.bat` e validar p1/p2, entrada, rolagem, guard, super gauge e KO.*
+

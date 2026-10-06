@@ -37,8 +37,9 @@ export class VictoryScene extends Phaser.Scene {
                 ? `${baseKey}_win`
                 : (this.textures.exists(`${this.winnerId}_idle`) ? `${this.winnerId}_idle` : baseKey));
 
-        // Particles for victory background
-        const particles = this.add.particles(0, 0, 'spark', {
+        // Particles for victory background (efeito auto-gerenciado pela cena)
+        // Usa 'hit_spark' (carregado no BootScene), não 'spark' (não-existente)
+        this.add.particles(0, 0, 'hit_spark', {
             x: width / 2,
             y: height / 2,
             speed: { min: -100, max: 100 },

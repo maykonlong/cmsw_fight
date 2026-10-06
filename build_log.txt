@@ -1,0 +1,173 @@
+﻿node : file:///C:/Users/MaykonSilva/OneDri
+ve%20-%20C&M%20SOFTWARE%20LICENCIAMENTO%20
+DE%20SISTEMAS%20LTDA/%C3%81rea%20de%20Trab
+alho/Arquivos%20Gerais/Automa%C3%A7%C3%B5e
+s/cmsw_figth/game/node_modules/rolldown/di
+st/shared/binding-B4m_2rFW.mjs:603
+No linha:1 caractere:10
++ cd game; node 
+node_modules/vite/bin/vite.js build 2>&1 
+| Out-File -Fi ...
++          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (file:///C:/User...4m_2rFW.mjs:603  
+  :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+			const error = /* @__PURE__ */ new 
+Error("Cannot find native binding. npm 
+has a bug related to optional 
+dependencies 
+(https://github.com/npm/cli/issues/4828). 
+Please try `npm i` again after removing 
+both package-lock.json and node_modules 
+directory.");
+			                              ^
+
+Error: Cannot find native binding. npm 
+has a bug related to optional 
+dependencies 
+(https://github.com/npm/cli/issues/4828). 
+Please try `npm i` again after removing 
+both package-lock.json and node_modules 
+directory.
+    at file:///C:/Users/MaykonSilva/OneDri
+ve%20-%20C&M%20SOFTWARE%20LICENCIAMENTO%20
+DE%20SISTEMAS%20LTDA/%C3%81rea%20de%20Trab
+alho/Arquivos%20Gerais/Automa%C3%A7%C3%B5e
+s/cmsw_figth/game/node_modules/rolldown/di
+st/shared/binding-B4m_2rFW.mjs:603:34
+    at file:///C:/Users/MaykonSilva/OneDri
+ve%20-%20C&M%20SOFTWARE%20LICENCIAMENTO%20
+DE%20SISTEMAS%20LTDA/%C3%81rea%20de%20Trab
+alho/Arquivos%20Gerais/Automa%C3%A7%C3%B5e
+s/cmsw_figth/game/node_modules/rolldown/di
+st/shared/binding-B4m_2rFW.mjs:9:49
+    ... 2 lines matching cause stack 
+trace ...
+    at async 
+onImport.tracePromise.__proto__ 
+(node:internal/modules/esm/loader:661:26) 
+{
+  cause: Error: Cannot find module 
+'@rolldown/binding-wasm32-wasi'
+  Require stack:
+  - C:\Users\MaykonSilva\OneDrive - C&M 
+SOFTWARE LICENCIAMENTO DE SISTEMAS 
+LTDA\├ürea de Trabalho\Arquivos Gerais\Aut
+oma├º├Áes\cmsw_figth\game\node_modules\rol
+ldown\dist\shared\binding-B4m_2rFW.mjs
+      at file:///C:/Users/MaykonSilva/OneD
+rive%20-%20C&M%20SOFTWARE%20LICENCIAMENTO%
+20DE%20SISTEMAS%20LTDA/%C3%81rea%20de%20Tr
+abalho/Arquivos%20Gerais/Automa%C3%A7%C3%B
+5es/cmsw_figth/game/node_modules/rolldown/
+dist/shared/binding-B4m_2rFW.mjs:497:18
+      ... 6 lines matching cause stack 
+trace ...
+      at async 
+onImport.tracePromise.__proto__ 
+(node:internal/modules/esm/loader:661:26) 
+{
+    cause: Error: Cannot find module 
+'./rolldown-binding.wasi.cjs'
+    Require stack:
+    - C:\Users\MaykonSilva\OneDrive - C&M 
+SOFTWARE LICENCIAMENTO DE SISTEMAS 
+LTDA\├ürea de Trabalho\Arquivos Gerais\Aut
+oma├º├Áes\cmsw_figth\game\node_modules\rol
+ldown\dist\shared\binding-B4m_2rFW.mjs
+        at file:///C:/Users/MaykonSilva/On
+eDrive%20-%20C&M%20SOFTWARE%20LICENCIAMENT
+O%20DE%20SISTEMAS%20LTDA/%C3%81rea%20de%20
+Trabalho/Arquivos%20Gerais/Automa%C3%A7%C3
+%B5es/cmsw_figth/game/node_modules/rolldow
+n/dist/shared/binding-B4m_2rFW.mjs:497:18
+        ... 6 lines matching cause stack 
+trace ...
+        at async 
+onImport.tracePromise.__proto__ 
+(node:internal/modules/esm/loader:661:26) 
+{
+      cause: Error: Uma pol´┐¢tica de 
+Controle de Aplicativo bloqueou este 
+arquivo.
+
+      \\?\C:\Users\MaykonSilva\OneDrive - 
+C&M SOFTWARE LICENCIAMENTO DE SISTEMAS 
+LTDA\├ürea de Trabalho\Arquivos Gerais\Aut
+oma├º├Áes\cmsw_figth\game\node_modules\@ro
+lldown\binding-win32-x64-msvc\rolldown-bin
+ding.win32-x64-msvc.node
+          at file:///C:/Users/MaykonSilva/
+OneDrive%20-%20C&M%20SOFTWARE%20LICENCIAME
+NTO%20DE%20SISTEMAS%20LTDA/%C3%81rea%20de%
+20Trabalho/Arquivos%20Gerais/Automa%C3%A7%
+C3%B5es/cmsw_figth/game/node_modules/rolld
+own/dist/shared/binding-B4m_2rFW.mjs:497:1
+8
+          ... 6 lines matching cause 
+stack trace ...
+          at async 
+onImport.tracePromise.__proto__ 
+(node:internal/modules/esm/loader:661:26) 
+{
+        cause: Error: Cannot find module 
+'./rolldown-binding.win32-x64-msvc.node'
+        Require stack:
+        - C:\Users\MaykonSilva\OneDrive - 
+C&M SOFTWARE LICENCIAMENTO DE SISTEMAS 
+LTDA\├ürea de Trabalho\Arquivos Gerais\Aut
+oma├º├Áes\cmsw_figth\game\node_modules\rol
+ldown\dist\shared\binding-B4m_2rFW.mjs
+            at file:///C:/Users/MaykonSilv
+a/OneDrive%20-%20C&M%20SOFTWARE%20LICENCIA
+MENTO%20DE%20SISTEMAS%20LTDA/%C3%81rea%20d
+e%20Trabalho/Arquivos%20Gerais/Automa%C3%A
+7%C3%B5es/cmsw_figth/game/node_modules/rol
+ldown/dist/shared/binding-B4m_2rFW.mjs:497
+:18
+            at Array.reduce (<anonymous>)
+            at createLoadErrorChain (file:
+///C:/Users/MaykonSilva/OneDrive%20-%20C&M
+%20SOFTWARE%20LICENCIAMENTO%20DE%20SISTEMA
+S%20LTDA/%C3%81rea%20de%20Trabalho/Arquivo
+s%20Gerais/Automa%C3%A7%C3%B5es/cmsw_figth
+/game/node_modules/rolldown/dist/shared/bi
+nding-B4m_2rFW.mjs:490:17)
+            at file:///C:/Users/MaykonSilv
+a/OneDrive%20-%20C&M%20SOFTWARE%20LICENCIA
+MENTO%20DE%20SISTEMAS%20LTDA/%C3%81rea%20d
+e%20Trabalho/Arquivos%20Gerais/Automa%C3%A
+7%C3%B5es/cmsw_figth/game/node_modules/rol
+ldown/dist/shared/binding-B4m_2rFW.mjs:604
+:18
+            at file:///C:/Users/MaykonSilv
+a/OneDrive%20-%20C&M%20SOFTWARE%20LICENCIA
+MENTO%20DE%20SISTEMAS%20LTDA/%C3%81rea%20d
+e%20Trabalho/Arquivos%20Gerais/Automa%C3%A
+7%C3%B5es/cmsw_figth/game/node_modules/rol
+ldown/dist/shared/binding-B4m_2rFW.mjs:9:4
+9
+            at file:///C:/Users/MaykonSilv
+a/OneDrive%20-%20C&M%20SOFTWARE%20LICENCIA
+MENTO%20DE%20SISTEMAS%20LTDA/%C3%81rea%20d
+e%20Trabalho/Arquivos%20Gerais/Automa%C3%A
+7%C3%B5es/cmsw_figth/game/node_modules/rol
+ldown/dist/shared/parse-D5aRkQ8y.mjs:3:46
+            at ModuleJob.run (node:interna
+l/modules/esm/module_job:430:25)
+            at async 
+onImport.tracePromise.__proto__ 
+(node:internal/modules/esm/loader:661:26) 
+{
+          cause: null
+        }
+      }
+    }
+  }
+}
+
+Node.js v24.14.0

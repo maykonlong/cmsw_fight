@@ -1,0 +1,6 @@
+kevin_p2=False
+vini_dog_p2=False
+kevin_idle=True
+vini_dog_idle=True
+kevin_p2_idle=True
+vini_dog_p2_idle=True

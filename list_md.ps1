@@ -1,0 +1,1 @@
+Get-ChildItem -Path 'c:/Users/MaykonSilva/OneDrive - C&M SOFTWARE LICENCIAMENTO DE SISTEMAS LTDA/Área de Trabalho/Arquivos Gerais/Automações/cmsw_figth' -File | Where-Object {$_.Name -like '*.md'} | Sort-Object Name | Select-Object Name, Length

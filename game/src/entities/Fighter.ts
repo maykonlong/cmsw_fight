@@ -567,7 +567,6 @@ class BackdashState extends State {
 // ─────────────────────────────────────────────────────────────────
 class JumpState extends State {
     private airFrames = 0;
-    private isShortHop = false;
     private canShortHop = true;
     private isSuperJump = false;
 
@@ -575,7 +574,6 @@ class JumpState extends State {
         if (!resume && !f.isOnGround()) return; // IMPEDE DUPLO PULO ABSOLUTAMENTE!
         this.airFrames = resume ? 9 : 0;
         this.canShortHop = !resume;
-        this.isShortHop = false;
         f.setPoseTexture('jump_1');
         if (resume) return;
         f.airAttackUsed = false;
@@ -604,7 +602,6 @@ class JumpState extends State {
         // Short Hop Check (Se soltar pra cima antes do frame 7, corta a subida)
         if (this.canShortHop && this.airFrames < 7 && f.inputManager && !f.inputManager.isUpDown) {
             this.canShortHop = false;
-            this.isShortHop = true;
             if (vy < 0) {
                 f.setVelocityY(vy * 0.5); // Corta a força do pulo, caindo mais rápido
             }

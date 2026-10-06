@@ -65,7 +65,7 @@ export class CombatScene extends Phaser.Scene {
 
     preload() {
         const poses = [
-            'idle', 'idle_2', 'walk', 'walk_2', 'walk_3', 'walk_back',
+            'idle', 'walk', 'walk_2', 'walk_3', 'walk_back',
             'run_1', 'run_2', 'run_3', 'run_back_1', 'run_back_2', 'run_back_3',
             'jump', 'jump_1', 'jump_2', 'jump_3',
             'air_punch', 'air_punch_2', 'air_kick', 'air_kick_2',
@@ -392,75 +392,52 @@ export class CombatScene extends Phaser.Scene {
         if (p2CanTurn) this.enemy.setFlipX(this.enemy.x > this.player.x);
 
         // Check Box collisions
-        if (CombatSystem.checkHitboxCollision(this.player.currentHitbox, this.enemy.currentHurtbox)) {
-            if (this.player.currentHitbox.hitType === 'throw') {
-                if (CombatSystem.checkThrowRange(this.player, this.enemy)) {
-                    this.enemy.stateMachine.transition('thrown');
-                    this.vfxManager.cameraShake(0.02);
-                    AudioManager.getInstance().playSFX('throw');
-                }
-            } else {
-                const result = CombatSystem.applyHit(this.player, this.enemy, this.player.currentHitbox, false);
-                const dmg = this.player.currentHitbox.damage;
-                const isHeavy = dmg >= 80;
-                const isMedium = dmg >= 40 && dmg < 80;
-                const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
-                const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
-                const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
-
-                if (result === 'blocked') {
-                    this.vfxManager.spawnBlockSpark(this.player.currentHitbox.x, this.player.currentHitbox.y);
-                    AudioManager.getInstance().playSFX('block');
-                    this.vfxManager.hitStop(Math.max(2, hitStopFrames - 2)); // Blockstun hitstop
-                } else if (result === 'hit') {
-                    this.vfxManager.spawnHitSpark(this.player.currentHitbox.x, this.player.currentHitbox.y, sparkType);
-                    this.vfxManager.hitStop(hitStopFrames);
-                    this.vfxManager.cameraShake(shakeIntensity);
-                    AudioManager.getInstance().playSFX(this.player.currentHitbox.soundHit);
-                }
-                if (result !== 'none') {
-                    this.player.attackContact = true;
-                }
-            }
-            this.player.currentHitbox.active = false;
-        }
-
-        if (CombatSystem.checkHitboxCollision(this.enemy.currentHitbox, this.player.currentHurtbox)) {
-            if (this.enemy.currentHitbox.hitType === 'throw') {
-                if (CombatSystem.checkThrowRange(this.enemy, this.player)) {
-                    this.player.stateMachine.transition('thrown');
-                    this.vfxManager.cameraShake(0.02);
-                    AudioManager.getInstance().playSFX('throw');
-                }
-            } else {
-                const result = CombatSystem.applyHit(this.enemy, this.player, this.enemy.currentHitbox, false);
-                const dmg = this.enemy.currentHitbox.damage;
-                const isHeavy = dmg >= 80;
-                const isMedium = dmg >= 40 && dmg < 80;
-                const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
-                const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
-                const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
-
-                if (result === 'blocked') {
-                    this.vfxManager.spawnBlockSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y);
-                    AudioManager.getInstance().playSFX('block');
-                    this.vfxManager.hitStop(Math.max(2, hitStopFrames - 2));
-                } else if (result === 'hit') {
-                    this.vfxManager.spawnHitSpark(this.enemy.currentHitbox.x, this.enemy.currentHitbox.y, sparkType);
-                    this.vfxManager.hitStop(hitStopFrames);
-                    this.vfxManager.cameraShake(shakeIntensity);
-                    AudioManager.getInstance().playSFX(this.enemy.currentHitbox.soundHit);
-                }
-                if (result !== 'none') {
-                    this.enemy.attackContact = true;
-                }
-            }
-            this.enemy.currentHitbox.active = false;
-        }
+        this.resolveMeleeHit(this.player, this.enemy);
+        this.resolveMeleeHit(this.enemy, this.player);
 
         // Pushbox resolve
         // Check Match Over
         this.matchManager.checkWinCondition();
+    }
+
+    /**
+     * Resolve uma colisão hitbox→hurtbox entre atacante e defensor.
+     * Trata agarrões, bloqueios, hitstun, hitstop, VFX e SFX.
+     * (Antes este bloco estava duplicado para P1 e P2 — refactor DRY.)
+     */
+    private resolveMeleeHit(attacker: Fighter, defender: Fighter) {
+        if (!CombatSystem.checkHitboxCollision(attacker.currentHitbox, defender.currentHurtbox)) return;
+
+        if (attacker.currentHitbox.hitType === 'throw') {
+            if (CombatSystem.checkThrowRange(attacker, defender)) {
+                defender.stateMachine.transition('thrown');
+                this.vfxManager.cameraShake(0.02);
+                AudioManager.getInstance().playSFX('throw');
+            }
+        } else {
+            const result = CombatSystem.applyHit(attacker, defender, attacker.currentHitbox, false);
+            const dmg = attacker.currentHitbox.damage;
+            const isHeavy = dmg >= 80;
+            const isMedium = dmg >= 40 && dmg < 80;
+            const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
+            const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
+            const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
+
+            if (result === 'blocked') {
+                this.vfxManager.spawnBlockSpark(attacker.currentHitbox.x, attacker.currentHitbox.y);
+                AudioManager.getInstance().playSFX('block');
+                this.vfxManager.hitStop(Math.max(2, hitStopFrames - 2)); // Blockstun hitstop
+            } else if (result === 'hit') {
+                this.vfxManager.spawnHitSpark(attacker.currentHitbox.x, attacker.currentHitbox.y, sparkType);
+                this.vfxManager.hitStop(hitStopFrames);
+                this.vfxManager.cameraShake(shakeIntensity);
+                AudioManager.getInstance().playSFX(attacker.currentHitbox.soundHit);
+            }
+            if (result !== 'none') {
+                attacker.attackContact = true;
+            }
+        }
+        attacker.currentHitbox.active = false;
     }
 }
 

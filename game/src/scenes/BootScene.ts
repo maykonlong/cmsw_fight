@@ -37,6 +37,11 @@ export class BootScene extends Phaser.Scene {
             if (!this.textures.exists(k2)) this.load.image(k2, `assets/sprites/${k2}.png`);
         });
 
+        // Base (idle) do P2 - usada como fallback de diretório, nunca renderizada
+        // (a textura real vem do JSON: data.sprites.idle = kevin_p2_idle)
+        this.load.image('kevin_p2', 'assets/sprites/kevin_p2.png');
+        this.load.image('vini_dog_p2', 'assets/sprites/vini_dog_p2.png');
+
         // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2)
         this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
         poses.forEach(p => {
@@ -68,10 +73,11 @@ export class BootScene extends Phaser.Scene {
         this.load.json('vini_tabacaria', 'data/stages/vini_tabacaria.json');
 
         // Carregamento universal de Audio (SFX, Vozes e Músicas com reservas)
+        // Apenas os SFX com arquivos reais no repo são carregados aqui.
+        // Vozes (voice/) e Músicas (music/) ainda não possuem assets;
+        // o AudioManager cai no synth fallback quando a chave não está no cache.
         const sfxKeys = [
-            'hit_light', 'hit_medium', 'hit_heavy', 'block', 'electric_hit', 'throw', 'land',
-            'swing', 'ui_cursor', 'ui_select', 'ui_cancel', 'electric_cast', 'dog_cast',
-            'vape_smoke', 'shower_water', 'dog_bark'
+            'hit_light', 'hit_medium', 'hit_heavy', 'block', 'electric_hit', 'throw', 'land'
         ];
         sfxKeys.forEach(key => {
             this.load.audio(key, [
@@ -81,23 +87,8 @@ export class BootScene extends Phaser.Scene {
             ]);
         });
 
-        const voiceKeys = ['round_1', 'round_2', 'round_3', 'fight', 'ko', 'time_over', 'perfect', 'you_win', 'you_lose'];
-        voiceKeys.forEach(key => {
-            this.load.audio(key, [
-                `assets/audio/voice/${key}.ogg`,
-                `assets/audio/voice/${key}.mp3`,
-                `assets/audio/voice/${key}.wav`
-            ]);
-        });
-
-        const musicKeys = ['menu_bgm', 'char_select', 'stage_combat_masters', 'stage_street', 'victory', 'game_over'];
-        musicKeys.forEach(key => {
-            this.load.audio(key, [
-                `assets/audio/music/${key}.ogg`,
-                `assets/audio/music/${key}.mp3`,
-                `assets/audio/music/${key}.wav`
-            ]);
-        });
+        // Voice lines & music tracks: aguardar assets .ogg/.mp3/.wav no
+        // assets/audio/voice e assets/audio/music. Fallback de synth já ativo.
     }
 
     create() {
