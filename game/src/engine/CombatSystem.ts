@@ -106,8 +106,8 @@ export class CombatSystem {
                 attacker.sameMoveHits = 1;
             }
 
-            // Se o oponente tentar travar o jogador repetindo EXATAMENTE o mesmo golpe 3 vezes:
-            if (attacker.sameMoveHits >= 3) {
+            // Se o oponente tentar travar o jogador repetindo EXATAMENTE o mesmo golpe 10 vezes (Prevenção de infinito):
+            if (attacker.sameMoveHits >= 10) {
                 attacker.sameMoveHits = 0;
                 defender.setVelocityX(hitbox.knockback * 4.2 * dir);
                 defender.hitStunTimer = 2;
@@ -115,7 +115,7 @@ export class CombatSystem {
                 if (attacker.scene?.vfxManager) {
                     attacker.scene.vfxManager.showComboText(0, defender.x, defender.y - 120, 'BURST ESCAPE!');
                 }
-                defender.stateMachine.transition('idle');
+                defender.stateMachine.transition('knockdown');
                 return 'hit';
             }
         }

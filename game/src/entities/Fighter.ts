@@ -16,7 +16,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public stateMachine: StateMachine;
     public inputManager?: IInputProvider;
     public speed: number = 250;
-    public jumpForce: number = 880;
+    public jumpForce: number = 1050; // KOF style super high jump
 
     // Combat
     public hp: number = 1000;
@@ -151,6 +151,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             land:        new LandState(),
             throw:       new ThrowState(),
             thrown:      new ThrownState(),
+            blowback:    new BlowbackState(),
             
             // Especial & Super (Desperation Move KOF)
             special:       new SpecialState(),
@@ -225,12 +226,11 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     private applyVisualSize() {
-        const targetHeight = Fighter.DISPLAY_HEIGHT; // 340
-        const aspectRatio = (this.width > 0 && this.height > 0) ? (this.width / this.height) : (180 / 340);
-        const targetWidth = Math.round(targetHeight * aspectRatio);
-        this.setDisplaySize(targetWidth, targetHeight);
-
+        // Usa setScale ao invés de setDisplaySize para NUNCA esticar/distorcer a proporção da imagem original.
+        this.setScale(1.6);
+        
         const body = this.body as Phaser.Physics.Arcade.Body;
+        // Ajusta a caixa de colisão baseada na nova escala
         const bodyWidth = 88 / this.scaleX;
         const bodyHeight = 306 / this.scaleY;
         body.setSize(bodyWidth, bodyHeight);
@@ -277,6 +277,11 @@ class IdleState extends State {
         // AB Roll Esquiva KOF (Soco Leve + Chute Leve juntos)
         if (inp.isLPJustPressed && inp.isLKJustPressed) {
             this.stateMachine.transition('roll'); return;
+        }
+
+        // CD Blowback KOF (Soco Forte + Chute Forte juntos)
+        if (inp.isHPJustPressed && inp.isHKJustPressed) {
+            this.stateMachine.transition('blowback'); return;
         }
 
         // Reconhecimento de comandos especiais & Super Especial (Desperation Move KOF)
@@ -587,7 +592,7 @@ class JumpState extends State {
             this.canShortHop = false;
             this.isShortHop = true;
             if (vy < 0) {
-                f.setVelocityY(vy * 0.45); // Corta a força do pulo, caindo mais rápido
+                f.setVelocityY(vy * 0.5); // Corta a força do pulo, caindo mais rápido
             }
         }
 
@@ -914,26 +919,42 @@ class BlockState extends State {
         const inp = f.inputManager;
         const isFacingLeft = f.flipX;
         const holdBack = isFacingLeft ? inp.isRightDown : inp.isLeftDown;
-        const pressForward = isFacingLeft ? inp.isLeftDown : inp.isRightDown;
-
-        // Block Reversal Counter (Contra-ataque ao defender: Frente + Forte ou Especial)
-        const isCounter = (pressForward && (inp.isHPJustPressed || inp.isHKJustPressed)) || inp.isSpecialJustPressed;
-        if (isCounter) {
-            f.isBlocking = false;
-            f.setTint(0xffe34d);
-            if ((f.scene as any)?.vfxManager) {
-                (f.scene as any).vfxManager.showComboText(0, f.x, f.y - 120, 'REVERSAL COUNTER!');
+        
+        // Guard Cancel KOF (Rolar ou Blowback enquanto defende)
+        if (f.hitStunTimer > 0) {
+            f.hitStunTimer--;
+            
+            if (f.superStocks > 0 || f.superGauge >= 1000) {
+                const isRoll = inp.isLPJustPressed && inp.isLKJustPressed;
+                const isBlowback = inp.isHPJustPressed && inp.isHKJustPressed;
+                
+                if (isRoll || isBlowback) {
+                    if (f.superStocks > 0) f.superStocks--;
+                    else f.superGauge -= 1000;
+                    
+                    if ((f.scene as any)?.vfxManager) {
+                        (f.scene as any).vfxManager.showComboText(0, f.x, f.y - 120, 'GUARD CANCEL!');
+                    }
+                    if (isRoll) {
+                        this.stateMachine.transition('roll', true); // true = Guard Cancel
+                        return;
+                    } else {
+                        this.stateMachine.transition('blowback');
+                        return;
+                    }
+                }
             }
-            this.stateMachine.transition('special', f.getDefaultSpecialCommand());
-            return;
         }
         
-        if (!holdBack) {
-            this.stateMachine.transition(this.type === 'LOW' ? 'crouch' : 'idle');
-        } else if (this.type === 'HIGH' && inp.isDownDown) {
-            this.stateMachine.transition('block_low');
-        } else if (this.type === 'LOW' && !inp.isDownDown) {
-            this.stateMachine.transition('block_high');
+        // Só sai do block quando terminar o hitStunTimer
+        if (f.hitStunTimer <= 0) {
+            if (!holdBack) {
+                this.stateMachine.transition(this.type === 'LOW' ? 'crouch' : 'idle');
+            } else if (this.type === 'HIGH' && inp.isDownDown) {
+                this.stateMachine.transition('block_low');
+            } else if (this.type === 'LOW' && !inp.isDownDown) {
+                this.stateMachine.transition('block_high');
+            }
         }
     }
 }
@@ -982,27 +1003,47 @@ class SpecialState extends State {
 // ─────────────────────────────────────────────────────────────────
 class RollState extends State {
     private duration = 0;
-    enter(f: Fighter) {
-        this.duration = 22; // 22 frames de rolamento
+    private isGuardCancel = false;
+
+    enter(f: Fighter, isGuardCancel: boolean = false) {
+        this.duration = 24; // 24 frames de rolamento
+        this.isGuardCancel = isGuardCancel;
         f.setPoseTexture('crouch');
         f.currentHurtbox.invincible = true;
         const isFacingLeft = f.flipX;
         const inp = f.inputManager;
         const rollDir = inp?.isLeftDown ? -1 : inp?.isRightDown ? 1 : (isFacingLeft ? -1 : 1);
-        f.setVelocityX(380 * rollDir);
+        
+        const speed = isGuardCancel ? 550 : 380;
+        f.setVelocityX(speed * rollDir);
+        
+        if (isGuardCancel) f.setTint(0x00aaff);
         AudioManager.getInstance().playSFX('swing', 0.35);
     }
 
     execute(f: Fighter) {
         this.duration--;
+
+        if (this.duration % 3 === 0) {
+            (f.scene as any).vfxManager?.spawnAfterImage(f, this.isGuardCancel ? 0x00aaff : 0xaaaaaa);
+        }
+
         if (this.duration === 14) {
             f.setPoseTexture('crouch_punch');
         }
-        if (this.duration <= 4) {
+
+        if (this.duration <= 6) {
             f.currentHurtbox.invincible = false;
+            f.clearTint();
         }
+
+        if (this.duration <= 10) {
+            f.setVelocityX(f.body!.velocity.x * 0.75); // Friction
+        }
+
         if (this.duration <= 0) {
             f.currentHurtbox.invincible = false;
+            f.clearTint();
             this.stateMachine.transition(f.inputManager?.isDownDown ? 'crouch' : 'idle');
         }
     }
@@ -1037,8 +1078,9 @@ class SuperSpecialState extends State {
         const isKevin = f.characterId.includes('kevin');
         if ((f.scene as any)?.vfxManager) {
             const vfx = (f.scene as any).vfxManager;
+            vfx.darkenScreen(60); // Max Mode KOF style dimming
             vfx.screenFlash(220);
-            vfx.cameraShake(0.025);
+            vfx.cameraShake(0.035);
             vfx.showComboText(0, f.x, f.y - 140, isKevin ? 'SELINHO SUPREMO!' : 'PITBULL RUSH EXTREMO!');
         }
         AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast', 0.85);
@@ -1196,6 +1238,48 @@ class WakeupState extends State {
             f.isHit = false;
             this.stateMachine.transition('idle');
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// BLOWBACK (C+D) KOF
+// ─────────────────────────────────────────────────────────────────
+class BlowbackState extends State {
+    private duration = 0;
+
+    enter(f: Fighter) {
+        f.setVelocityX(0);
+        this.duration = 38;
+        f.setPoseTexture('kick'); 
+        
+        f.currentHitbox.active = true;
+        f.currentHitbox.damage = 75;
+        f.currentHitbox.hitType = 'blowback';
+        f.currentHitbox.hitLevel = 'MID';
+        f.currentHitbox.knockback = 750; // Joga pra longe!
+        f.currentHitbox.knockdown = true;
+        f.currentHitbox.blockstun = 24;
+        f.currentHitbox.hitstun = 35;
+        f.currentHitbox.setTo(0, 0, 100, 60);
+        f.currentHitbox.offsetX = 50;
+        f.currentHitbox.offsetY = -50;
+        
+        AudioManager.getInstance().playSFX('swing', 0.5);
+    }
+
+    execute(f: Fighter) {
+        this.duration--;
+        if (this.duration === 28) {
+            f.currentHitbox.active = false;
+        }
+        if (this.duration <= 0) {
+            this.stateMachine.transition('idle');
+        }
+    }
+
+    exit(f: Fighter) {
+        f.currentHitbox.active = false;
+        f.clearTint();
     }
 }
 

@@ -121,6 +121,18 @@ export class VFXManager {
         this.scene.cameras.main.flash(duration, 255, 255, 255);
     }
 
+    public darkenScreen(duration: number) {
+        const overlay = this.scene.add.rectangle(0, 0, this.scene.scale.width, this.scene.scale.height, 0x000000, 0.7);
+        overlay.setOrigin(0, 0).setDepth(25);
+        this.scene.tweens.add({
+            targets: overlay,
+            alpha: 0,
+            delay: duration * 16,
+            duration: 300,
+            onComplete: () => overlay.destroy()
+        });
+    }
+
     public slowMotion(duration: number) {
         this.scene.time.timeScale = 0.15;
         this.scene.time.delayedCall(duration * 0.15, () => {

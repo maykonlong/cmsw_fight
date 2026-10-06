@@ -404,7 +404,7 @@ export class CombatScene extends Phaser.Scene {
                 const dmg = this.player.currentHitbox.damage;
                 const isHeavy = dmg >= 80;
                 const isMedium = dmg >= 40 && dmg < 80;
-                const hitStopFrames = isHeavy ? 14 : (isMedium ? 10 : 6);
+                const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
                 const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
                 const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
 
@@ -437,7 +437,7 @@ export class CombatScene extends Phaser.Scene {
                 const dmg = this.enemy.currentHitbox.damage;
                 const isHeavy = dmg >= 80;
                 const isMedium = dmg >= 40 && dmg < 80;
-                const hitStopFrames = isHeavy ? 14 : (isMedium ? 10 : 6);
+                const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
                 const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
                 const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
 
