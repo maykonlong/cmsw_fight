@@ -16,7 +16,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public stateMachine: StateMachine;
     public inputManager?: IInputProvider;
     public speed: number = 250;
-    public jumpForce: number = 1050; // KOF style super high jump
+    public jumpForce: number = 1450; // Aumentado para compensar a gravidade
     private baseScale: number | null = null;
 
     // Combat
@@ -97,13 +97,13 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
         // Init Boxes
         this.currentHitbox = new Hitbox(0, 0, 0, 0);
-        this.currentHurtbox = new Hurtbox(0, 0, 100, 265);
-        this.currentHurtbox.offsetX = -50;
-        this.currentHurtbox.offsetY = -112;
+        this.currentHurtbox = new Hurtbox(0, 0, 120, 310);
+        this.currentHurtbox.offsetX = -60;
+        this.currentHurtbox.offsetY = -310;
 
-        this.pushbox = new Pushbox(0, 0, 75, 180);
-        this.pushbox.offsetX = -37.5;
-        this.pushbox.offsetY = -30;
+        this.pushbox = new Pushbox(0, 0, 100, 240);
+        this.pushbox.offsetX = -50;
+        this.pushbox.offsetY = -240;
 
         // Registrando estados usando MoveData base para normais
         this.stateMachine = new StateMachine('idle', {
@@ -797,8 +797,8 @@ class AttackState extends State {
 
         if (isAir) f.airAttackUsed = true;
         if (isCrouch) {
-            f.currentHurtbox.height = 135;
-            f.currentHurtbox.offsetY = 18;
+            f.currentHurtbox.height = 200;
+            f.currentHurtbox.offsetY = -200;
         }
 
         f.setPoseTexture(this.getPoseName(this.moveData, 1));
@@ -814,10 +814,14 @@ class AttackState extends State {
         f.currentHitbox.blockstun = this.moveData.blockstun;
         f.currentHitbox.soundHit = this.moveData.soundHit;
         
-        f.currentHitbox.offsetX = this.moveData.hitboxOffset.x;
-        f.currentHitbox.offsetY = this.moveData.hitboxOffset.y;
+        // Escalar os hitboxes antigos para o tamanho novo (340px)
+        const scaleX = 2.0;
+        const scaleY = 3.0;
+
+        f.currentHitbox.offsetX = this.moveData.hitboxOffset.x * scaleX;
+        f.currentHitbox.offsetY = this.moveData.hitboxOffset.y * scaleY;
         f.currentHitbox.moveId = this.moveData.input;
-        f.currentHitbox.setTo(0, 0, this.moveData.hitboxOffset.w, this.moveData.hitboxOffset.h);
+        f.currentHitbox.setTo(0, 0, this.moveData.hitboxOffset.w * scaleX, this.moveData.hitboxOffset.h * scaleX);
     }
 
     execute(f: Fighter) {
@@ -825,8 +829,8 @@ class AttackState extends State {
 
         // Mantém a hurtbox agachada baixa durante ataques agachados
         if (this.moveData.input.startsWith('c')) {
-            f.currentHurtbox.height = 135;
-            f.currentHurtbox.offsetY = 18;
+            f.currentHurtbox.height = 200;
+            f.currentHurtbox.offsetY = -200;
         }
 
         // A colisão com o chão encerra o golpe; nunca cria um segundo salto.

@@ -1,6 +1,6 @@
 {
   "id": "combat_masters_hq",
-  "name": "C&M Software HQ",
+  "name": "Combat Masters HQ",
   "music": "assets/audio/music/stage_combat_masters.ogg",
   "groundY": 590,
   "leftBoundary": 80,
