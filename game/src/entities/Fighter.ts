@@ -17,6 +17,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public inputManager?: IInputProvider;
     public speed: number = 250;
     public jumpForce: number = 1050; // KOF style super high jump
+    private baseScale: number | null = null;
 
     // Combat
     public hp: number = 1000;
@@ -226,10 +227,18 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     private applyVisualSize() {
-        // Usa a proporção correta para alcançar a altura alvo de DISPLAY_HEIGHT, sem distorcer.
-        if (this.height > 0) {
-            const scale = Fighter.DISPLAY_HEIGHT / this.height;
-            this.setScale(scale);
+        if (this.baseScale === null) {
+            if (this.height > 0) {
+                this.baseScale = Fighter.DISPLAY_HEIGHT / this.height;
+            } else {
+                this.baseScale = 1;
+            }
+        }
+
+        // Mantém a proporção do personagem sempre idêntica à do frame Idle, 
+        // evitando que ele encolha quando frames maiores (com auras gigantes) forem carregados.
+        if (this.baseScale !== 1) {
+            this.setScale(this.baseScale);
         } else {
             this.setDisplaySize(Fighter.DISPLAY_WIDTH, Fighter.DISPLAY_HEIGHT);
         }
