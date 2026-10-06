@@ -30,7 +30,7 @@ export class CPUController implements IInputProvider {
     constructor(me: Fighter, target: Fighter) {
         this.me = me;
         this.target = target;
-        const difficulty = Number(localStorage.getItem('cmsw_diff') ?? 1);
+        const difficulty = Number(localStorage.getItem('COMBAT MASTERS_diff') ?? 1);
         this.reactionDelay = difficulty === 0 ? 34 : difficulty === 2 ? 14 : 24;
         this.attackCooldown = difficulty === 0 ? 100 : difficulty === 2 ? 45 : 70;
     }

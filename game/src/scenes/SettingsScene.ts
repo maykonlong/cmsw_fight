@@ -28,7 +28,7 @@ export class SettingsScene extends Phaser.Scene {
         this.audioManager = AudioManager.getInstance();
         this.audioManager.setScene(this);
 
-        const savedDiff = localStorage.getItem('cmsw_diff');
+        const savedDiff = localStorage.getItem('COMBAT MASTERS_diff');
         if (savedDiff !== null) this.currentDiff = parseInt(savedDiff, 10);
 
         const startY = 220;
@@ -115,7 +115,7 @@ export class SettingsScene extends Phaser.Scene {
     private adjust(dir: number) {
         if (this.selectedIndex === 0) {
             this.currentDiff = Phaser.Math.Wrap(this.currentDiff + dir, 0, this.diffLevels.length);
-            localStorage.setItem('cmsw_diff', this.currentDiff.toString());
+            localStorage.setItem('COMBAT MASTERS_diff', this.currentDiff.toString());
         } else if (this.selectedIndex === 1) {
             this.audioManager.musicVolume = Phaser.Math.Clamp(this.audioManager.musicVolume + (dir * 0.1), 0, 1);
         } else if (this.selectedIndex === 2) {

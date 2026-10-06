@@ -226,8 +226,13 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     }
 
     private applyVisualSize() {
-        // Usa setScale ao invés de setDisplaySize para NUNCA esticar/distorcer a proporção da imagem original.
-        this.setScale(1.6);
+        // Usa a proporção correta para alcançar a altura alvo de DISPLAY_HEIGHT, sem distorcer.
+        if (this.height > 0) {
+            const scale = Fighter.DISPLAY_HEIGHT / this.height;
+            this.setScale(scale);
+        } else {
+            this.setDisplaySize(Fighter.DISPLAY_WIDTH, Fighter.DISPLAY_HEIGHT);
+        }
         
         const body = this.body as Phaser.Physics.Arcade.Body;
         // Ajusta a caixa de colisão baseada na nova escala

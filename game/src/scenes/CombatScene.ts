@@ -56,7 +56,7 @@ export class CombatScene extends Phaser.Scene {
             this.stageKey = this.p2Key.includes('vini') ? 'vini_tabacaria' : 'kevin_bathroom';
         } else {
             // Em modo desafio (2P / PVP): seleção aleatória de cenário
-            const availableStages = ['kevin_bathroom', 'vini_tabacaria', 'cmsw_hq'];
+            const availableStages = ['kevin_bathroom', 'vini_tabacaria', 'COMBAT MASTERS_hq'];
             this.stageKey = Phaser.Math.RND.pick(availableStages);
         }
         this.secondPlayerInput = undefined;
@@ -97,7 +97,7 @@ export class CombatScene extends Phaser.Scene {
 
     create() {
         AudioManager.getInstance().setScene(this);
-        AudioManager.getInstance().playMusic('stage_cmsw', true);
+        AudioManager.getInstance().playMusic('stage_COMBAT MASTERS', true);
 
         // Foco automático no canvas para captura imediata de teclado
         if (this.sys.game.canvas) {

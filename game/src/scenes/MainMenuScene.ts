@@ -70,15 +70,15 @@ export class MainMenuScene extends Phaser.Scene {
         ArcadeTheme.panel(this, width / 2 - 340, 65, 680, 615, ARCADE.blue);
 
         // Header Badge
-        this.add.text(width / 2, 90, '★ CMSW FIGHT ARCADE SYSTEM ★', {
+        this.add.text(width / 2, 90, '★ COMBAT MASTERS ARCADE SYSTEM ★', {
             fontFamily: 'Impact, "Arial Black", sans-serif',
             fontSize: '15px',
             color: '#ffd700',
             letterSpacing: 4,
         }).setOrigin(0.5);
 
-        // Título Principal CMSW FIGHT
-        const title = ArcadeTheme.title(this, 'CMSW FIGHT', width / 2, 145, 84);
+        // Título Principal COMBAT MASTERS
+        const title = ArcadeTheme.title(this, 'COMBAT MASTERS', width / 2, 145, 84);
         this.tweens.add({
             targets: title,
             scaleX: 1.04,

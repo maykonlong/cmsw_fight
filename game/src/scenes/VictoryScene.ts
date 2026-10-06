@@ -86,7 +86,7 @@ export class VictoryScene extends Phaser.Scene {
 
         const displayName = baseKey.includes('kevin') ? 'KEVIN MANJA' : 'VINI DOG';
         const subText = isCampaignComplete
-            ? 'CAMPEÃO ABSOLUTO DO CMSW FIGHT 2026! 🏆'
+            ? 'CAMPEÃO ABSOLUTO DO COMBAT MASTERS 2026! 🏆'
             : (isCampaign ? 'RIVAL DERROTADO! PRÓXIMO DESAFIO AGUARDA!' : `${displayName} É O CAMPEÃO!`);
 
         this.add.text(width / 2, height - 222, subText, {
@@ -122,7 +122,7 @@ export class VictoryScene extends Phaser.Scene {
                     p1Name: 'KEVIN MANJA',
                     p2Name: 'VINI DOG (RIVAL)',
                     mode: '1p',
-                    stage: 'cmsw_hq',
+                    stage: 'COMBAT MASTERS_hq',
                     arcadeStage: nextStageNum
                 });
             });

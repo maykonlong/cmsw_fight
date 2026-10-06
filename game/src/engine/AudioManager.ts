@@ -38,9 +38,9 @@ export class AudioManager {
     }
 
     public loadSettings() {
-        const mv = localStorage.getItem('cmsw_music_vol');
-        const sv = localStorage.getItem('cmsw_sfx_vol');
-        const vv = localStorage.getItem('cmsw_voice_vol');
+        const mv = localStorage.getItem('COMBAT MASTERS_music_vol');
+        const sv = localStorage.getItem('COMBAT MASTERS_sfx_vol');
+        const vv = localStorage.getItem('COMBAT MASTERS_voice_vol');
 
         if (mv !== null) this.musicVolume = parseFloat(mv);
         if (sv !== null) this.sfxVolume = parseFloat(sv);
@@ -48,9 +48,9 @@ export class AudioManager {
     }
 
     public saveSettings() {
-        localStorage.setItem('cmsw_music_vol', this.musicVolume.toString());
-        localStorage.setItem('cmsw_sfx_vol', this.sfxVolume.toString());
-        localStorage.setItem('cmsw_voice_vol', this.voiceVolume.toString());
+        localStorage.setItem('COMBAT MASTERS_music_vol', this.musicVolume.toString());
+        localStorage.setItem('COMBAT MASTERS_sfx_vol', this.sfxVolume.toString());
+        localStorage.setItem('COMBAT MASTERS_voice_vol', this.voiceVolume.toString());
 
         // Update current music volume
         if (this.currentMusic) {
@@ -189,7 +189,7 @@ export class AudioManager {
         const melodies: Record<string, number[]> = {
             menu_bgm: [220, 0, 330, 392, 330, 0, 262, 196],
             char_select: [330, 392, 440, 392, 330, 262, 294, 0],
-            stage_cmsw: [165, 220, 262, 220, 196, 247, 294, 247],
+            stage_COMBAT MASTERS: [165, 220, 262, 220, 196, 247, 294, 247],
             victory: [392, 523, 659, 784, 659, 523, 784, 0],
             game_over: [220, 196, 165, 147, 131, 0, 131, 0],
         };

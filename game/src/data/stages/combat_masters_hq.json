@@ -1,7 +1,7 @@
 {
-  "id": "cmsw_hq",
+  "id": "COMBAT MASTERS_hq",
   "name": "C&M Software HQ",
-  "music": "assets/audio/music/stage_cmsw.ogg",
+  "music": "assets/audio/music/stage_COMBAT MASTERS.ogg",
   "groundY": 590,
   "leftBoundary": 80,
   "rightBoundary": 1200,

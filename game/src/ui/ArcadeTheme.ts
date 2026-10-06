@@ -49,7 +49,7 @@ export class ArcadeTheme {
         g.fillRect(0, 5, width, 3);
         g.fillRect(0, height - 8, width, 3);
 
-        scene.add.text(24, 16, 'CMSW FIGHT — ARCADE SPECIAL EDITION 2026', {
+        scene.add.text(24, 16, 'COMBAT MASTERS — ARCADE SPECIAL EDITION 2026', {
             fontFamily: '"Arial Black", Gadget, sans-serif',
             fontSize: '12px',
             color: '#ffd700',

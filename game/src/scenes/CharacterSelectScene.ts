@@ -432,7 +432,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         const stages = [
             { key: 'kevin_bathroom', label: '🛁 BANHEIRO ARCO-ÍRIS (KEVIN)' },
             { key: 'vini_tabacaria', label: '💨 TABACARIA & HOOKAH (VINI)' },
-            { key: 'cmsw_hq', label: '🏢 C&M SOFTWARE HQ' }
+            { key: 'COMBAT MASTERS_hq', label: '🏢 C&M SOFTWARE HQ' }
         ];
 
         stages.forEach((stg, i) => {
