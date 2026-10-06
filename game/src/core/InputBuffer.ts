@@ -30,3 +30,4 @@ export class InputBuffer {
         return this.buffer;
     }
 }
+

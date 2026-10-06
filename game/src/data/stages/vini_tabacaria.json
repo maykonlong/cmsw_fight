@@ -1,7 +1,7 @@
 {
   "id": "vini_tabacaria",
   "name": "Tabacaria & Hookah Lounge do Vini",
-  "music": "assets/audio/music/stage_COMBAT MASTERS.ogg",
+  "music": "assets/audio/music/stage_combat_masters.ogg",
   "groundY": 590,
   "leftBoundary": 80,
   "rightBoundary": 1200,
@@ -16,3 +16,4 @@
     }
   ]
 }
+

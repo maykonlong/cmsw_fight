@@ -1,7 +1,7 @@
 {
-  "id": "COMBAT MASTERS_hq",
+  "id": "combat_masters_hq",
   "name": "C&M Software HQ",
-  "music": "assets/audio/music/stage_COMBAT MASTERS.ogg",
+  "music": "assets/audio/music/stage_combat_masters.ogg",
   "groundY": 590,
   "leftBoundary": 80,
   "rightBoundary": 1200,
@@ -19,3 +19,4 @@
     { "type": "leaves", "count": 8, "speed": 0.5 }
   ]
 }
+

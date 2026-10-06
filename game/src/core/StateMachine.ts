@@ -38,3 +38,4 @@ export class State {
     execute(..._args: any[]) {}
     exit(..._args: any[]) {}
 }
+

@@ -137,3 +137,4 @@ export const BASE_MOVES: Record<string, MoveData> = {
         hitboxOffset: { x: 70, y: 20, w: 100, h: 50 }, animation: 'air_attack', soundHit: 'hit_heavy', soundBlock: 'block', effect: 'hit_spark_heavy'
     }
 };
+

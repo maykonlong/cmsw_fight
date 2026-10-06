@@ -25,3 +25,4 @@ export class Hitbox extends Phaser.Geom.Rectangle {
         this.y = charY + this.offsetY;
     }
 }
+

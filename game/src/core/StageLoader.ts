@@ -66,3 +66,4 @@ export class StageLoader {
         return { groundY: data.groundY, width: data.width };
     }
 }
+

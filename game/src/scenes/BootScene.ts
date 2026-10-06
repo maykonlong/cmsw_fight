@@ -63,7 +63,7 @@ export class BootScene extends Phaser.Scene {
         this.load.json('character_roster', 'data/character_roster.json');
         this.load.json('kevin', 'data/characters/kevin.json');
         this.load.json('vini_dog', 'data/characters/vini_dog.json');
-        this.load.json('COMBAT MASTERS_hq', 'data/stages/COMBAT MASTERS_hq.json');
+        this.load.json('combat_masters_hq', 'data/stages/combat_masters_hq.json');
         this.load.json('kevin_bathroom', 'data/stages/kevin_bathroom.json');
         this.load.json('vini_tabacaria', 'data/stages/vini_tabacaria.json');
 
@@ -90,7 +90,7 @@ export class BootScene extends Phaser.Scene {
             ]);
         });
 
-        const musicKeys = ['menu_bgm', 'char_select', 'stage_COMBAT MASTERS', 'stage_street', 'victory', 'game_over'];
+        const musicKeys = ['menu_bgm', 'char_select', 'stage_combat_masters', 'stage_street', 'victory', 'game_over'];
         musicKeys.forEach(key => {
             this.load.audio(key, [
                 `assets/audio/music/${key}.ogg`,
@@ -149,3 +149,4 @@ export class BootScene extends Phaser.Scene {
         });
     }
 }
+

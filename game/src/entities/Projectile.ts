@@ -31,3 +31,4 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
         return this.owner;
     }
 }
+

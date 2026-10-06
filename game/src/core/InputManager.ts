@@ -331,3 +331,4 @@ export class InputManager implements IInputProvider {
         InputManager.justPressedKeys.clear();
     }
 }
+

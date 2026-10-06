@@ -16,3 +16,4 @@ export class Hurtbox extends Phaser.Geom.Rectangle {
         this.y = charY + this.offsetY;
     }
 }
+

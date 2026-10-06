@@ -122,7 +122,7 @@ export class VictoryScene extends Phaser.Scene {
                     p1Name: 'KEVIN MANJA',
                     p2Name: 'VINI DOG (RIVAL)',
                     mode: '1p',
-                    stage: 'COMBAT MASTERS_hq',
+                    stage: 'combat_masters_hq',
                     arcadeStage: nextStageNum
                 });
             });
@@ -153,3 +153,4 @@ export class VictoryScene extends Phaser.Scene {
         });
     }
 }
+

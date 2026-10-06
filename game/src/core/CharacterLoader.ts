@@ -74,3 +74,4 @@ export class CharacterLoader {
         return fighter;
     }
 }
+

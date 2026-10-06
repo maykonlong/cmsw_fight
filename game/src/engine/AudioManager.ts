@@ -189,7 +189,7 @@ export class AudioManager {
         const melodies: Record<string, number[]> = {
             menu_bgm: [220, 0, 330, 392, 330, 0, 262, 196],
             char_select: [330, 392, 440, 392, 330, 262, 294, 0],
-            stage_COMBAT MASTERS: [165, 220, 262, 220, 196, 247, 294, 247],
+            stage_combat_masters: [165, 220, 262, 220, 196, 247, 294, 247],
             victory: [392, 523, 659, 784, 659, 523, 784, 0],
             game_over: [220, 196, 165, 147, 131, 0, 131, 0],
         };
@@ -204,3 +204,4 @@ export class AudioManager {
         }, 220);
     }
 }
+

@@ -46,3 +46,4 @@ export class CameraSystem {
         this.camera.shake(duration, intensity);
     }
 }
+

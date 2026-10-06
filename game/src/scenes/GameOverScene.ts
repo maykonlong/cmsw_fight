@@ -116,3 +116,4 @@ export class GameOverScene extends Phaser.Scene {
         this.input.keyboard?.once('keydown-SPACE', proceed);
     }
 }
+

@@ -36,3 +36,4 @@ export interface IInputProvider {
   // ═══ Chamado a cada frame ═══
   update(): void;
 }
+

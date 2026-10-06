@@ -156,3 +156,4 @@ export class SettingsScene extends Phaser.Scene {
         options[this.selectedIndex].action();
     }
 }
+

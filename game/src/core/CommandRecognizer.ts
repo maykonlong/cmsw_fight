@@ -98,3 +98,4 @@ export class CommandRecognizer {
         return false;
     }
 }
+

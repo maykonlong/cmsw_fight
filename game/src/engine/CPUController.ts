@@ -193,3 +193,4 @@ export class CPUController implements IInputProvider {
         this._right = false;
     }
 }
+

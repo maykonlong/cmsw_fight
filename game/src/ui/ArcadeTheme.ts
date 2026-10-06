@@ -93,3 +93,4 @@ export class ArcadeTheme {
         }).setOrigin(0.5);
     }
 }
+
