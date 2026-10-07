@@ -177,6 +177,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     update() {
         if (this.specialCooldown > 0) this.specialCooldown--;
         this.updateMaxMode();
+        // Stun esvazia devagar quando o lutador não está taking hits
+        if (this.stunMeter > 0 && !this.isHit) {
+            this.stunMeter = Math.max(0, this.stunMeter - 0.25);
+        }
 
         // Um toque durante outro golpe continua válido por uma janela curta.
         if (this.inputManager?.isSpecialJustPressed) this.bufferedSpecialFrames = 18;
@@ -1639,18 +1643,58 @@ class BlowbackState extends State {
 
 class DizzyState extends State {
     private timer = 0;
+    private stars?: Phaser.GameObjects.Container;
+
     enter(f: Fighter) {
-        this.timer = 120;
-        f.isHit = true; // treated as hit so they can't act
+        this.timer = 210; // ~3.5s de atordoamento
+        f.isHit = false;  // dizzy PODE ser acertado (KOF) — é o punish gratuito
+        f.stunMeter = 0;
+        f.setPoseTexture('hit');
+        f.setVelocityX(0);
+        f.currentHitbox.active = false;
+
+        // Estrelas orbitando a cabeça
+        const headY = f.y - f.displayHeight * 0.95;
+        this.stars = f.scene.add.container(f.x, headY).setDepth(40);
+        for (let i = 0; i < 3; i++) {
+            const star = f.scene.add.image(Math.cos((i / 3) * Math.PI * 2) * 42, Math.sin((i / 3) * Math.PI * 2) * 14, 'hit_spark');
+            star.setDisplaySize(26, 26).setTint(0xffd700).setBlendMode(Phaser.BlendModes.ADD);
+            this.stars.add(star);
+        }
+        f.scene.tweens.add({ targets: this.stars, angle: 360, duration: 1400, repeat: -1 });
     }
+
     execute(f: Fighter) {
         this.timer--;
-        // Could listen to buttons to reduce timer here
+
+        // Cambaleio + piscada amarela de atordoado
+        f.setAngle(Math.sin(f.scene.time.now * 0.02) * 7);
+        f.setTint(f.scene.time.now % 400 < 200 ? 0xffe08a : 0xffffff);
+        if (this.stars) {
+            this.stars.x = f.x;
+            this.stars.y = f.y - f.displayHeight * 0.95;
+        }
+
+        // Mash de botões reduz o atordoamento (rolê clássico de arcade)
+        const inp = f.inputManager;
+        if (inp && (inp.isLPJustPressed || inp.isMPJustPressed || inp.isHPJustPressed ||
+                    inp.isLKJustPressed || inp.isMKJustPressed || inp.isHKJustPressed)) {
+            this.timer -= 6;
+        }
+
         if (this.timer <= 0) {
-            f.isHit = false;
-            f.stunMeter = 0;
             this.stateMachine.transition('idle');
         }
+    }
+
+    exit(f: Fighter) {
+        if (this.stars) {
+            this.stars.destroy();
+            this.stars = undefined;
+        }
+        f.setAngle(0);
+        f.clearTint();
+        f.stunMeter = 0;
     }
 }
 
@@ -1705,7 +1749,12 @@ class KOState extends State {
 }
 
 class WinState extends State {
+    private frame = 0;
+    private altOn = false;
+
     enter(f: Fighter) {
+        this.frame = 0;
+        this.altOn = false;
         f.setVelocityX(0);
         f.clearTint();
         f.setPoseTexture('win');
@@ -1714,6 +1763,14 @@ class WinState extends State {
     }
 
     execute(f: Fighter) {
+        this.frame++;
+        // Comemoração animada: alterna a pose oficial com o win_alt desenhado do zero
+        if (this.frame % 26 === 0) {
+            this.altOn = !this.altOn;
+            f.setPoseTexture(this.altOn ? 'win_alt' : 'win');
+            f.setDisplaySize(240, 440);
+            AudioManager.getInstance().playSFX('swing', 0.12);
+        }
         if (f.body?.touching.down && f.body.velocity.y >= 0) {
             f.setVelocityY(0);
         }

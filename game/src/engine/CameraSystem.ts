@@ -3,39 +3,31 @@ import { Fighter } from '../entities/Fighter';
 
 export class CameraSystem {
     private camera: Phaser.Cameras.Scene2D.Camera;
-    private minZoom: number = 0.8;
-    private maxZoom: number = 1.2;
-    private padding: number = 200; // Extra space to keep characters in view
+    private minZoom: number = 1.0;   // nunca revela as bordas do cenário (largura = tela)
+    private maxZoom: number = 1.12;  // zoom-in dramático no combate fechado
+    private closeAt: number = 850;   // distância onde começa o zoom
+    private nearAt: number = 220;    // distância de zoom máximo
 
     constructor(scene: Phaser.Scene) {
         this.camera = scene.cameras.main;
     }
 
     public update(p1: Fighter, p2: Fighter) {
-        // Find midpoint
-        const midX = (p1.x + p2.x) / 2;
-        
-        // Calculate distance between players
+        // Rampa suave: aberto = zoom normal, combate colado = zoom máximo
         const distance = Math.abs(p1.x - p2.x);
-        
-        // Calculate required zoom to keep both on screen
-        const requiredWidth = distance + this.padding * 2;
-        let targetZoom = this.camera.width / requiredWidth;
-        
-        // Clamp zoom
-        targetZoom = Phaser.Math.Clamp(targetZoom, this.minZoom, this.maxZoom);
+        const t = Phaser.Math.Clamp((this.closeAt - distance) / (this.closeAt - this.nearAt), 0, 1);
+        const targetZoom = this.minZoom + t * (this.maxZoom - this.minZoom);
 
         // Smoothly interpolate camera properties (Lerp)
-        this.camera.zoom = Phaser.Math.Linear(this.camera.zoom, targetZoom, 0.1);
-        this.camera.scrollX = Phaser.Math.Linear(this.camera.scrollX, midX - (this.camera.width / 2), 0.1);
+        this.camera.zoom = Phaser.Math.Linear(this.camera.zoom, targetZoom, 0.06);
 
-        // Keep camera within world bounds if set
+        // Mantém dentro dos bounds do cenário (cenário = largura da tela -> scroll 0)
         if (this.camera.useBounds) {
             const bounds = this.camera.getBounds();
             if (bounds) {
                 this.camera.scrollX = Phaser.Math.Clamp(
-                    this.camera.scrollX, 
-                    bounds.x, 
+                    this.camera.scrollX,
+                    bounds.x,
                     bounds.right - this.camera.width
                 );
             }

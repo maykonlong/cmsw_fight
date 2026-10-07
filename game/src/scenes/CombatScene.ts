@@ -74,7 +74,7 @@ export class CombatScene extends Phaser.Scene {
             'block', 'punch', 'punch_2', 'punch_l', 'punch_l_2', 'punch_r', 'punch_r_2',
             'kick', 'kick_2', 'kick_l', 'kick_l_2', 'kick_r', 'kick_r_2',
             'special', 'special_2', 'throw', 'throw_2', 'thrown',
-            'hit', 'ko', 'win'
+            'hit', 'ko', 'win', 'win_alt'
         ];
 
         const charKeys = ['kevin', 'kevin_p2', 'vini_dog', 'vini_dog_p2'];
@@ -389,6 +389,9 @@ export class CombatScene extends Phaser.Scene {
         }
         this.player.x = Phaser.Math.Clamp(this.player.x, 95, this.scale.width - 95);
         this.enemy.x = Phaser.Math.Clamp(this.enemy.x, 95, this.scale.width - 95);
+
+        // Câmera dinâmica: aproxima quando o combate fecha, volta ao normal quando abrem
+        this.cameraSystem.update(this.player, this.enemy);
 
         // Auto-Face (apenas em movimento livre para não interromper animações de ataque)
         const p1CanTurn = ['idle', 'walk', 'crouch', 'block', 'run', 'land'].includes(this.player.stateMachine.state);

@@ -65,9 +65,10 @@ export class CombatSystem {
         if (defender.isHit) return 'none';
 
         // Auto-Guard: Defender bloqueia se estiver no estado de bloqueio OU segurando/andando para trás
-        const isHoldingBack = Boolean(defender.isHoldingBack);
-        const isHoldingLowBack = Boolean(defender.isHoldingLowBack);
-        const isCurrentlyBlocking = Boolean(defender.isBlocking);
+        // (dizzy não defende nunca — é o punish gratuito do KOF)
+        const isHoldingBack = Boolean(defender.isHoldingBack) && defender.stateMachine.state !== 'dizzy';
+        const isHoldingLowBack = Boolean(defender.isHoldingLowBack) && defender.stateMachine.state !== 'dizzy';
+        const isCurrentlyBlocking = Boolean(defender.isBlocking) && defender.stateMachine.state !== 'dizzy';
         const canAutoBlock = (isHoldingBack || isHoldingLowBack || isCurrentlyBlocking) && hitbox.hitLevel !== 'UNBLOCKABLE';
 
         if (canAutoBlock) {
@@ -139,8 +140,19 @@ export class CombatSystem {
             attacker.registerComboHit(finalDamage, attacker.scene?.vfxManager);
         }
 
+        // Stun/Dizzy: dano acumula atordoamento; enchendo a barra, o lutador fica dizzy
+        const charData = attacker?.scene?.cache?.json?.get(String(defender.characterId).replace(/_p2$/, ''));
+        const stunMax = Number(charData?.stunMax) || 200;
+        defender.stunMeter = (defender.stunMeter || 0) + finalDamage * 0.6;
+        const isStunned = defender.stunMeter >= stunMax && !hitbox.knockdown && hitbox.hitType !== 'throw';
+        if (isStunned) defender.stunMeter = 0;
+
         defender.hitStunTimer = hitbox.hitstun + (isCounterHit ? 6 : 0);
-        defender.stateMachine.transition(hitbox.knockdown ? 'knockdown' : 'hit', hitbox.hitType);
+        defender.stateMachine.transition(isStunned ? 'dizzy' : (hitbox.knockdown ? 'knockdown' : 'hit'), hitbox.hitType);
+
+        if (isStunned && attacker?.scene?.vfxManager) {
+            attacker.scene.vfxManager.showComboText(0, defender.x, defender.y - 150, 'STUN!');
+        }
         return 'hit';
     }
 }

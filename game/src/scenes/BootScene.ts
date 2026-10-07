@@ -25,7 +25,7 @@ export class BootScene extends Phaser.Scene {
             'kick_r', 'kick_r_2', 'kick_r_3', 'kick_r_4',
             'special', 'special_2', 'special_3', 'special_4',
             'throw', 'throw_2', 'thrown',
-            'hit', 'ko', 'win'
+            'hit', 'ko', 'win', 'win_alt'
         ];
 
         // Carrega todas as imagens de poses individuais do Kevin (P1 e P2)
