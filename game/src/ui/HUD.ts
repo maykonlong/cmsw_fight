@@ -212,6 +212,13 @@ export class HUD {
         this.p1SuperBar.fillStyle(0xffd700, 1);
         this.p1SuperBar.fillRect(50, 74, p1SuperPercent * 300, 14);
 
+        // P1 Max Mode Timer (BC ativo — KOF 2002 UM)
+        if (this.p1.isMaxMode) {
+            const p1MaxW = (this.p1.maxModeTimer / Fighter.MAX_MODE_DURATION) * 300;
+            this.p1SuperBar.fillStyle(0xff6600, 1);
+            this.p1SuperBar.fillRect(50, 90, Math.min(300, p1MaxW), 5);
+        }
+
         // P2 HP Bar
         this.p2DamageBar.clear();
         this.p2DamageBar.fillStyle(0xffff00, 1);
@@ -230,6 +237,13 @@ export class HUD {
         const p2SuperW = p2SuperPercent * 300;
         this.p2SuperBar.fillStyle(0x00ccff, 1);
         this.p2SuperBar.fillRect(width - 50 - p2SuperW, 74, p2SuperW, 14);
+
+        // P2 Max Mode Timer (BC ativo — KOF 2002 UM)
+        if (this.p2.isMaxMode) {
+            const p2MaxW = Math.min(300, (this.p2.maxModeTimer / Fighter.MAX_MODE_DURATION) * 300);
+            this.p2SuperBar.fillStyle(0xff6600, 1);
+            this.p2SuperBar.fillRect(width - 50 - p2MaxW, 90, p2MaxW, 5);
+        }
     }
 
     private getBarColor(percent: number): number {

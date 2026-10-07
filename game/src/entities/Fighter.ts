@@ -39,6 +39,17 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
     public airAttackUsed: boolean = false;
     public specialCooldown: number = 0;
 
+    // KOF 2002 UM — 4 arcos de pulo
+    public jumpType: 'none' | 'hop' | 'hyper_hop' | 'normal' | 'super' = 'none';
+    public static readonly BASE_GRAVITY: number = 800;
+
+    // Max Mode (BC — 2002 UM / XIII)
+    public isMaxMode: boolean = false;
+    public maxModeTimer: number = 0;
+    public static readonly MAX_MODE_DURATION: number = 1000;   // ~16s a 60fps
+    public static readonly MAX_CANCEL_COST: number = 150;      // custo por free cancel
+    public static readonly QUICK_MAX_DURATION: number = 500;   // Quick Max dura metade
+
     // KOF Super Gauge (Poder)
     public superGauge: number = 0;
     public superStocks: number = 0;
@@ -113,6 +124,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
             run:         new RunState(),
             backdash:    new BackdashState(),
             roll:        new RollState(),
+            prejump:     new PrejumpState(),
             jump:        new JumpState(),
             crouch:      new CrouchState(),
             
@@ -164,6 +176,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
     update() {
         if (this.specialCooldown > 0) this.specialCooldown--;
+        this.updateMaxMode();
 
         // Um toque durante outro golpe continua válido por uma janela curta.
         if (this.inputManager?.isSpecialJustPressed) this.bufferedSpecialFrames = 18;
@@ -186,6 +199,46 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
     public getDefaultSpecialCommand(): string {
         return this.characterId.includes('vini') ? '214K' : '236P';
+    }
+
+    // ── Max Mode (KOF 2002 UM) ──────────────────────────────────
+    public canActivateMaxMode(): boolean {
+        return !this.isMaxMode && this.superStocks >= 1;
+    }
+
+    public activateMaxMode(quick: boolean = false) {
+        if (!this.canActivateMaxMode()) return;
+        this.superStocks--;
+        this.isMaxMode = true;
+        this.maxModeTimer = quick ? Fighter.QUICK_MAX_DURATION : Fighter.MAX_MODE_DURATION;
+        AudioManager.getInstance().playSFX('electric_cast', 0.7);
+        const vfx = (this.scene as any)?.vfxManager;
+        vfx?.screenFlash(90);
+        vfx?.showComboText(0, this.x, this.y - 150, 'MAX MODE!');
+    }
+
+    public deductMaxCancel(): boolean {
+        if (!this.isMaxMode || this.maxModeTimer < Fighter.MAX_CANCEL_COST) return false;
+        this.maxModeTimer -= Fighter.MAX_CANCEL_COST;
+        return true;
+    }
+
+    public deactivateMaxMode() {
+        this.isMaxMode = false;
+        this.maxModeTimer = 0;
+    }
+
+    private updateMaxMode() {
+        if (!this.isMaxMode) return;
+        this.maxModeTimer--;
+        if (this.maxModeTimer <= 0) {
+            this.deactivateMaxMode();
+            return;
+        }
+        // Aura de Max Mode: afterimage dourado periódico
+        if (this.maxModeTimer % 7 === 0) {
+            (this.scene as any)?.vfxManager?.spawnAfterImage(this, 0xffd700);
+        }
     }
 
     public isOnGround(): boolean {
@@ -307,12 +360,19 @@ class IdleState extends State {
             this.stateMachine.transition('blowback'); return;
         }
 
+        // MAX MODE (KOF 2002 UM): Chute Médio + Soco Forte (B+C) consome 1 stock
+        if (inp.isMKJustPressed && inp.isHPJustPressed && f.canActivateMaxMode()) {
+            f.activateMaxMode(false); return;
+        }
+
         // Reconhecimento de comandos especiais & Super Especial (Desperation Move KOF)
         const cmd = CommandRecognizer.checkCommands(inp.buffer, inp.currentFrame, f.flipX);
         const isSuperReady = (f.superStocks > 0 || f.superGauge >= 1000);
+        // MAX2 (HSDM): vida abaixo de 30% durante o Max Mode — não consome stock
+        const isMax2Ready = f.isMaxMode && f.hp <= f.maxHp * 0.3;
 
         if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.specialCooldown <= 0) {
-            if (isSuperReady) {
+            if (isSuperReady || isMax2Ready) {
                 this.stateMachine.transition('super_special', cmd); return;
             } else {
                 this.stateMachine.transition('special', cmd); return;
@@ -320,7 +380,7 @@ class IdleState extends State {
         }
         if (f.bufferedSpecialFrames > 0 && f.specialCooldown <= 0) {
             f.bufferedSpecialFrames = 0;
-            if (isSuperReady) {
+            if (isSuperReady || isMax2Ready) {
                 this.stateMachine.transition('super_special', f.getDefaultSpecialCommand()); return;
             } else {
                 this.stateMachine.transition('special', f.getDefaultSpecialCommand()); return;
@@ -328,7 +388,7 @@ class IdleState extends State {
         }
 
         if (inp.isUpJustPressed && f.isOnGround()) {
-            this.stateMachine.transition('jump'); return;
+            this.stateMachine.transition('prejump'); return;
         }
         if (inp.isDownDown) {
             if (inp.isLPJustPressed) { this.stateMachine.transition('crouch_LP'); return; }
@@ -339,7 +399,7 @@ class IdleState extends State {
             if (inp.isHKJustPressed) { this.stateMachine.transition('crouch_HK'); return; }
             this.stateMachine.transition('crouch'); return;
         }
-        
+
         if (inp.isLeftDown || inp.isRightDown) {
             this.stateMachine.transition('walk'); return;
         }
@@ -505,8 +565,9 @@ class RunState extends State {
 
         f.setVelocityX(runSpeed * moveDir);
 
+        // Pular correndo engata Hyper Hop / Super Jump automaticamente
         if (inp.isUpJustPressed && f.isOnGround()) {
-            this.stateMachine.transition('jump'); return;
+            this.stateMachine.transition('prejump', true); return;
         }
         if (inp.isLPJustPressed && !inp.isLKJustPressed) { this.stateMachine.transition('stand_LP'); return; }
         if (inp.isMPJustPressed) { this.stateMachine.transition('stand_MP'); return; }
@@ -567,7 +628,7 @@ class BackdashState extends State {
         }
 
         if (inp.isUpJustPressed && f.isOnGround()) {
-            this.stateMachine.transition('jump'); return;
+            this.stateMachine.transition('prejump'); return;
         }
     }
 
@@ -577,30 +638,106 @@ class BackdashState extends State {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// JUMP
+// PREJUMP (janela universal de 4 frames — KOF)
+// Decide no fim da janela qual dos 4 arcos de pulo será executado
 // ─────────────────────────────────────────────────────────────────
+class PrejumpState extends State {
+    private timer = 0;
+    private dir: 'up' | 'fwd' | 'back' = 'up';
+    private fromRun = false;
+    private hadDownCharge = false;
+
+    enter(f: Fighter, fromRun: boolean = false) {
+        this.timer = 4; // janela universal de pré-pulo
+        this.fromRun = fromRun;
+        f.setPoseTexture('crouch'); // pose curta de agachamento no prejump
+        f.setVelocityX(0);
+
+        const inp = f.inputManager;
+        const isFacingLeft = f.flipX;
+        this.dir = inp?.isUpDown
+            ? ((isFacingLeft ? inp.isLeftDown : inp.isRightDown) ? 'fwd'
+                : ((isFacingLeft ? inp.isRightDown : inp.isLeftDown) ? 'back' : 'up'))
+            : 'up';
+
+        // Charge para baixo nos últimos 8 frames (Super Jump / Hyper Hop — numpad 1/2/3)
+        this.hadDownCharge = false;
+        if (inp) {
+            for (const b of inp.buffer.getWindow(8, inp.currentFrame)) {
+                if (b.direction === '1' || b.direction === '2' || b.direction === '3') {
+                    this.hadDownCharge = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    execute(_f: Fighter) {
+        this.timer--;
+        if (this.timer <= 0) {
+            this.stateMachine.transition('jump', {
+                fromRun: this.fromRun,
+                downCharge: this.hadDownCharge,
+                dir: this.dir
+            });
+        }
+    }
+}
+
 class JumpState extends State {
     private airFrames = 0;
-    private canShortHop = true;
     private isSuperJump = false;
 
-    enter(f: Fighter, resume: boolean = false) {
+    enter(f: Fighter, opts?: { resume?: boolean; fromRun?: boolean; downCharge?: boolean; dir?: string } | boolean) {
+        // Compat: estados antigos passam `true` como resume
+        if (typeof opts === 'boolean') opts = { resume: opts };
+        const resume = opts?.resume ?? false;
         if (!resume && !f.isOnGround()) return; // IMPEDE DUPLO PULO ABSOLUTAMENTE!
         this.airFrames = resume ? 9 : 0;
-        this.canShortHop = !resume;
         f.setPoseTexture('jump_1');
         if (resume) return;
         f.airAttackUsed = false;
-        f.setVelocityY(-f.jumpForce);
-        if (!f.inputManager) return;
-        
-        // Momentum: Se estava correndo antes de pular, o pulo vai mais longe (Super Jump / Hyper Hop)
-        const isRunning = Math.abs((f.body as Phaser.Physics.Arcade.Body).velocity.x) > f.speed * 1.2;
-        this.isSuperJump = isRunning;
-        const jumpSpeed = isRunning ? f.speed * 1.4 : f.speed * 0.85;
 
-        if (f.inputManager.isLeftDown)  f.setVelocityX(-jumpSpeed);
-        else if (f.inputManager.isRightDown) f.setVelocityX(jumpSpeed);
+        // ── Os 4 arcos de pulo do KOF (98 UM / 2002 UM) ──
+        const holdingUp = f.inputManager?.isUpDown ?? true;
+        const isHyper = (opts?.fromRun ?? false) || (opts?.downCharge ?? false);
+
+        let velY = -f.jumpForce;          // Regular Jump
+        let speedX = f.speed * 0.85;
+        let gravityMult = 1.0;
+        let type: Fighter['jumpType'] = 'normal';
+
+        if (!holdingUp) {
+            // Hop: soltou cima durante o prejump — arco baixo e rápido
+            velY = -f.jumpForce * 0.55;
+            gravityMult = 1.35; // arcos rasantes caem mais rápido
+            type = 'hop';
+            speedX = f.speed * 0.95;
+            if (isHyper) {
+                // Hyper Hop: a ferramenta ofensiva do rushdown — rasante e veloz
+                type = 'hyper_hop';
+                speedX = f.speed * 1.6;
+            }
+        } else if (isHyper) {
+            // Super Jump: longo alcance horizontal para cruzar a tela
+            type = 'super';
+            speedX = f.speed * 1.6;
+        }
+
+        f.jumpType = type;
+        f.setGravityY(Fighter.BASE_GRAVITY * gravityMult);
+        this.isSuperJump = type === 'super' || type === 'hyper_hop';
+        f.setVelocityY(velY);
+
+        if (!f.inputManager) return;
+        const isFacingLeft = f.flipX;
+        let dirX = 0;
+        const dir = opts?.dir ?? 'up';
+        if (dir === 'fwd') dirX = isFacingLeft ? -1 : 1;
+        else if (dir === 'back') dirX = isFacingLeft ? 1 : -1;
+        else if (f.inputManager.isLeftDown) dirX = -1;
+        else if (f.inputManager.isRightDown) dirX = 1;
+        f.setVelocityX(dirX * speedX);
     }
 
     execute(f: Fighter) {
@@ -608,17 +745,9 @@ class JumpState extends State {
         const body = f.body as Phaser.Physics.Arcade.Body;
         const vy = body?.velocity.y ?? 0;
 
-        // Rastro fantasma se for Super Jump
+        // Rastro fantasma em Super Jump / Hyper Hop
         if (this.isSuperJump && this.airFrames % 3 === 0) {
-            (f.scene as any).vfxManager?.spawnAfterImage(f, 0x00aaff);
-        }
-
-        // Short Hop Check (Se soltar pra cima antes do frame 7, corta a subida)
-        if (this.canShortHop && this.airFrames < 7 && f.inputManager && !f.inputManager.isUpDown) {
-            this.canShortHop = false;
-            if (vy < 0) {
-                f.setVelocityY(vy * 0.5); // Corta a força do pulo, caindo mais rápido
-            }
+            (f.scene as any).vfxManager?.spawnAfterImage(f, this.isSuperJump && f.jumpType === 'hyper_hop' ? 0xffd700 : 0x00aaff);
         }
 
         // Alternância de frames de pulo (jump_1 arranque, jump_2 ápice, jump_3 queda)
@@ -651,6 +780,12 @@ class JumpState extends State {
         if (inp.isLKJustPressed) { this.stateMachine.transition('air_LK'); return; }
         if (inp.isMKJustPressed) { this.stateMachine.transition('air_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('air_HK'); return; }
+    }
+
+    exit(f: Fighter) {
+        // Restaura a gravidade base ao sair do ar
+        f.setGravityY(Fighter.BASE_GRAVITY);
+        f.jumpType = 'none';
     }
 }
 
@@ -745,6 +880,11 @@ class CrouchState extends State {
 
         if (!inp.isDownDown) {
             this.stateMachine.transition('idle'); return;
+        }
+
+        // Super Jump: baixo carregado + cima (2-8) sai direto do agachamento
+        if (inp.isUpJustPressed) {
+            this.stateMachine.transition('prejump'); return;
         }
 
         if (inp.isLPJustPressed) { this.stateMachine.transition('crouch_LP'); return; }
@@ -885,6 +1025,16 @@ class AttackState extends State {
             if (f.inputManager && f.attackContact) {
                 const inp = f.inputManager;
                 const isCrouch = inp.isDownDown;
+
+                // QUICK MAX (KOF 2002 UM): BC no instante do contato cancela o golpe em corrida
+                if (inp.isMKJustPressed && inp.isHPJustPressed && f.canActivateMaxMode()) {
+                    f.activateMaxMode(true);
+                    f.currentHitbox.active = false;
+                    f.clearTint();
+                    f.setAngle(0);
+                    this.stateMachine.transition('run');
+                    return;
+                }
 
                 // Chain/Target Combos
                 const isLight = this.moveData.input.includes('L');
@@ -1086,6 +1236,17 @@ class SpecialState extends State {
             f.emit('fire_special', f);
         }
 
+        // FREE CANCEL (Max Mode — 2002 UM): especial cancela em outro especial
+        // consumindo o timer do modo, ignorando o cooldown normal
+        if (f.isMaxMode && this.duration <= 38 && this.duration >= 20 && f.inputManager) {
+            const cmd = CommandRecognizer.checkCommands(f.inputManager.buffer, f.inputManager.currentFrame, f.flipX);
+            if ((cmd === '236P' || cmd === '623P' || cmd === '214K') && f.deductMaxCancel()) {
+                f.currentHitbox.active = false;
+                this.stateMachine.transition('special', cmd);
+                return;
+            }
+        }
+
         if (this.duration <= 0) {
             f.clearTint();
             this.stateMachine.transition('idle');
@@ -1160,12 +1321,17 @@ class RollState extends State {
 class SuperSpecialState extends State {
     private duration = 0;
     private fired = false;
+    private isMax2 = false;
 
     enter(f: Fighter) {
-        if (f.superStocks > 0) {
-            f.superStocks--;
-        } else if (f.superGauge >= 1000) {
-            f.superGauge = 0;
+        // MAX2 / HSDM: só existe com o Max Mode ativo e vida abaixo de 30% (não consome stock)
+        this.isMax2 = f.isMaxMode && f.hp <= f.maxHp * 0.3;
+        if (!this.isMax2) {
+            if (f.superStocks > 0) {
+                f.superStocks--;
+            } else if (f.superGauge >= 1000) {
+                f.superGauge = 0;
+            }
         }
         f.specialCooldown = 95;
         f.bufferedSpecialFrames = 0;
@@ -1174,7 +1340,7 @@ class SuperSpecialState extends State {
         this.duration = 60;
         this.fired = false;
         f.currentHitbox.active = false;
-        f.setTint(0xffd700);
+        f.setTint(this.isMax2 ? 0xff3366 : 0xffd700);
 
         const isKevin = f.characterId.includes('kevin');
         if ((f.scene as any)?.vfxManager) {
@@ -1182,7 +1348,11 @@ class SuperSpecialState extends State {
             vfx.darkenScreen(60); // Max Mode KOF style dimming
             vfx.screenFlash(220);
             vfx.cameraShake(0.035);
-            vfx.showComboText(0, f.x, f.y - 140, isKevin ? 'SELINHO SUPREMO!' : 'PITBULL RUSH EXTREMO!');
+            // Super Freeze: o mundo congela por 16 frames durante o flash (padrão KOF)
+            vfx.hitStop(16);
+            vfx.showComboText(0, f.x, f.y - 140,
+                this.isMax2 ? (isKevin ? '★ MAX2 — BEIJO LETAL! ★' : '★ MAX2 — ALFA DO CACHORRO! ★')
+                            : (isKevin ? 'SELINHO SUPREMO!' : 'PITBULL RUSH EXTREMO!'));
         }
         AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast', 0.85);
     }
@@ -1193,7 +1363,7 @@ class SuperSpecialState extends State {
         if (!this.fired && this.duration <= 56) {
             this.fired = true;
             f.setPoseTexture('special_2');
-            f.emit('fire_special', f, true); // true = super special
+            f.emit('fire_special', f, true, this.isMax2); // true = super special
         }
 
         if (this.duration <= 0) {
@@ -1314,6 +1484,7 @@ class KnockdownState extends State {
         f.isHit = true;
         f.currentHitbox.active = false;
         f.clearTint();
+        f.setGravityY(Fighter.BASE_GRAVITY);
         this.phase = 'fall';
         this.bounced = false;
         f.setPoseTexture('hit');
@@ -1490,6 +1661,7 @@ class KOState extends State {
         f.isHit = true;
         f.currentHitbox.active = false;
         f.clearTint();
+        f.setGravityY(Fighter.BASE_GRAVITY);
         this.landed = false;
         this.bounced = false;
         // Nocaute com queda real: voa de costas, quica e fica deitado

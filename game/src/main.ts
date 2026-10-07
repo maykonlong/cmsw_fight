@@ -35,5 +35,6 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [BootScene, MainMenuScene, CharacterSelectScene, VsScene, CombatScene, TrainingScene, VictoryScene, GameOverScene, SettingsScene, ControlsScene]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+(window as any).__game = game; // handle de depuracao
 

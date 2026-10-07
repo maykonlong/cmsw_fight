@@ -259,7 +259,7 @@ export class CombatScene extends Phaser.Scene {
         proj.destroy();
     }
 
-    private fireSpecial(fighter: Fighter, isSuper: boolean = false) {
+    private fireSpecial(fighter: Fighter, isSuper: boolean = false, isMax2: boolean = false) {
         if (!this.matchManager?.isMatchActive()) return;
 
         // Limite de 1 projétil ativo por lutador na tela ao mesmo tempo (regra clássica KOF/SF)
@@ -269,9 +269,9 @@ export class CombatScene extends Phaser.Scene {
         const direction = fighter.flipX ? -1 : 1;
         const isKevin = fighter.characterId.includes('kevin');
         const special = this.cache.json.get(fighter.characterId.replace(/_p2$/, ''))?.specials?.[0];
-        
-        const damage = isSuper ? 240 : (special?.damage ?? 80);
-        const speed = isSuper ? 720 : (special?.projectileSpeed ?? (isKevin ? 550 : 480));
+
+        const damage = isMax2 ? 340 : isSuper ? 240 : (special?.damage ?? 80);
+        const speed = isMax2 ? 820 : isSuper ? 720 : (special?.projectileSpeed ?? (isKevin ? 550 : 480));
 
         const projectile = new Projectile(
             this,
@@ -284,10 +284,11 @@ export class CombatScene extends Phaser.Scene {
             isKevin ? 'electric' : 'normal'
         );
         
-        const widthSize = isSuper ? 240 : (isKevin ? 160 : 180);
-        const heightSize = isSuper ? 160 : 110;
+        const widthSize = isMax2 ? 300 : isSuper ? 240 : (isKevin ? 160 : 180);
+        const heightSize = isMax2 ? 200 : isSuper ? 160 : 110;
         projectile.setDisplaySize(widthSize, heightSize);
-        if (isSuper) projectile.setTint(0xffd700);
+        if (isMax2) projectile.setTint(0xff3366);
+        else if (isSuper) projectile.setTint(0xffd700);
 
         const pBody = projectile.body as Phaser.Physics.Arcade.Body;
         pBody.setSize(widthSize * 0.75, heightSize * 0.65);
@@ -300,6 +301,10 @@ export class CombatScene extends Phaser.Scene {
             this.vfxManager.screenFlash(150);
             this.vfxManager.cameraShake(0.02);
             AudioManager.getInstance().playVoice('fight');
+            if (isMax2) {
+                this.vfxManager.cameraShake(0.045);
+                this.vfxManager.screenFlash(260);
+            }
         } else {
             AudioManager.getInstance().playSFX(isKevin ? 'electric_cast' : 'dog_cast');
             if (isKevin) this.vfxManager.screenFlash(60);
@@ -406,9 +411,18 @@ export class CombatScene extends Phaser.Scene {
      * (Antes este bloco estava duplicado para P1 e P2 — refactor DRY.)
      */
     private resolveMeleeHit(attacker: Fighter, defender: Fighter) {
-        if (!CombatSystem.checkHitboxCollision(attacker.currentHitbox, defender.currentHurtbox)) return;
+        const isThrowAttempt = attacker.currentHitbox.hitType === 'throw';
 
-        if (attacker.currentHitbox.hitType === 'throw') {
+        if (isThrowAttempt) {
+            // Prioridade de agarrão (KOF): throws furam a invencibilidade do Roll
+            const hb = attacker.currentHitbox;
+            const hurt = defender.currentHurtbox;
+            if (!hb.active || defender.isHit || !Phaser.Geom.Intersects.RectangleToRectangle(hb, hurt)) return;
+        } else if (!CombatSystem.checkHitboxCollision(attacker.currentHitbox, defender.currentHurtbox)) {
+            return;
+        }
+
+        if (isThrowAttempt) {
             if (CombatSystem.checkThrowRange(attacker, defender)) {
                 defender.stateMachine.transition('thrown');
                 this.vfxManager.cameraShake(0.02);
@@ -425,7 +439,8 @@ export class CombatScene extends Phaser.Scene {
             const dmg = attacker.currentHitbox.damage;
             const isHeavy = dmg >= 80;
             const isMedium = dmg >= 40 && dmg < 80;
-            const hitStopFrames = isHeavy ? 9 : (isMedium ? 6 : 4);
+            // Hitstop calibrado KOF: pesados congelam 10-14 frames; counter hit congela ainda mais
+            const hitStopFrames = (isHeavy ? 12 : (isMedium ? 7 : 4)) + (isCounter ? 3 : 0);
             const shakeIntensity = isHeavy ? 0.02 : (isMedium ? 0.01 : 0.005);
             const sparkType = isHeavy ? 'heavy' : (isMedium ? 'medium' : 'light');
 
