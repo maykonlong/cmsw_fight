@@ -291,15 +291,19 @@ export class CombatScene extends Phaser.Scene {
             isKevin ? 'electric' : 'normal'
         );
         
-        const widthSize = isMax2 ? 300 : isSuper ? 240 : (isKevin ? 160 : 180);
-        const heightSize = isMax2 ? 200 : isSuper ? 160 : 110;
+        // Tamanhos proporcionais ao aspecto real de cada arte (sem distorção)
+        let widthSize: number, heightSize: number;
+        if (isKevin) { widthSize = 170; heightSize = 142; }        // coração 192x160 (1.2:1)
+        else { widthSize = 230; heightSize = 115; }                // cachorro 320x160 (2:1)
+        if (isMax2) { widthSize *= 1.7; heightSize *= 1.7; }
+        else if (isSuper) { widthSize *= 1.4; heightSize *= 1.4; }
         projectile.setDisplaySize(widthSize, heightSize);
         if (isMax2) projectile.setTint(0xff3366);
         else if (isSuper) projectile.setTint(0xffd700);
 
         const pBody = projectile.body as Phaser.Physics.Arcade.Body;
-        pBody.setSize(widthSize * 0.75, heightSize * 0.65);
-        pBody.setOffset(15, 18);
+        pBody.setSize(widthSize * 0.7, heightSize * 0.7);
+        pBody.setOffset((widthSize - widthSize * 0.7) / 2 + 12, (heightSize - heightSize * 0.7) / 2 + 12);
         projectile.setFlipX(direction < 0);
         projectile.setDepth(10);
         this.projectiles.add(projectile);

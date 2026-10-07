@@ -18,7 +18,7 @@
   "ambientEffects": [
     { "type": "leaves", "count": 8, "speed": 0.5 },
     { "type": "sparks", "speed": 1 },
-    { "type": "crowd", "y": 600, "scale": 1.1 }
+    { "type": "crowd", "y": 590, "scale": 1.7 }
   ]
 }
 

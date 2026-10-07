@@ -157,10 +157,10 @@ export class StageLoader {
                     // Torcida animada: silhuetas vibrando no fundo
                     if (!scene.textures.exists('crowd_1')) break;
                     const stripY = typeof fx.y === 'number' ? fx.y : height - 96;
-                    for (let i = 0; i < 4; i++) {
-                        const cx = width / 2 + (i - 1.5) * 340;
+                    for (let i = 0; i < 3; i++) {
+                        const cx = width / 2 + (i - 1) * 420;
                         const crowd = scene.add.image(cx, stripY, 'crowd_1').setDepth(1);
-                        if (fx.scale) crowd.setScale(fx.scale);
+                        crowd.setScale(fx.scale ?? 1.7);
                         scene.time.addEvent({
                             delay: 340 + i * 40,
                             loop: true,

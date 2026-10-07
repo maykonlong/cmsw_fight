@@ -67,6 +67,7 @@ export class VFXManager {
         }
         const burst = this.scene.add.image(x, y, 'clash_1')
             .setDepth(40)
+            .setDisplaySize(240, 240)
             .setBlendMode(Phaser.BlendModes.ADD);
         this.animateFrames(burst, ['clash_1', 'clash_2', 'clash_3'], 70);
         this.scene.tweens.add({
@@ -84,6 +85,7 @@ export class VFXManager {
         if (!this.scene.textures.exists('aura_ring_1')) return;
         const ringImg = this.scene.add.image(x, y, 'aura_ring_1')
             .setDepth(28)
+            .setDisplaySize(340, 340) // envolve o lutador inteiro (340px)
             .setBlendMode(Phaser.BlendModes.ADD)
             .setTint(tint);
         this.animateFrames(ringImg, ['aura_ring_1', 'aura_ring_2', 'aura_ring_3'], 60);
@@ -102,6 +104,7 @@ export class VFXManager {
         if (!this.scene.textures.exists('electric_bolt_1')) return;
         const bolt = this.scene.add.image(x + Phaser.Math.Between(-30, 30), y, 'electric_bolt_1')
             .setDepth(32)
+            .setDisplaySize(100, 230) // desce da cabeça até o chão do lutador
             .setBlendMode(Phaser.BlendModes.ADD);
         this.animateFrames(bolt, ['electric_bolt_1', 'electric_bolt_2', 'electric_bolt_3'], 60);
         this.scene.tweens.add({
@@ -118,6 +121,7 @@ export class VFXManager {
         if (this.scene.textures.exists('guard_shield')) {
             const shield = this.scene.add.image(x, y, 'guard_shield')
                 .setDepth(29)
+                .setDisplaySize(120, 260) // cobre a altura de guarda do lutador
                 .setBlendMode(Phaser.BlendModes.ADD)
                 .setAlpha(0.95);
             this.scene.tweens.add({

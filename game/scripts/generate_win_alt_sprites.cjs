@@ -4,7 +4,12 @@ const { PNG } = require('pngjs');
 const fs = require('fs');
 const path = require('path');
 
-const W = 25, H = 26, SCALE = 20;
+const W = 25, H = 26;
+// Proporção calibrada contra kevin_win.png/vini_dog_win.png originais:
+// figura ocupa ~75% da altura do canvas 500x520, pés na mesma linha (~y 490)
+const CELL = 18, CANVAS_W = 500, CANVAS_H = 520;
+const OX = Math.floor((CANVAS_W - W * CELL) / 2);
+const OY = CANVAS_H - H * CELL - 22; // pés alinhados com os sprites oficiais
 const OUTLINE = '#171019';
 
 function makeGrid() { return Array.from({ length: H }, () => Array(W).fill(null)); }
@@ -29,13 +34,15 @@ function outline(g) {
 }
 
 function render(g, file) {
-  const png = new PNG({ width: W * SCALE, height: H * SCALE });
+  const png = new PNG({ width: CANVAS_W, height: CANVAS_H });
   const oc = hex(OUTLINE);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const cell = g[j][i];
     const c = cell ? hex(cell) : [0, 0, 0, 0];
-    for (let y = 0; y < SCALE; y++) for (let x = 0; x < SCALE; x++) {
-      const idx = ((j * SCALE + y) * W * SCALE + (i * SCALE + x)) * 4;
+    for (let y = 0; y < CELL; y++) for (let x = 0; x < CELL; x++) {
+      const px = OX + i * CELL + x, py = OY + j * CELL + y;
+      if (px < 0 || px >= CANVAS_W || py < 0 || py >= CANVAS_H) continue;
+      const idx = (py * CANVAS_W + px) * 4;
       png.data[idx] = c[0]; png.data[idx+1] = c[1]; png.data[idx+2] = c[2];
       png.data[idx+3] = cell ? 255 : 0;
       if (!cell) { png.data[idx] = oc[0]; png.data[idx+1] = oc[1]; png.data[idx+2] = oc[2]; }
