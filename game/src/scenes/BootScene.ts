@@ -134,7 +134,7 @@ export class BootScene extends Phaser.Scene {
                         alpha: 0,
                         duration: 500,
                         onComplete: () => {
-                            // Atalho de dev: ?scene=NomeDaCena&winner=kevin pula direto pra cena
+                            // Atalho de dev: ?scene=NomeDaCena&p1=kevin&p2=vini_dog&mode=1p
                             const params = new URLSearchParams(window.location.search);
                             const target = params.get('scene');
                             if (target && this.scene.manager.keys[target]) {
@@ -143,7 +143,10 @@ export class BootScene extends Phaser.Scene {
                                     loser: params.get('loser') || 'vini_dog',
                                     p1Wins: Number(params.get('p1Wins')) || 2,
                                     p2Wins: Number(params.get('p2Wins')) || 0,
-                                    mode: params.get('mode') || '2p'
+                                    mode: params.get('mode') || '2p',
+                                    p1: params.get('p1') || 'kevin',
+                                    p2: params.get('p2') || 'vini_dog',
+                                    stage: params.get('stage') || undefined
                                 });
                             } else {
                                 this.scene.start('MainMenuScene');

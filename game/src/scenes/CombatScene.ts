@@ -415,7 +415,13 @@ export class CombatScene extends Phaser.Scene {
                 AudioManager.getInstance().playSFX('throw');
             }
         } else {
-            const result = CombatSystem.applyHit(attacker, defender, attacker.currentHitbox, false);
+            // Counter Hit: acertou o oponente durante o startup do golpe dele (KOF)
+            const defState = defender.stateMachine.state;
+            const isCounter = !defender.isHit &&
+                (defState.startsWith('stand_') || defState.startsWith('crouch_')) &&
+                !defender.attackContact;
+
+            const result = CombatSystem.applyHit(attacker, defender, attacker.currentHitbox, isCounter);
             const dmg = attacker.currentHitbox.damage;
             const isHeavy = dmg >= 80;
             const isMedium = dmg >= 40 && dmg < 80;
@@ -432,6 +438,10 @@ export class CombatScene extends Phaser.Scene {
                 this.vfxManager.hitStop(hitStopFrames);
                 this.vfxManager.cameraShake(shakeIntensity);
                 AudioManager.getInstance().playSFX(attacker.currentHitbox.soundHit);
+                if (isCounter) {
+                    this.vfxManager.showCounterText(defender.x, defender.y - 180);
+                    this.vfxManager.cameraShake(shakeIntensity * 2);
+                }
             }
             if (result !== 'none') {
                 attacker.attackContact = true;

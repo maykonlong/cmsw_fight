@@ -265,10 +265,19 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 // IDLE
 // ─────────────────────────────────────────────────────────────────
 class IdleState extends State {
+    private baseScaleY = 0;
+
     enter(f: Fighter) {
         f.setPoseTexture('idle');
+        this.baseScaleY = f.scaleY;
     }
     execute(f: Fighter) {
+        // Respiração sutil (pequena oscilação de escala, estilo KOF)
+        if (this.baseScaleY > 0) {
+            const breathe = 1 + Math.sin(f.scene.time.now * 0.004) * 0.008;
+            f.setScale(f.scaleX, this.baseScaleY * breathe);
+        }
+
         // Easing (Friction) to stop smoothly instead of instantly
         const currentVx = (f.body as Phaser.Physics.Arcade.Body).velocity.x;
         f.setVelocityX(Phaser.Math.Linear(currentVx, 0, 0.35));
@@ -346,6 +355,11 @@ class IdleState extends State {
         if (inp.isLKJustPressed && !inp.isLPJustPressed) { this.stateMachine.transition('stand_LK'); return; }
         if (inp.isMKJustPressed) { this.stateMachine.transition('stand_MK'); return; }
         if (inp.isHKJustPressed) { this.stateMachine.transition('stand_HK'); return; }
+    }
+
+    exit(f: Fighter) {
+        // Restaura a escala antes de qualquer outra pose/anim
+        if (this.baseScaleY > 0) f.setScale(f.scaleX, this.baseScaleY);
     }
 }
 
@@ -809,6 +823,7 @@ class AttackState extends State {
         f.currentHitbox.knockback = this.moveData.knockback;
         f.currentHitbox.hitstun = this.moveData.hitstun;
         f.currentHitbox.blockstun = this.moveData.blockstun;
+        f.currentHitbox.chipDamage = this.moveData.chipDamage;
         f.currentHitbox.soundHit = this.moveData.soundHit;
         
         // Escalar os hitboxes antigos para o tamanho novo (340px)
@@ -997,20 +1012,73 @@ class BlockState extends State {
 class SpecialState extends State {
     private duration = 0;
     private fired = false;
+    private isReversal = false;
 
-    enter(f: Fighter, _cmd: string = '236P') {
-        f.specialCooldown = 75; // Previne envio contínuo/infinito de poderes
+    enter(f: Fighter, cmd: string = '236P') {
+        this.isReversal = cmd === '623P';
         f.bufferedSpecialFrames = 0;
-        f.setPoseTexture('special');
         f.setVelocityX(0);
-        this.duration = 45;
-        this.fired = false;
         f.currentHitbox.active = false;
-        f.setTint(f.characterId.includes('vini') ? 0x66ccff : 0xff77dd);
+        this.fired = false;
+        this.duration = this.isReversal ? 42 : 45;
+
+        if (this.isReversal) {
+            // Reversal KOF (Encontrão do Kevin / Mordida Fatal do Vini):
+            // sobe invencível acertando com knockdown — nunca mais um projétil repetido
+            f.specialCooldown = 55;
+            f.setPoseTexture('punch_r');
+            f.setTint(0xffee88);
+            f.setVelocityY(-640);
+            const dir = f.flipX ? -1 : 1;
+            f.setVelocityX(dir * 120);
+            f.currentHurtbox.invincible = true;
+
+            f.currentHitbox.damage = 120;
+            f.currentHitbox.hitType = 'special';
+            f.currentHitbox.hitLevel = 'MID';
+            f.currentHitbox.knockdown = true;
+            f.currentHitbox.knockback = 420;
+            f.currentHitbox.hitstun = 30;
+            f.currentHitbox.blockstun = 16;
+            f.currentHitbox.chipDamage = 0;
+            f.currentHitbox.soundHit = 'hit_heavy';
+            f.currentHitbox.moveId = '623P';
+            f.currentHitbox.offsetX = 60;
+            f.currentHitbox.offsetY = -340;
+            f.currentHitbox.setTo(0, 0, 140, 200);
+
+            AudioManager.getInstance().playSFX('swing', 0.5);
+            AudioManager.getInstance().playSFX('throw', 0.4);
+        } else {
+            f.specialCooldown = 75; // Previne envio contínuo/infinito de poderes
+            f.setPoseTexture('special');
+            f.setTint(f.characterId.includes('vini') ? 0x66ccff : 0xff77dd);
+        }
     }
 
     execute(f: Fighter) {
         this.duration--;
+
+        if (this.isReversal) {
+            const active = this.duration <= 38 && this.duration >= 24;
+            f.currentHitbox.active = active;
+            if (this.duration <= 30) f.currentHurtbox.invincible = false;
+
+            if (this.duration <= 38) f.setPoseTexture('punch_r_2');
+            if (this.duration <= 26) f.setPoseTexture('punch_r_3');
+
+            // Recuperação no chão
+            if (f.isOnGround() && this.duration < 20) {
+                f.setPoseTexture('punch_r_4');
+                f.setVelocityX(0);
+            }
+
+            if (this.duration <= 0) {
+                f.clearTint();
+                this.stateMachine.transition('idle');
+            }
+            return;
+        }
 
         if (!this.fired && this.duration <= 43) {
             this.fired = true;
@@ -1026,6 +1094,7 @@ class SpecialState extends State {
 
     exit(f: Fighter) {
         f.currentHitbox.active = false;
+        f.currentHurtbox.invincible = false;
         f.clearTint();
     }
 }
@@ -1233,43 +1302,124 @@ class HitState extends State {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// KNOCKDOWN estilo KOF: arco de queda → quique → deitado → levantar
+// ─────────────────────────────────────────────────────────────────
 class KnockdownState extends State {
-    private timer = 0;
+    private phase: 'fall' | 'lying' = 'fall';
+    private lyingTimer = 0;
+    private bounced = false;
+
     enter(f: Fighter) {
         f.isHit = true;
-        this.timer = 50; // hard knockdown 50 frames
-        f.setVelocityX(0);
         f.currentHitbox.active = false;
-        f.setPoseTexture('ko');
-    }
-    execute(f: Fighter) {
-        this.timer--;
-        const inp = f.inputManager;
-        if (inp && (inp.isLeftDown || inp.isRightDown || inp.isDownDown || inp.isLPJustPressed || inp.isLKJustPressed)) {
-            this.stateMachine.transition('wakeup');
-            return;
+        f.clearTint();
+        this.phase = 'fall';
+        this.bounced = false;
+        f.setPoseTexture('hit');
+        // Rasteira/CD no chão ganha um pequeno arco pra trás antes de bater
+        if (f.isOnGround()) {
+            const dir = f.flipX ? 1 : -1;
+            f.setVelocityX(dir * 180);
+            f.setVelocityY(-380);
         }
-        if (this.timer <= 0) {
-            this.stateMachine.transition('wakeup');
+        AudioManager.getInstance().playSFX('swing', 0.2);
+    }
+
+    execute(f: Fighter) {
+        const lieAngle = f.flipX ? -88 : 88;
+
+        if (this.phase === 'fall') {
+            // Corpo gira caindo de costas
+            f.setAngle(Phaser.Math.Linear(f.angle, lieAngle * 0.55, 0.18));
+            if (f.body!.velocity.y > 100) f.setPoseTexture('ko');
+
+            if (f.isOnGround() && f.body!.velocity.y >= 0) {
+                if (!this.bounced) {
+                    // Primeiro impacto: quique no chão
+                    this.bounced = true;
+                    f.setPoseTexture('ko');
+                    f.setVelocityY(-210);
+                    f.setVelocityX(f.body!.velocity.x * 0.5);
+                    AudioManager.getInstance().playSFX('land', 0.8);
+                    const vfx = (f.scene as any)?.vfxManager;
+                    vfx?.spawnDustCloud(f.x, (f.scene as any)?.floorY ?? f.y);
+                    vfx?.cameraShake(0.012);
+                } else {
+                    // Parou: deitado (invencível no chão, como no KOF)
+                    this.phase = 'lying';
+                    this.lyingTimer = 46;
+                    f.setPoseTexture('ko');
+                    f.setAngle(lieAngle);
+                    f.setVelocity(0, 0);
+                    f.currentHurtbox.invincible = true;
+                }
+            }
+        } else {
+            this.lyingTimer--;
+            const inp = f.inputManager;
+            // Tech Roll: segurando direção no chão, rola pro lado levantando
+            if (inp && (inp.isLeftDown || inp.isRightDown)) {
+                this.stateMachine.transition('wakeup', true);
+                return;
+            }
+            if (this.lyingTimer <= 0) {
+                this.stateMachine.transition('wakeup');
+            }
         }
     }
 }
 
 class WakeupState extends State {
     private timer = 0;
-    enter(f: Fighter) {
-        this.timer = 15;
+    private techRoll = false;
+
+    enter(f: Fighter, techRoll: boolean = false) {
+        this.techRoll = techRoll;
+        this.timer = techRoll ? 20 : 15;
         f.currentHurtbox.invincible = true;
-        f.setAlpha(0.5); // visual feedback of invincibility
+        f.currentHitbox.active = false;
+        f.setAlpha(0.6); // visual feedback of invincibility
+
+        if (techRoll) {
+            const inp = f.inputManager;
+            const isFacingLeft = f.flipX;
+            const dir = inp?.isLeftDown ? -1 : inp?.isRightDown ? 1 : (isFacingLeft ? -1 : 1);
+            f.setVelocityX(430 * dir);
+            f.setPoseTexture('crouch_punch');
+            AudioManager.getInstance().playSFX('swing', 0.3);
+        }
     }
+
     execute(f: Fighter) {
         this.timer--;
+
+        if (this.techRoll) {
+            if (this.timer % 4 === 0) {
+                (f.scene as any)?.vfxManager?.spawnAfterImage(f, 0x9fe8ff);
+            }
+            f.setVelocityX(f.body!.velocity.x * 0.92);
+        } else {
+            // Levanta girando de deitado pra pé
+            f.setAngle(Phaser.Math.Linear(f.angle, 0, 0.22));
+            if (this.timer <= 8) f.setPoseTexture('crouch');
+        }
+
         if (this.timer <= 0) {
-            f.currentHurtbox.invincible = false;
-            f.setAlpha(1);
-            f.isHit = false;
+            this.finish(f);
             this.stateMachine.transition('idle');
         }
+    }
+
+    exit(f: Fighter) {
+        this.finish(f);
+    }
+
+    private finish(f: Fighter) {
+        f.currentHurtbox.invincible = false;
+        f.setAlpha(1);
+        f.setAngle(0);
+        f.isHit = false;
     }
 }
 
@@ -1333,14 +1483,50 @@ class DizzyState extends State {
 }
 
 class KOState extends State {
+    private landed = false;
+    private bounced = false;
+
     enter(f: Fighter) {
-        f.setPoseTexture('ko');
-        f.setVelocityX(0);
-        f.setVelocityY(0);
         f.isHit = true;
         f.currentHitbox.active = false;
         f.clearTint();
-        f.setAngle(0);
+        this.landed = false;
+        this.bounced = false;
+        // Nocaute com queda real: voa de costas, quica e fica deitado
+        f.setPoseTexture('hit');
+        if (f.isOnGround()) {
+            const dir = f.flipX ? 1 : -1;
+            f.setVelocityX(dir * 220);
+            f.setVelocityY(-420);
+        }
+        AudioManager.getInstance().playSFX('swing', 0.4);
+    }
+
+    execute(f: Fighter) {
+        const lieAngle = f.flipX ? -88 : 88;
+
+        if (!this.landed) {
+            f.setAngle(Phaser.Math.Linear(f.angle, lieAngle * 0.55, 0.15));
+            if (f.body!.velocity.y > 120) f.setPoseTexture('ko');
+
+            if (f.isOnGround() && f.body!.velocity.y >= 0) {
+                if (!this.bounced) {
+                    this.bounced = true;
+                    f.setPoseTexture('ko');
+                    f.setVelocityY(-240);
+                    f.setVelocityX(f.body!.velocity.x * 0.5);
+                    AudioManager.getInstance().playSFX('land', 1);
+                    const vfx = (f.scene as any)?.vfxManager;
+                    vfx?.spawnDustCloud(f.x, (f.scene as any)?.floorY ?? f.y);
+                    vfx?.cameraShake(0.02);
+                } else {
+                    this.landed = true;
+                    f.setPoseTexture('ko');
+                    f.setAngle(lieAngle);
+                    f.setVelocity(0, 0);
+                }
+            }
+        }
     }
 }
 

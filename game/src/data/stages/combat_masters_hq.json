@@ -16,7 +16,8 @@
     }
   ],
   "ambientEffects": [
-    { "type": "leaves", "count": 8, "speed": 0.5 }
+    { "type": "leaves", "count": 8, "speed": 0.5 },
+    { "type": "sparks", "speed": 1 }
   ]
 }
 

@@ -49,6 +49,12 @@ export class CombatSystem {
         return damage;
     }
 
+    // KOF Combo Scaling: a partir do 2º hit da combo o dano cai 10% por hit (piso 50%)
+    public static getComboScaling(comboHitsAlready: number): number {
+        if (comboHitsAlready <= 0) return 1;
+        return Math.max(0.5, 1 - comboHitsAlready * 0.1);
+    }
+
     public static checkThrowRange(thrower: any, target: any): boolean {
         const distance = Phaser.Math.Distance.Between(thrower.x, thrower.y, target.x, target.y);
         return distance < thrower.throwRange;
@@ -82,14 +88,20 @@ export class CombatSystem {
                 if (typeof defender.addSuperEnergy === 'function') defender.addSuperEnergy(25);
                 if (typeof attacker.addSuperEnergy === 'function') attacker.addSuperEnergy(15);
                 defender.stateMachine.transition(isDefendingLow ? 'block_low' : 'block_high');
+
+                // Chip Damage (KOF): bloquear não é de graça
+                const chip = Math.max(0, hitbox.chipDamage ?? 0);
+                if (chip > 0) defender.hp = Math.max(0, defender.hp - chip);
                 return 'blocked';
             }
         }
         
         // Se chegou aqui, hit limpo
-        const finalDamage = this.calculateDamage(hitbox, isCounterHit);
+        let finalDamage = this.calculateDamage(hitbox, isCounterHit);
+        // Scaling de dano da combo em andamento (hit 2, 3, 4... valem menos)
+        finalDamage = Math.max(1, Math.floor(finalDamage * this.getComboScaling(attacker?.comboHits ?? 0)));
         const dir = attacker.x < defender.x ? 1 : -1;
-        
+
         defender.hp -= finalDamage;
         if (defender.hp < 0) defender.hp = 0;
 
@@ -120,14 +132,14 @@ export class CombatSystem {
             }
         }
 
-        defender.setVelocityX(hitbox.knockback * dir);
-        
+        defender.setVelocityX(hitbox.knockback * dir * (isCounterHit ? 1.3 : 1));
+
         // Registrar hit no sistema de combos do atacante
         if (attacker && typeof attacker.registerComboHit === 'function') {
             attacker.registerComboHit(finalDamage, attacker.scene?.vfxManager);
         }
 
-        defender.hitStunTimer = hitbox.hitstun;
+        defender.hitStunTimer = hitbox.hitstun + (isCounterHit ? 6 : 0);
         defender.stateMachine.transition(hitbox.knockdown ? 'knockdown' : 'hit', hitbox.hitType);
         return 'hit';
     }

@@ -14,6 +14,9 @@
       "parallaxY": 0,
       "depth": 0
     }
+  ],
+  "ambientEffects": [
+    { "type": "steam", "speed": 1 }
   ]
 }
 

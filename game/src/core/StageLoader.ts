@@ -63,7 +63,98 @@ export class StageLoader {
         // Set camera bounds
         scene.cameras.main.setBounds(0, 0, data.width, scene.scale.height);
 
+        // Efeitos ambientes (folhas, fumaça, vapor, faíscas digitais)
+        if (data.ambientEffects?.length) {
+            this.spawnAmbientEffects(scene, data.ambientEffects);
+        }
+
         return { groundY: data.groundY, width: data.width };
+    }
+
+    private static ensureEffectTextures(scene: Phaser.Scene) {
+        if (!scene.textures.exists('fx_leaf')) {
+            const g = scene.make.graphics({ x: 0, y: 0 }, false);
+            g.fillStyle(0x6fdf4a, 1);
+            g.fillEllipse(8, 6, 14, 7);
+            g.generateTexture('fx_leaf', 16, 12);
+            g.destroy();
+        }
+        if (!scene.textures.exists('fx_dot')) {
+            const g = scene.make.graphics({ x: 0, y: 0 }, false);
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(6, 6, 6);
+            g.generateTexture('fx_dot', 12, 12);
+            g.destroy();
+        }
+    }
+
+    private static spawnAmbientEffects(scene: Phaser.Scene, effects: any[]) {
+        this.ensureEffectTextures(scene);
+        const { width, height } = scene.scale;
+
+        for (const fx of effects) {
+            switch (fx.type) {
+                case 'leaves':
+                    scene.add.particles(0, 0, 'fx_leaf', {
+                        x: { min: -40, max: width + 40 },
+                        y: -20,
+                        lifespan: 9000,
+                        speedX: { min: 20, max: 60 },
+                        speedY: { min: 25, max: 55 },
+                        rotate: { start: 0, end: 360 },
+                        scale: { min: 0.8, max: 1.7 },
+                        alpha: { start: 0.85, end: 0.2 },
+                        quantity: 1,
+                        frequency: 1400 / (fx.speed || 1)
+                    }).setDepth(2);
+                    break;
+                case 'smoke':
+                    scene.add.particles(0, 0, 'fx_dot', {
+                        x: { min: 0, max: width },
+                        y: height - 70,
+                        lifespan: 6500,
+                        speedY: { min: -35, max: -15 },
+                        speedX: { min: -12, max: 12 },
+                        scaleX: { start: 0.8, end: 2.6 },
+                        scaleY: { start: 0.8, end: 3.2 },
+                        alpha: { start: 0.15, end: 0 },
+                        tint: 0xbfc9d6,
+                        quantity: 1,
+                        frequency: 900
+                    }).setDepth(2);
+                    break;
+                case 'steam':
+                    scene.add.particles(0, 0, 'fx_dot', {
+                        x: { min: -20, max: width + 20 },
+                        y: { min: height - 120, max: height - 40 },
+                        lifespan: 4500,
+                        speedY: { min: -70, max: -35 },
+                        speedX: { min: -16, max: 16 },
+                        scaleX: { start: 0.6, end: 1.8 },
+                        scaleY: { start: 0.5, end: 1.4 },
+                        alpha: { start: 0.22, end: 0 },
+                        tint: 0xeaf6ff,
+                        quantity: 1,
+                        frequency: 700
+                    }).setDepth(2);
+                    break;
+                case 'sparks':
+                    scene.add.particles(0, 0, 'fx_dot', {
+                        x: { min: 0, max: width },
+                        y: { min: 120, max: height - 100 },
+                        lifespan: 4000,
+                        speedY: { min: -22, max: -8 },
+                        speedX: { min: -10, max: 10 },
+                        scale: { start: 0.4, end: 0 },
+                        alpha: { start: 0.8, end: 0 },
+                        tint: [0x00e5ff, 0x7de3ff, 0xffd700],
+                        quantity: 1,
+                        frequency: 380,
+                        blendMode: 'ADD'
+                    }).setDepth(2);
+                    break;
+            }
+        }
     }
 }
 
