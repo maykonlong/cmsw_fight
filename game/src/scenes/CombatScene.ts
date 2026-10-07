@@ -406,6 +406,42 @@ export class CombatScene extends Phaser.Scene {
         this.resolveMeleeHit(this.player, this.enemy);
         this.resolveMeleeHit(this.enemy, this.player);
 
+        // Encontro de poderes (KOF): projéteis de lutadores opostos que se cruzam
+        // na mesma altura se anulam com um clarão — libera a tela para novos golpes.
+        // Detecção varrida: compara x atual com x do frame anterior, então mesmo
+        // com delta gigante (aba dormindo e voltando) o cruzamento é detectado.
+        const projs = this.projectiles.getChildren() as Projectile[];
+        for (const p of projs) {
+            p.setData('clashPrevX', p.getData('clashCurX') ?? p.x);
+            p.setData('clashCurX', p.x);
+        }
+        if (projs.length >= 2) {
+            for (let i = 0; i < projs.length; i++) {
+                for (let j = i + 1; j < projs.length; j++) {
+                    const a = projs[i], b = projs[j];
+                    if (!a.active || !b.active || !a.hitActive || !b.hitActive) continue;
+                    if (a.getOwner() === b.getOwner()) continue;
+                    if (Math.abs(a.y - b.y) > 70) continue; // alturas diferentes se cruzam sem tocar
+
+                    const prevGap = (Number(a.getData('clashPrevX')) - Number(b.getData('clashPrevX')));
+                    const curGap = a.x - b.x;
+                    const crossed = prevGap * curGap < 0; // passaram um pelo outro neste frame
+                    const touching = Math.abs(curGap) < (a.displayWidth + b.displayWidth) / 2;
+                    if (!crossed && !touching) continue;
+
+                    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+                    a.hitActive = false; b.hitActive = false;
+                    a.destroy(); b.destroy();
+                    this.vfxManager.spawnHitSpark(mx, my, 'heavy');
+                    this.vfxManager.screenFlash(90);
+                    this.vfxManager.cameraShake(0.025);
+                    this.vfxManager.hitStop(6);
+                    this.vfxManager.showComboText(0, mx, my - 50, 'CLASH!');
+                    AudioManager.getInstance().playSFX('electric_hit', 0.7);
+                }
+            }
+        }
+
         // Pushbox resolve
         // Check Match Over
         this.matchManager.checkWinCondition();

@@ -147,8 +147,14 @@ export class CombatSystem {
         const isStunned = defender.stunMeter >= stunMax && !hitbox.knockdown && hitbox.hitType !== 'throw';
         if (isStunned) defender.stunMeter = 0;
 
+        // Realismo nas quedas: acertado no ar com golpe pesado ou counter-hit
+        // faz tombar (knockdown) em vez de se recuperar flutuando
+        const airTumble = !hitbox.knockdown && hitbox.hitType !== 'throw' &&
+            !defender.isOnGround() && (finalDamage >= 90 || isCounterHit);
+
         defender.hitStunTimer = hitbox.hitstun + (isCounterHit ? 6 : 0);
-        defender.stateMachine.transition(isStunned ? 'dizzy' : (hitbox.knockdown ? 'knockdown' : 'hit'), hitbox.hitType);
+        const goesDown = hitbox.knockdown || airTumble;
+        defender.stateMachine.transition(isStunned ? 'dizzy' : (goesDown ? 'knockdown' : 'hit'), hitbox.hitType, hitbox.hitLevel, finalDamage >= 80);
 
         if (isStunned && attacker?.scene?.vfxManager) {
             attacker.scene.vfxManager.showComboText(0, defender.x, defender.y - 150, 'STUN!');

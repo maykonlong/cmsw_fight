@@ -844,6 +844,7 @@ class LandState extends State {
         f.setVelocityX(0);
         f.setVelocityY(0);
         AudioManager.getInstance().playSFX('land', 0.45);
+        (f.scene as any)?.vfxManager?.spawnDustCloud(f.x, (f.scene as any)?.floorY ?? f.y);
     }
     execute(_f: Fighter) {
         this.duration--;
@@ -1439,8 +1440,9 @@ class ThrownState extends State {
 // ─────────────────────────────────────────────────────────────────
 class HitState extends State {
     private type: 'normal' | 'electric' = 'normal';
+    private lean = 0;
 
-    enter(f: Fighter, type: 'normal' | 'electric' = 'normal') {
+    enter(f: Fighter, type: 'normal' | 'electric' = 'normal', level: string = 'MID', heavy: boolean = false) {
         f.isHit = true;
         f.currentHitbox.active = false;
         f.setPoseTexture('hit');
@@ -1449,9 +1451,21 @@ class HitState extends State {
         if (type === 'electric') {
             f.hitStunTimer = 50;
             f.setVelocityX(0);
+            f.setAngle(0);
         } else {
             f.hitStunTimer = Math.max(1, f.hitStunTimer || 22);
             f.setTint(0xffffff);
+
+            // Reação com peso: o corpo inclina na direção do empurrão
+            const vx = f.body!.velocity.x;
+            const base = level === 'HIGH' ? 13 : level === 'LOW' ? 9 : 10;
+            this.lean = heavy ? base + 7 : base;
+            f.setAngle(vx !== 0 ? Math.sign(vx) * this.lean : (f.flipX ? this.lean : -this.lean));
+
+            // Golpe pesado tira o equilíbrio: pequeno salto de impacto
+            if (heavy && f.isOnGround()) {
+                f.setVelocityY(-170);
+            }
         }
     }
 
@@ -1465,11 +1479,14 @@ class HitState extends State {
             if (Math.abs(f.body!.velocity.x) > 5) {
                 f.setVelocityX(f.body!.velocity.x * 0.75);
             }
+            // O corpo se recompõe gradualmente enquanto o hitstun consome
+            f.setAngle(Phaser.Math.Linear(f.angle, 0, 0.07));
         }
 
         if (f.hitStunTimer <= 0) {
             f.isHit = false;
             f.clearTint();
+            f.setAngle(0);
             if (f.isOnGround()) this.stateMachine.transition('idle');
             else this.stateMachine.transition('jump', true);
         }
