@@ -1473,12 +1473,13 @@ class HitState extends State {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// KNOCKDOWN estilo KOF: arco de queda → quique → deitado → levantar
+// KNOCKDOWN estilo KOF: arco de queda → quique → ajoelhado → levantar
 // ─────────────────────────────────────────────────────────────────
 class KnockdownState extends State {
     private phase: 'fall' | 'lying' = 'fall';
     private lyingTimer = 0;
     private bounced = false;
+    private tilt = 0;
 
     enter(f: Fighter) {
         f.isHit = true;
@@ -1487,6 +1488,8 @@ class KnockdownState extends State {
         f.setGravityY(Fighter.BASE_GRAVITY);
         this.phase = 'fall';
         this.bounced = false;
+        // Inclinação suave de queda (sem deitar: termina ajoelhado)
+        this.tilt = f.flipX ? -28 : 28;
         f.setPoseTexture('hit');
         // Rasteira/CD no chão ganha um pequeno arco pra trás antes de bater
         if (f.isOnGround()) {
@@ -1498,11 +1501,9 @@ class KnockdownState extends State {
     }
 
     execute(f: Fighter) {
-        const lieAngle = f.flipX ? -88 : 88;
-
         if (this.phase === 'fall') {
-            // Corpo gira caindo de costas
-            f.setAngle(Phaser.Math.Linear(f.angle, lieAngle * 0.55, 0.18));
+            // Corpo inclina caindo de costas
+            f.setAngle(Phaser.Math.Linear(f.angle, this.tilt, 0.18));
             if (f.body!.velocity.y > 100) f.setPoseTexture('ko');
 
             if (f.isOnGround() && f.body!.velocity.y >= 0) {
@@ -1517,11 +1518,11 @@ class KnockdownState extends State {
                     vfx?.spawnDustCloud(f.x, (f.scene as any)?.floorY ?? f.y);
                     vfx?.cameraShake(0.012);
                 } else {
-                    // Parou: deitado (invencível no chão, como no KOF)
+                    // Parou: ajoelhado de cabeça baixa (invencível, como no KOF)
                     this.phase = 'lying';
                     this.lyingTimer = 46;
-                    f.setPoseTexture('ko');
-                    f.setAngle(lieAngle);
+                    f.setPoseTexture('crouch');
+                    f.setAngle(this.tilt * 0.45);
                     f.setVelocity(0, 0);
                     f.currentHurtbox.invincible = true;
                 }
@@ -1656,6 +1657,7 @@ class DizzyState extends State {
 class KOState extends State {
     private landed = false;
     private bounced = false;
+    private tilt = 0;
 
     enter(f: Fighter) {
         f.isHit = true;
@@ -1664,7 +1666,8 @@ class KOState extends State {
         f.setGravityY(Fighter.BASE_GRAVITY);
         this.landed = false;
         this.bounced = false;
-        // Nocaute com queda real: voa de costas, quica e fica deitado
+        this.tilt = f.flipX ? -34 : 34;
+        // Nocaute com queda real: voa de costas, quica e cai ajoelhado
         f.setPoseTexture('hit');
         if (f.isOnGround()) {
             const dir = f.flipX ? 1 : -1;
@@ -1675,10 +1678,8 @@ class KOState extends State {
     }
 
     execute(f: Fighter) {
-        const lieAngle = f.flipX ? -88 : 88;
-
         if (!this.landed) {
-            f.setAngle(Phaser.Math.Linear(f.angle, lieAngle * 0.55, 0.15));
+            f.setAngle(Phaser.Math.Linear(f.angle, this.tilt, 0.15));
             if (f.body!.velocity.y > 120) f.setPoseTexture('ko');
 
             if (f.isOnGround() && f.body!.velocity.y >= 0) {
@@ -1692,9 +1693,10 @@ class KOState extends State {
                     vfx?.spawnDustCloud(f.x, (f.scene as any)?.floorY ?? f.y);
                     vfx?.cameraShake(0.02);
                 } else {
+                    // Derrota: cai de joelhos com a cabeça baixa
                     this.landed = true;
-                    f.setPoseTexture('ko');
-                    f.setAngle(lieAngle);
+                    f.setPoseTexture('crouch');
+                    f.setAngle(this.tilt * 0.5);
                     f.setVelocity(0, 0);
                 }
             }
