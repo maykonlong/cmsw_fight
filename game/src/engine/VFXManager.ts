@@ -10,38 +10,127 @@ export class VFXManager {
         this.cameraSystem = cameraSystem;
     }
 
+    // Anima uma sequência de texturas em um único objeto (frames já desenhados)
+    private animateFrames(img: Phaser.GameObjects.Image, frames: string[], frameDelay: number) {
+        let idx = 0;
+        const ev = this.scene.time.addEvent({
+            delay: frameDelay,
+            repeat: frames.length - 2,
+            callback: () => {
+                idx++;
+                if (frames[idx] && this.scene.textures.exists(frames[idx])) img.setTexture(frames[idx]);
+            }
+        });
+        img.once('destroy', () => ev.remove());
+        return img;
+    }
+
     public spawnHitSpark(x: number, y: number, type: 'light' | 'medium' | 'heavy') {
-        if (this.scene.textures.exists('hit_spark')) {
-            const sparkSprite = this.scene.add.image(x, y, 'hit_spark')
-                .setDisplaySize(type === 'heavy' ? 110 : 78, type === 'heavy' ? 110 : 78)
+        const size = type === 'heavy' ? 170 : type === 'medium' ? 130 : 100;
+        if (this.scene.textures.exists('spark_1')) {
+            const spark = this.scene.add.image(x, y, 'spark_1')
                 .setDepth(30)
-                .setBlendMode(Phaser.BlendModes.ADD);
+                .setDisplaySize(size, size)
+                .setBlendMode(Phaser.BlendModes.ADD)
+                .setRotation(type === 'heavy' ? 0.3 : -0.2);
+            this.animateFrames(spark, ['spark_1', 'spark_2', 'spark_3', 'spark_4'], 38);
             this.scene.tweens.add({
-                targets: sparkSprite,
-                scale: 0.25,
+                targets: spark,
+                scale: 1.25,
                 alpha: 0,
-                angle: type === 'heavy' ? 18 : -12,
-                duration: 150,
+                duration: 170,
                 ease: 'Cubic.easeOut',
-                onComplete: () => sparkSprite.destroy()
+                onComplete: () => spark.destroy()
             });
             return;
         }
-        const sizeMap = { light: 0.5, medium: 1.0, heavy: 1.5 };
-        const spark = this.scene.add.circle(x, y, 20 * sizeMap[type], 0xffa500);
-        spark.setDepth(10);
-        
+        const sparkSprite = this.scene.add.image(x, y, 'hit_spark')
+            .setDisplaySize(size, size)
+            .setDepth(30)
+            .setBlendMode(Phaser.BlendModes.ADD);
         this.scene.tweens.add({
-            targets: spark,
-            scale: 1.5,
+            targets: sparkSprite,
+            scale: 0.25,
             alpha: 0,
+            angle: type === 'heavy' ? 18 : -12,
             duration: 150,
-            onComplete: () => spark.destroy()
+            ease: 'Cubic.easeOut',
+            onComplete: () => sparkSprite.destroy()
+        });
+    }
+
+    // Explosão do encontro de poderes: burst de 3 frames
+    public spawnClash(x: number, y: number) {
+        if (!this.scene.textures.exists('clash_1')) {
+            this.spawnHitSpark(x, y, 'heavy');
+            return;
+        }
+        const burst = this.scene.add.image(x, y, 'clash_1')
+            .setDepth(40)
+            .setBlendMode(Phaser.BlendModes.ADD);
+        this.animateFrames(burst, ['clash_1', 'clash_2', 'clash_3'], 70);
+        this.scene.tweens.add({
+            targets: burst,
+            scale: { from: 0.7, to: 1.6 },
+            alpha: { from: 1, to: 0 },
+            duration: 320,
+            ease: 'Cubic.easeOut',
+            onComplete: () => burst.destroy()
+        });
+    }
+
+    // Anel de aura para casts de especial / ativação do Max Mode
+    public spawnAuraRing(x: number, y: number, tint: number = 0xffd54a) {
+        if (!this.scene.textures.exists('aura_ring_1')) return;
+        const ringImg = this.scene.add.image(x, y, 'aura_ring_1')
+            .setDepth(28)
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setTint(tint);
+        this.animateFrames(ringImg, ['aura_ring_1', 'aura_ring_2', 'aura_ring_3'], 60);
+        this.scene.tweens.add({
+            targets: ringImg,
+            scale: { from: 0.5, to: 1.35 },
+            alpha: { from: 1, to: 0 },
+            duration: 380,
+            ease: 'Cubic.easeOut',
+            onComplete: () => ringImg.destroy()
+        });
+    }
+
+    // Raio elétrico do beijo do Kevin ao eletrocutar
+    public spawnElectricBolt(x: number, y: number) {
+        if (!this.scene.textures.exists('electric_bolt_1')) return;
+        const bolt = this.scene.add.image(x + Phaser.Math.Between(-30, 30), y, 'electric_bolt_1')
+            .setDepth(32)
+            .setBlendMode(Phaser.BlendModes.ADD);
+        this.animateFrames(bolt, ['electric_bolt_1', 'electric_bolt_2', 'electric_bolt_3'], 60);
+        this.scene.tweens.add({
+            targets: bolt,
+            alpha: { from: 1, to: 0 },
+            y: y + 20,
+            duration: 260,
+            onComplete: () => bolt.destroy()
         });
     }
 
     public spawnBlockSpark(x: number, y: number) {
-        // Escudo: flash azul + anel dourado expandindo (KOF guard)
+        // Escudo de guarda (KOF guard point) — cresce e some
+        if (this.scene.textures.exists('guard_shield')) {
+            const shield = this.scene.add.image(x, y, 'guard_shield')
+                .setDepth(29)
+                .setBlendMode(Phaser.BlendModes.ADD)
+                .setAlpha(0.95);
+            this.scene.tweens.add({
+                targets: shield,
+                scale: { from: 0.75, to: 1.2 },
+                alpha: 0,
+                duration: 190,
+                ease: 'Cubic.easeOut',
+                onComplete: () => shield.destroy()
+            });
+        }
+
+        // Escudo: flash azul + anel dourado expandindo
         if (this.scene.textures.exists('hit_spark')) {
             const guard = this.scene.add.image(x, y, 'hit_spark')
                 .setDisplaySize(70, 70)
@@ -86,17 +175,33 @@ export class VFXManager {
     }
 
     public spawnDustCloud(x: number, y: number) {
+        const usePuff = this.scene.textures.exists('dust_puff');
         for (let i = 0; i < 4; i++) {
-            const dust = this.scene.add.circle(x + Phaser.Math.Between(-20, 20), y, 10, 0xaaaaaa);
-            dust.setDepth(9);
-            this.scene.tweens.add({
-                targets: dust,
-                y: y - Phaser.Math.Between(10, 30),
-                x: dust.x + Phaser.Math.Between(-15, 15),
-                alpha: 0,
-                duration: Phaser.Math.Between(300, 500),
-                onComplete: () => dust.destroy()
-            });
+            if (usePuff) {
+                const puff = this.scene.add.image(x + Phaser.Math.Between(-22, 22), y - 6, 'dust_puff')
+                    .setDepth(9)
+                    .setScale(Phaser.Math.FloatBetween(0.35, 0.6));
+                this.scene.tweens.add({
+                    targets: puff,
+                    y: y - Phaser.Math.Between(14, 34),
+                    x: puff.x + Phaser.Math.Between(-16, 16),
+                    scale: puff.scale * 1.5,
+                    alpha: 0,
+                    duration: Phaser.Math.Between(320, 520),
+                    onComplete: () => puff.destroy()
+                });
+            } else {
+                const dust = this.scene.add.circle(x + Phaser.Math.Between(-20, 20), y, 10, 0xaaaaaa);
+                dust.setDepth(9);
+                this.scene.tweens.add({
+                    targets: dust,
+                    y: y - Phaser.Math.Between(10, 30),
+                    x: dust.x + Phaser.Math.Between(-15, 15),
+                    alpha: 0,
+                    duration: Phaser.Math.Between(300, 500),
+                    onComplete: () => dust.destroy()
+                });
+            }
         }
     }
 

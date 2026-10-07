@@ -153,6 +153,41 @@ export class StageLoader {
                         blendMode: 'ADD'
                     }).setDepth(2);
                     break;
+                case 'crowd': {
+                    // Torcida animada: silhuetas vibrando no fundo
+                    if (!scene.textures.exists('crowd_1')) break;
+                    const stripY = typeof fx.y === 'number' ? fx.y : height - 96;
+                    for (let i = 0; i < 4; i++) {
+                        const cx = width / 2 + (i - 1.5) * 340;
+                        const crowd = scene.add.image(cx, stripY, 'crowd_1').setDepth(1);
+                        if (fx.scale) crowd.setScale(fx.scale);
+                        scene.time.addEvent({
+                            delay: 340 + i * 40,
+                            loop: true,
+                            callback: () => crowd.setTexture(crowd.texture.key === 'crowd_1' ? 'crowd_2' : 'crowd_1')
+                        });
+                    }
+                    break;
+                }
+                case 'neon': {
+                    // Letreiro neon piscando (às vezes apaga, estilo bar retrô)
+                    if (!scene.textures.exists('neon_open_1')) break;
+                    const nx = typeof fx.x === 'number' ? fx.x : width / 2;
+                    const ny = typeof fx.y === 'number' ? fx.y : 120;
+                    const sign = scene.add.image(nx, ny, 'neon_open_1').setDepth(2);
+                    if (fx.scale) sign.setScale(fx.scale);
+                    scene.time.addEvent({
+                        delay: 620,
+                        loop: true,
+                        callback: () => {
+                            const flick = Math.random();
+                            if (flick < 0.12) sign.setTexture('neon_open_2');
+                            else if (flick < 0.22) sign.setVisible(false);
+                            else { sign.setTexture('neon_open_1'); sign.setVisible(true); }
+                        }
+                    });
+                    break;
+                }
             }
         }
     }

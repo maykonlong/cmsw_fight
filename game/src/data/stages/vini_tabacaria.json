@@ -16,7 +16,8 @@
     }
   ],
   "ambientEffects": [
-    { "type": "smoke", "speed": 1 }
+    { "type": "smoke", "speed": 1 },
+    { "type": "neon", "x": 640, "y": 120, "scale": 0.9 }
   ]
 }
 

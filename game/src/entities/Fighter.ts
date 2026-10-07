@@ -218,6 +218,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
         AudioManager.getInstance().playSFX('electric_cast', 0.7);
         const vfx = (this.scene as any)?.vfxManager;
         vfx?.screenFlash(90);
+        vfx?.spawnAuraRing?.(this.x, this.y - this.displayHeight * 0.45, 0xffd54a);
         vfx?.showComboText(0, this.x, this.y - 150, 'MAX MODE!');
     }
 
@@ -1238,6 +1239,11 @@ class SpecialState extends State {
         if (!this.fired && this.duration <= 43) {
             this.fired = true;
             f.setPoseTexture('special_2');
+            // Anel de aura no lançamento do poder
+            (f.scene as any)?.vfxManager?.spawnAuraRing?.(
+                f.x, f.y - f.displayHeight * 0.45,
+                f.characterId.includes('vini') ? 0x66ccff : 0xff77dd
+            );
             f.emit('fire_special', f);
         }
 
@@ -1673,9 +1679,10 @@ class DizzyState extends State {
         // Estrelas orbitando a cabeça
         const headY = f.y - f.displayHeight * 0.95;
         this.stars = f.scene.add.container(f.x, headY).setDepth(40);
+        const starTex = f.scene.textures.exists('star') ? 'star' : 'hit_spark';
         for (let i = 0; i < 3; i++) {
-            const star = f.scene.add.image(Math.cos((i / 3) * Math.PI * 2) * 42, Math.sin((i / 3) * Math.PI * 2) * 14, 'hit_spark');
-            star.setDisplaySize(26, 26).setTint(0xffd700).setBlendMode(Phaser.BlendModes.ADD);
+            const star = f.scene.add.image(Math.cos((i / 3) * Math.PI * 2) * 42, Math.sin((i / 3) * Math.PI * 2) * 14, starTex);
+            star.setDisplaySize(30, 30).setBlendMode(Phaser.BlendModes.ADD);
             this.stars.add(star);
         }
         f.scene.tweens.add({ targets: this.stars, angle: 360, duration: 1400, repeat: -1 });

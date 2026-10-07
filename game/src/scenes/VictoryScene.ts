@@ -323,9 +323,23 @@ export class VictoryScene extends Phaser.Scene {
                 smoke.stop();
                 this.tweens.add({ targets: smoke, alpha: 0, duration: 500 });
 
-                const dog = this.add.image(headX, headY + 20, 'aura_cachorro');
+                const useRun = this.textures.exists('dog_run_1');
+                const dog = this.add.image(headX, headY + 20, useRun ? 'dog_run_1' : 'aura_cachorro');
                 const dogScale = 300 / dog.width;
                 dog.setScale(dogScale).setAlpha(0).setFlipX(true).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
+
+                // Cachorro CORRENDO: cicla os 3 frames do pacote VFX
+                if (useRun) {
+                    let fi = 0;
+                    this.time.addEvent({
+                        delay: 100,
+                        loop: true,
+                        callback: () => {
+                            fi = (fi + 1) % 3;
+                            if (dog.active) dog.setTexture(`dog_run_${fi + 1}`);
+                        }
+                    });
+                }
 
                 this.tweens.add({ targets: dog, alpha: { from: 0, to: 1 }, scale: dogScale * 1.25, duration: 350, ease: 'Back.easeOut' });
                 this.time.delayedCall(420, () => AudioManager.getInstance().playSFX('electric_hit', 0.5));

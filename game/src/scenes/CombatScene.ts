@@ -257,6 +257,10 @@ export class CombatScene extends Phaser.Scene {
         } else {
             target.takeDamage(proj.damage, 180, proj.x, proj.damageType);
             this.vfxManager.spawnHitSpark(proj.x, proj.y, 'heavy');
+            if (proj.damageType === 'electric') {
+                // Choque do beijo: raios descendo no alvo
+                this.vfxManager.spawnElectricBolt(target.x, target.y - target.displayHeight * 0.6);
+            }
             AudioManager.getInstance().playSFX(proj.damageType === 'electric' ? 'electric_hit' : 'hit_heavy');
         }
         proj.destroy();
@@ -432,7 +436,7 @@ export class CombatScene extends Phaser.Scene {
                     const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
                     a.hitActive = false; b.hitActive = false;
                     a.destroy(); b.destroy();
-                    this.vfxManager.spawnHitSpark(mx, my, 'heavy');
+                    this.vfxManager.spawnClash(mx, my);
                     this.vfxManager.screenFlash(90);
                     this.vfxManager.cameraShake(0.025);
                     this.vfxManager.hitStop(6);

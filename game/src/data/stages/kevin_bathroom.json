@@ -16,7 +16,8 @@
     }
   ],
   "ambientEffects": [
-    { "type": "steam", "speed": 1 }
+    { "type": "steam", "speed": 1 },
+    { "type": "neon", "x": 240, "y": 200, "scale": 0.8 }
   ]
 }
 

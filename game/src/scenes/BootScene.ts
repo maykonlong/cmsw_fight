@@ -42,6 +42,21 @@ export class BootScene extends Phaser.Scene {
         this.load.json('kevin_bathroom', 'data/stages/kevin_bathroom.json');
         this.load.json('vini_tabacaria', 'data/stages/vini_tabacaria.json');
 
+        // Pacote VFX/cenário/cinemática (gerado por scripts/generate_vfx_pack.cjs)
+        const vfxAssets = [
+            'spark_1', 'spark_2', 'spark_3', 'spark_4',
+            'clash_1', 'clash_2', 'clash_3',
+            'guard_shield', 'star', 'dust_puff',
+            'aura_ring_1', 'aura_ring_2', 'aura_ring_3',
+            'electric_bolt_1', 'electric_bolt_2', 'electric_bolt_3',
+            'beijo_1', 'beijo_2', 'beijo_3',
+            'dog_run_1', 'dog_run_2', 'dog_run_3',
+            'vape_puff', 'crowd_1', 'crowd_2', 'neon_open_1', 'neon_open_2'
+        ];
+        vfxAssets.forEach(k => {
+            if (!this.textures.exists(k)) this.load.image(k, `assets/sprites/${k}.png`);
+        });
+
         // Carregamento universal de Audio (SFX, Vozes e Músicas com reservas)
         // Apenas os SFX com arquivos reais no repo são carregados aqui.
         // Vozes (voice/) e Músicas (music/) ainda não possuem assets;
