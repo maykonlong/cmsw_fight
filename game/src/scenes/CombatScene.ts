@@ -77,8 +77,11 @@ export class CombatScene extends Phaser.Scene {
             'hit', 'ko', 'win', 'win_alt'
         ];
 
-        const charKeys = ['kevin', 'kevin_p2', 'vini_dog', 'vini_dog_p2'];
-        charKeys.forEach(ck => {
+        // Lazy loading: carrega as poses completas SÓ dos lutadores desta luta
+        // (as bases/idle/win já vieram no boot). Espelho (P1 vs P1) usa a variante _p2.
+        const p1KeyToUse = this.p1Key;
+        const p2KeyToUse = (this.p1Key === this.p2Key) ? `${this.p2Key}_p2` : this.p2Key;
+        [p1KeyToUse, p2KeyToUse].forEach(ck => {
             if (!this.textures.exists(ck)) this.load.image(ck, `assets/sprites/${ck}.png`);
             poses.forEach(p => {
                 const key = `${ck}_${p}`;

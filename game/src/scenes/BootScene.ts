@@ -7,48 +7,18 @@ export class BootScene extends Phaser.Scene {
     }
 
     preload() {
-        const poses = [
-            'idle', 'walk', 'walk_2', 'walk_3', 'walk_back', 'run_1', 'run_2', 'run_3', 'run_back_1', 'run_back_2', 'run_back_3',
-            'jump', 'jump_1', 'jump_2', 'jump_3',
-            'air_punch', 'air_punch_2', 'air_punch_3', 'air_punch_4',
-            'air_kick', 'air_kick_2', 'air_kick_3', 'air_kick_4',
-            'air_kick_up', 'air_kick_up_2', 'air_kick_up_3', 'air_kick_up_4', 
-            'air_kick_diag', 'air_kick_diag_2', 'air_kick_diag_3', 'air_kick_diag_4',
-            'crouch', 'crouch_punch', 'crouch_punch_2', 'crouch_punch_3', 'crouch_punch_4',
-            'sweep', 'sweep_2', 'sweep_3', 'sweep_4',
-            'block', 
-            'punch', 'punch_2', 'punch_3', 'punch_4', 
-            'punch_l', 'punch_l_2', 'punch_l_3', 'punch_l_4', 
-            'punch_r', 'punch_r_2', 'punch_r_3', 'punch_r_4',
-            'kick', 'kick_2', 'kick_3', 'kick_4', 
-            'kick_l', 'kick_l_2', 'kick_l_3', 'kick_l_4', 
-            'kick_r', 'kick_r_2', 'kick_r_3', 'kick_r_4',
-            'special', 'special_2', 'special_3', 'special_4',
-            'throw', 'throw_2', 'thrown',
-            'hit', 'ko', 'win', 'win_alt'
-        ];
-
-        // Carrega todas as imagens de poses individuais do Kevin (P1 e P2)
-        this.load.image('kevin', 'assets/sprites/kevin.png');
-        poses.forEach(p => {
-            const k1 = `kevin_${p}`;
-            const k2 = `kevin_p2_${p}`;
-            if (!this.textures.exists(k1)) this.load.image(k1, `assets/sprites/${k1}.png`);
-            if (!this.textures.exists(k2)) this.load.image(k2, `assets/sprites/${k2}.png`);
-        });
-
-        // Base (idle) do P2 - usada como fallback de diretório, nunca renderizada
-        // (a textura real vem do JSON: data.sprites.idle = kevin_p2_idle)
-        this.load.image('kevin_p2', 'assets/sprites/kevin_p2.png');
-        this.load.image('vini_dog_p2', 'assets/sprites/vini_dog_p2.png');
-
-        // Carrega todas as imagens de poses individuais do Vini Dog (P1 e P2)
-        this.load.image('vini_dog', 'assets/sprites/vini_dog.png');
-        poses.forEach(p => {
-            const v1 = `vini_dog_${p}`;
-            const v2 = `vini_dog_p2_${p}`;
-            if (!this.textures.exists(v1)) this.load.image(v1, `assets/sprites/${v1}.png`);
-            if (!this.textures.exists(v2)) this.load.image(v2, `assets/sprites/${v2}.png`);
+        // Boot rápido: apenas bases e as poses usadas fora do combate
+        // (menu, seleção, VS e vitória). As 75 poses de luta de cada
+        // lutador são carregadas sob demanda pelo CombatScene (lazy loading),
+        // cortando ~50% da banda da primeira visita em qualquer dispositivo.
+        const charKeys = ['kevin', 'kevin_p2', 'vini_dog', 'vini_dog_p2'];
+        const commonPoses = ['idle', 'win', 'win_alt'];
+        charKeys.forEach(ck => {
+            if (!this.textures.exists(ck)) this.load.image(ck, `assets/sprites/${ck}.png`);
+            commonPoses.forEach(p => {
+                const key = `${ck}_${p}`;
+                if (!this.textures.exists(key)) this.load.image(key, `assets/sprites/${key}.png`);
+            });
         });
 
         // Efeitos especiais e itens
