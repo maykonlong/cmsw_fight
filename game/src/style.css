@@ -5,6 +5,12 @@ body, html {
   height: 100%;
   background-color: #111;
   overflow: hidden;
+  /* Responsividade mobile: sem scroll elástico/zoom por gesto durante o jogo */
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {

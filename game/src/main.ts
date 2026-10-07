@@ -17,6 +17,11 @@ const config: Phaser.Types.Core.GameConfig = {
     height: 720,
     parent: 'app',
     backgroundColor: '#000000',
+    render: {
+        // Prioriza GPU dedicada e render direto (fluidez em qualquer dispositivo)
+        powerPreference: 'high-performance',
+        antialias: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -37,4 +42,13 @@ const config: Phaser.Types.Core.GameConfig = {
 
 const game = new Phaser.Game(config);
 (window as any).__game = game; // handle de depuracao
+
+// PWA: registra o service worker (cache offline + recarga instantânea) apenas em produção
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {
+            // PWA é aprimoramento: sem SW o jogo segue funcionando online
+        });
+    });
+}
 
