@@ -133,7 +133,22 @@ export class BootScene extends Phaser.Scene {
                         targets: [studioText, titleSubText, subText],
                         alpha: 0,
                         duration: 500,
-                        onComplete: () => this.scene.start('MainMenuScene')
+                        onComplete: () => {
+                            // Atalho de dev: ?scene=NomeDaCena&winner=kevin pula direto pra cena
+                            const params = new URLSearchParams(window.location.search);
+                            const target = params.get('scene');
+                            if (target && this.scene.manager.keys[target]) {
+                                this.scene.start(target, {
+                                    winner: params.get('winner') || 'kevin',
+                                    loser: params.get('loser') || 'vini_dog',
+                                    p1Wins: Number(params.get('p1Wins')) || 2,
+                                    p2Wins: Number(params.get('p2Wins')) || 0,
+                                    mode: params.get('mode') || '2p'
+                                });
+                            } else {
+                                this.scene.start('MainMenuScene');
+                            }
+                        }
                     });
                 });
             }

@@ -38,9 +38,11 @@
    - Adicionar o sprite correto da Aura do Beijo (Kevin).
    - Adicionar o sprite correto da Aura do Cachorro Correndo (Vini Dog).
 
-3. **Cenas Cinematográficas de Vitória:**
-   - Substituir os retângulos coloridos (Mockups) usados no `WinState` do Kevin pelos Sprites oficiais do Banheiro Químico e do Clone Moreno.
-   - Criar a sequência exata no `WinState` do Vini Dog (Remover chapéu, rodar o personagem, gerar a partícula de fumaça de vape subindo no formato de cachorro).
+3. **Cenas Cinematográficas de Vitória:** ✅ CONCLUÍDO (06/10/2026)
+   - `VictoryScene` agora roda uma cinemática específica por lutador:
+     - **Kevin:** caminha até o Banheiro Químico (`banheiro_portatil.png`), vapor + bolhas de sabão e o Clone Moreno (sprite tingido) aparece tomando banho com ele.
+     - **Vini Dog:** vira de costas, solta a fumaça do vape e ela condensa no Cachorro de Aura (`aura_cachorro.png`), que dispara pela tela e volta a balançar o rabo ao lado dele.
+   - Atalho de dev adicionado no `BootScene`: `?scene=VictoryScene&winner=kevin` pula direto pra qualquer cena (útil para testes).
 
 4. **Menus e Polimento:**
    - Criar `MainMenuScene` (Tela de Título).

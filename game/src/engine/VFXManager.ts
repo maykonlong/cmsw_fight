@@ -41,16 +41,48 @@ export class VFXManager {
     }
 
     public spawnBlockSpark(x: number, y: number) {
-        const spark = this.scene.add.circle(x, y, 15, 0x00ffff);
-        spark.setDepth(10);
-        
+        // Escudo: flash azul + anel dourado expandindo (KOF guard)
+        if (this.scene.textures.exists('hit_spark')) {
+            const guard = this.scene.add.image(x, y, 'hit_spark')
+                .setDisplaySize(70, 70)
+                .setDepth(30)
+                .setTint(0x66d9ff)
+                .setBlendMode(Phaser.BlendModes.ADD);
+            this.scene.tweens.add({
+                targets: guard,
+                scale: 0.3,
+                alpha: 0,
+                duration: 130,
+                ease: 'Cubic.easeOut',
+                onComplete: () => guard.destroy()
+            });
+        }
+
+        const ring = this.scene.add.circle(x, y, 10)
+            .setStrokeStyle(3, 0xffce56, 0.95)
+            .setDepth(29);
         this.scene.tweens.add({
-            targets: spark,
-            scale: 1.2,
+            targets: ring,
+            scale: 2.6,
             alpha: 0,
-            duration: 100,
-            onComplete: () => spark.destroy()
+            duration: 220,
+            ease: 'Cubic.easeOut',
+            onComplete: () => ring.destroy()
         });
+
+        for (let i = 0; i < 4; i++) {
+            const shard = this.scene.add.circle(x, y, 4, 0xffe9a8);
+            shard.setDepth(29);
+            const angle = Phaser.Math.FloatBetween(-Math.PI, 0);
+            this.scene.tweens.add({
+                targets: shard,
+                x: x + Math.cos(angle) * Phaser.Math.Between(30, 55),
+                y: y + Math.sin(angle) * Phaser.Math.Between(20, 40),
+                alpha: 0,
+                duration: 260,
+                onComplete: () => shard.destroy()
+            });
+        }
     }
 
     public spawnDustCloud(x: number, y: number) {
